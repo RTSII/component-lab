@@ -491,6 +491,27 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Current MVP behaviour (Main Step 3):** Dragging and dropping `#stageBar` relocates the floating toolbar anywhere over the viewport/sandbox for the current browser session (resets to default corner on full page reload).
 - **Future enhancement:** Add a **Settings › Toolbar › Position** control (`Default corner` | `Remember custom spot` | `Reset position`) backed by `ui.tbPos = { xRatio, yRatio, flip }` in `componentLab:v2:ui` (`localStorage`). Storing normalized viewport ratios (`x / innerWidth`, `y / innerHeight`) ensures the saved custom spot adapts cleanly when switching between `1600×770` and `1366×768` laptop displays or resizing the Chrome window.
 
+#### 4. Future Refinement: Toolbar Reposition vs. Throw Sensitivity & Hold/Pause Gesture Disambiguation
+- **Observed issue during testing:** When holding and dragging `#stageBar` across the screen to test motion and repositioning it into the narrow top strip above the sandbox, pausing/hovering the cursor and releasing still triggered a flick/dismiss (`power >= 2`) instead of dropping the toolbar in place.
+- **Root cause:**
+  1. In `lab/motion.js`, `M.flickPower(dx, vx)` evaluates `if (sp >= L.strong || d >= L.far) return 2;`. Because `d >= L.far` (`170 px` in Normal mode) triggers `power = 2` based on **total drag distance alone**, any reposition drag longer than `170 px` is treated as a strong throw unless `stale` (`e.timeStamp - b.t > 90`) zeroes it out.
+  2. When releasing a mouse button or trackpad after a pause, a tiny `1–2 px` physical micro-jitter often fires a `pointermove` within the final `90 ms` before `pointerup`, resetting `b.t` so `stale` evaluates to `false` even though the user paused!
+- **Future fix / refinement plan:**
+  1. **Velocity-only throw threshold for free-roam drag-and-drop:** For free-roam repositioning on `#stageBar`, never promote a release to `power = 2` based on drag distance `d` alone—require true release **velocity** (`Math.hypot(vx, vy) >= L.strong`) over the last `80–100 ms` window.
+  2. **Micro-jitter deadzone on pause detection:** Ignore sub-pixel/micro-movements (`< 3 px` over the last `90 ms`) when computing `stale` / release velocity so natural finger/mouse button release jitter after a hover/pause always registers as `vx = 0, vy = 0` (a calm drop).
+  3. **Live visual cue ("Drop" vs. "Throw"):** Provide subtle visual feedback on `.tb.is-held` showing whether the current cursor state is settled for a stationary drop vs. primed for an off-screen throw.
+
+#### 5. Future Architecture & UX Study: Sandbox-First Primary Workarea & Reactive Chrome Workflow
+- **Core goal:** Make the sandbox component stage (`#stageFit` / `#stageScaler` / `#labFrame`) truly act and feel like the **primary workarea**, maximizing usable component screen real estate vs. the footprint taken by surrounding lab chrome (`#dock`, `#stageBar`, margins/gutters), while making the lab's panels react intelligently to what the user is doing.
+- **Areas to explore & design in a dedicated planning pass:**
+  1. **Maximizing Sandbox Allocation (`freeRect` & `layoutStage`):**
+     - Audit the padding/margins around `#stageFit` (`topPad`, `bottomPad`, `side`, and `cw = cardWidth() + 2 * MARGIN`) so the sandbox uses every available pixel when the dock is open, and consider an "Overlay / Floating Dock" mode where the dock floats translucently over the edge without shrinking `freeRect()` when inspecting full-bleed or wide (`1600×770`) layouts.
+  2. **Reactive Chrome During Active Sandbox Or Slider Interaction:**
+     - **While dragging a slider / dial / colour swatch:** Temporarily fade the dock card backdrop to ultra-low opacity (or collapse non-active rows) so the user can see the entire sandbox clearly behind the dock while tuning.
+     - **While interacting directly with the component inside `#labFrame` (hovering, dragging, testing keyboard/click states):** Automatically dim, tuck, or compact the dock and floating toolbar out of the way so the component has 100% visual focus.
+  3. **Coordinated Dock ↔ Floating Toolbar Workflow:**
+     - Allow the floating toolbar (`#stageBar`) and main dock (`#dock`) to complement each other dynamically (e.g., docking `#stageBar` into the top margin strip or card header when space is tight, or surfacing the most recently tuned control on `#stageBar` when the main dock is closed for full-screen sandbox testing).
+
 ---
 
 ### Next-session pickup notes

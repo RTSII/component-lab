@@ -231,3 +231,8 @@ mvp-decision-selector.html      # Interactive HTML decision selector for the MVP
   2. **Step 2 Checkpoint:** Auto-scan & motion fixes (`lab/scan.js`, `lab/motion.js`).
   3. **Step 3 Checkpoint:** Core lab fixes, `PRO_FEATURES` gating, enhancements (`4.1–4.7`), `@scope` CSS isolation, and `lab/controls.js` + `lab/export.js` split.
 - **Merging to `main`:** Only merge `feat/mvp-v2` into `main` after full verification in Chrome (`1600×770` and `1366×768`) and explicit user approval.
+- **Post-MVP Roadmap & Audit Log (see `COMPONENT-LAB-REVIEW-MVP.md` › *Future project review & post-MVP audit log*):**
+  1. **ES Module (`<script type="module">`) & `lab/state.js` evaluation** when scaling beyond 5 lab files.
+  2. **Persist Custom Floating Toolbar Position (`ui.tbPos`)** across reloads using normalized viewport ratios.
+  3. **Toolbar Reposition vs. Throw Sensitivity Refinement:** Separate drag distance (`d >= L.far`) from release velocity (`sp >= L.strong`) and add a micro-jitter deadzone during hover/pause before release so long-distance repositioning never accidentally triggers an off-screen throw.
+  4. **Sandbox-First Primary Workarea & Reactive Chrome UX:** Maximize stage screen allocation (`#stageFit` / `#stageScaler`) relative to UI chrome and make the dock/toolbar reactively dim, tuck, or coordinate during active component interaction or slider tuning.
