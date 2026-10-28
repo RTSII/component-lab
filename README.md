@@ -1,250 +1,155 @@
 # Component Lab v2
 
-A local page for tuning one UI component by hand. The component sits on a
-full-window stage; the controls live in a floating glass card on the right that
-folds down to one round button. Two icon buttons at the bottom of the card
-copy your changes (the default) or the whole working file. No installs, no build step, no internet (fonts are in `lab/fonts/`).
-Plain HTML/CSS/JS, no frameworks. Needs Python 3 and Chrome.
+A zero-build, local browser workbench for previewing, tuning, and exporting individual UI components by hand.
 
-v1 is kept untouched next to this folder in `component-lab-v1/`.
+- **Zero dependencies / zero build step:** Plain HTML, CSS, and JavaScript (`ES2022`) served by a lightweight Python 3 standard-library script (`serve.py`).
+- **Offline-first:** Self-hosted `Chakra Petch` and `JetBrains Mono` fonts live in `lab/fonts/`. No `npm`, bundlers, or external CDN requests required.
+- **Target environment:** Windows PC (`C:\Users\rtsii\Desktop\component-lab`), Python 3, and Google Chrome.
 
-## Install location (fixed)
-The lab's permanent root on Rob's Windows PC is `C:\Users\rtsii\Desktop\component-lab`. Every new version keeps this same path and folder name; Rob replaces the old files by extracting the new zip over it (the zip's top folder is `component-lab`, so extract into `C:\Users\rtsii\Desktop`). Double-click `run.bat` to start the server and open Chrome, or run `python serve.py` from that folder (the file is `serve.py`). Chrome only.
+---
 
-## Run it
+## Quick Start
+
+### 1. Fixed Install Location
+The permanent workspace root on Rob's Windows PC is:
+```text
+C:\Users\rtsii\Desktop\component-lab
+```
+Double-click **`run.bat`** to start the local server and open Chrome, or run from PowerShell / Command Prompt:
 
 ```powershell
-cd C:\path\to\component-lab
-python serve.py          # then open http://127.0.0.1:5179/ in Chrome
-python serve.py 5180     # any other port if 5179 is busy
+cd C:\Users\rtsii\Desktop\component-lab
+python serve.py          # serves http://127.0.0.1:5179/
+python serve.py 5180     # use another port if 5179 is busy
 ```
+- If `python` is not on `PATH`, use `py serve.py`.
+- Plain `python -m http.server` can preview components, but **`serve.py` is required** for the in-app **New Component (`+`)** modal (`/api/new`) and **Save to disk** (`/api/manifest`).
+- **Important Port / `localStorage` Note:** Browser `localStorage` is scoped by origin and port (`http://127.0.0.1:5179` vs. `http://127.0.0.1:5180`). Always use the same port (default `5179`) so your saved parameter values, starred Basic controls, and custom palettes stay visible, or use the JSON backup/restore tools in **Settings**.
 
-If `python` is not found, try `py serve.py`. If the port is taken, `serve.py`
-says so and you can pass another port. Plain `python -m http.server` also works,
-but **New component** and **Save to disk** need `serve.py`.
+---
 
-## Using it
+## Core Workflow: Basic vs. Pro Mode
 
-- **Sandbox frame**: the stage previews the component in a **1600×770**
-  frame by default (Rob's HP laptop: Chrome on a 1600×900 screen). **1366×768**
-  and **Fit** are extra checks under Settings › **Viewport**.
-- **Floating toolbar** (top left, see *Toolbar* below): component picker, then
-  play/pause (or Space) and the speed/scrub slider. It floats over the stage
-  and never changes the sandbox size or position.
-- **Dock**: hover the round button (or click it) to open the card. Click inside
-  it to pin it open. **Esc** or a click outside closes it (Esc closes the colour
-  arc first if it is open). The component re-centres in the space the card leaves.
-- **Header**: the component name wraps to a second line instead of being cut
-  off (e.g. "PTCB26 home helix" shows in full at 1366×768). Basic/Pro is the
-  segmented switch in the header (the old boxed **P** rail button is gone; the
-  rail is 46 px wide now).
-- **Rail** (right edge of the card): Color, Interaction (only when the
-  component has cursor/touch behaviour), Surface, Type, Motion, Rate, Layout,
-  then the rail actions **+** (new component) and the **toolbar** button (where
-  the old P button was), then the gear (Settings). The order and which
-  icons show can be changed in Settings › **Rail order** and **Rail actions**.
-- **Quick interaction toggle**: for components with a hover behaviour, a small
-  pill under the header ("Hover · Pause") cycles the hover options in one
-  click; its chevron jumps to the Interaction section.
-- **Basic** shows up to 8 featured controls. Only categories that have a
-  featured control get a tab. **Pro** shows every control. Rarely needed ones sit
-  under **Advanced**, and each control has a star that adds it to Basic or
-  removes it. Components always open in Basic.
-- **Colours**: palettes found in the project CSS appear as one-click presets.
-  In Basic, a swatch opens the radial picker (chips instead when the system asks
-  for reduced motion). The chevron opens the full colour page, where
-  **Custom…** reveals a picker and hex box.
-- **Pro sections** (accordion): in Pro, every category is stacked in one
-  scrolling panel ("All controls") as collapsible sections with centred headers
-  and a control count. Click a header to open or close it. A rail icon scrolls
-  to its section and opens it, without leaving the page, and the rail follows
-  your scroll position. Basic is unchanged.
-  - **Layout per section**: a "Pro adds" strip at the top says what Pro gives
-    you (all N controls, how many advanced, the interaction set, full-file
-    copy). Inside a section, controls are grouped into small cards with
-    centred headings (for the helix: Color → Card / Text / Glow; Layout →
-    Size / Spacing / Radius / Depth; Rate → Turn / Tempo …). Signature
-    features (marked ✦) come first. Each card shows only its main controls;
-    the rest sit in a **More** fold, and groups that are all advanced go in
-    the section's **Advanced** fold.
-  - **Control types**: colours are swatch rows plus palette chips; modes are
-    segmented tabs; on/off is a switch; continuous values are sliders;
-    angles are a **radial dial** (drag, or arrow keys / Home / End); long
-    lists (like card count) are a select.
-  - **Collapse state**: *Remember* (default: reopens what you had open, per
-    component), *All open*, or *All closed*. Saved in the browser.
-  - **Motion variants** (try them live, the choice is remembered):
-    **A Slide** (height slide + fade), **B Spring** (the default: a soft
-    damped spring, about 3% overshoot, header pinned; the sections below are
-    pushed down on the same spring and the body settles in from a slight
-    scale; closing uses a quick settle with no bounce), **C Stagger** (rows reveal one by
-    one), **D Exclusive** (one section open; the others shrink to small
-    icon-height chips above and below it).
-  - **Switching**: the **⋮** button next to Basic/Pro (shown in Pro only)
-    opens a small menu with both choices; it stays open while you try
-    variants, Esc or a click outside closes it. The same two settings are under
-    Settings › **Pro sections**. Each change is also written to the footer log.
-  - With reduced motion asked for by the system (or Settings › animations
-    off), sections open with a short fade or instantly.
-- **Footer** (bottom of the card on control pages): Copy changes, Copy full
-  file, **Undo** (counter-clockwise arrow) and **Reset** (eraser), then the
-  `N changed` count on the right. The buttons share a row when there is room
-  and wrap to a second row when not. Hover for a tooltip; Tab + Enter/Space
-  works too. A button shows a checkmark for about a second when it worked.
-  - **Copy changes** (first, highlighted, the default; page with +/−): only
-    what you changed, as `- Label [ID --css-var]: old -> new`, plus the
-    component's folder and file names and a link that reopens that exact state.
-    Small and exact: best when you continue in the same agent chat that
-    already has the file.
-  - **Copy full file** (page with `</>`): the whole working file. It is one
-    standalone HTML page holding the component's CSS, markup and component.js,
-    with every current value baked in (CSS custom properties on `.lab-frame`
-    and `LAB_PARAMS`), a header comment listing the changes, and a small runner
-    so it plays on its own in Chrome. Best for a new chat or new agent that has
-    never seen the component.
-  - **Undo**: a multi-step stack (up to 100 steps; one slider drag is one
-    step). **Ctrl+Z** undoes and **Ctrl+Shift+Z** / **Ctrl+Y** redoes while
-    focus is inside the card (not in a text box). Logged as
-    `> undo speed 1.40× → 1.00×`. Disabled when there is nothing to undo.
-  - **Reset**: puts every control back to its default in one step, logged as
-    `> reset 3 changes`. No confirm needed: Undo brings them all back.
-    Disabled when nothing has changed.
-  - **Interaction in copies**: both copies include an `Interaction:` line
-    (e.g. `hover = pause [HOVER], drag = spin [DRAG]`); the full file runs the
-    interaction live.
-  - **Log**: under the icons, a two-line terminal log of the last actions,
-    newest bright and the older one faded. Examples: `> speed 1.00× → 1.40×`,
-    `> copied full file (23 KB)`, `> motion B spring`. One slider drag makes
-    one line. With nothing done yet it shows `> no changes yet`. When the card
-    is at its maximum height (content scrolls), the log is hidden and only
-    the icon buttons show; it keeps logging and reappears when there is room
-    (the switch uses the full-footer height, so it does not flicker).
-- Double-click a control's label to reset that one control.
-- **Settings**:
-  - dock position (right or bottom) and anchor (9 points; the card stays pinned
-    there and grows away from it)
-  - animations on or off
-  - **Rail order**: drag the grip (or use the ↑/↓ buttons, or Alt+↑/↓ on the
-    grip) to reorder the category icons; the eye hides an icon from the rail
-    (its Pro section stays). **Reset to default order** undoes both. Saved in
-    the browser for every component; a category a component lacks is skipped.
-    The Pro sections follow the same order. **+** and Settings are fixed and
-    Settings can never be hidden.
-  - **Rail actions**: reorder or hide **+** and the toolbar button (same
-    grip/arrows/eye/reset as Rail order). Settings is always last and can never
-    be hidden.
-  - **Viewport**: sandbox frame **1600×770** (default), plus **1366×768** and
-    **Fit** as extra checks.
-  - **Toolbar**: show toolbar icon (on/off, saved), a gesture hint, start state
-    (closed / open / remember), outside click closes it, flick physics on/off
-    and flick strength (Light / Normal / Heavy). See *Toolbar* below.
-  - **Pro sections**: collapse state and section motion (same as the ⋮ menu)
-  - **Interaction scan**: what the scan found in the component's code (only
-    shown when something was found)
-  - palette source (project, or *My palette* once you have saved one)
-  - My palette (4–6 colours)
-  - **Save to disk** / **Export JSON** for the manifest
-  - **Hold to reset all** (hold for about 1.2 s)
-- Values are saved per component in the browser (localStorage) and in the URL
-  hash, for example `http://127.0.0.1:5179/#c=helix&SPEED=1.5&CARD_OPACITY=0.6`.
+Component Lab separates everyday visual tuning (**Basic**) from deep parameter inspection, layout organization, and manifest curation (**Pro**). Switch between them anytime using the **`Basic | Pro`** segmented toggle in the card header.
 
-## Toolbar
-
-A floating layer over the stage (fixed, top left; it moves to the top right
-when the card is anchored on the left). Only the toolbar takes pointer events.
-The stage fit reserves no space for it, so the sandbox keeps the same box with
-the toolbar closed, open or with its menu open (checked numerically in the
-tests at 1600×770 and 1366×768). The component menu is also a floating layer: it
-sizes to its content (104–320 px; ellipsis only past the maximum) and never
-moves the sandbox.
-
-- **Closed** it is one icon. **Click** the icon to open all groups or close
-  them. **Shift+click** or **←/→** opens or closes one group at a time.
-- **Groups** (left to right): **Component** (the primary group: the picker
-  sizes to the name, 104–280 px, and sets the toolbar's width; the slider
-  scales from it) then **Playback** (pause + slider; only for animated
-  components).
-- **Progressive motion**: groups slide open one at a time left to right on a
-  soft spring (110 ms stagger) and close **left to right too** (Component first,
-  quick settle, no bounce). This applies to click, keys, Esc, outside click and
-  flicks. The orders are constants in `lab/lab.js`:
-  `TB_OPEN_ORDER` / `TB_CLOSE_ORDER` (`'forward'` or `'reverse'`). Reduced motion
-  switches the slide off (instant).
-- **Esc** closes the component menu first, then the toolbar. An outside click
-  closes it (Settings › Toolbar, on by default; clicks in the card do not count).
-
-### Gestures and flick physics
-
-Shared code in `lab/motion.js` (`Motion.Flick`), with the same Settings for
-every flick: a move under 6 px is a click; while dragging the element follows
-with a rubber band; on release it springs back; reduced motion keeps the
-gestures but drops the throw animations.
-
-| Strength | gentle flick (speed or distance) | strong flick |
+| Area | **Basic Mode** (Everyday Tuning) | **Pro Mode** (Deep Tuning, Curation & Authoring) |
 |---|---|---|
-| Light  | ≥ 0.22 px/ms or ≥ 40 px | ≥ 0.75 px/ms or ≥ 120 px |
-| Normal | ≥ 0.35 px/ms or ≥ 60 px | ≥ 1.10 px/ms or ≥ 170 px |
-| Heavy  | ≥ 0.55 px/ms or ≥ 85 px | ≥ 1.60 px/ms or ≥ 230 px |
+| **Controls shown** | Up to **8 starred (`★`) controls**, shown one category page at a time via the right-hand rail icons. | **Every control** in one scrollable **All controls** accordion, grouped into mini-cards (`Card`, `Text`, `Glow`, etc.) with `More` and `Advanced` folds. |
+| **Curation & badges** | Clean labels and live values only. | Shows `✦` signature badges, `★` star buttons (click to add/remove a control from Basic's 8 slots), and source/wiring hints (`where`, `lab-bound`, `js-const`). |
+| **Colour picking** | Project palette presets + radial gooey swatch picker (`Arc`). | Compact swatch chip rows + `Custom…` native colour/hex input + 6-slot **My palette** editor. |
+| **Section layout (`⋮`)** | Standard single-category page view. | Header **`⋮`** menu & **Settings › Pro sections** choose collapse mode (*Remember*, *All open*, *All closed*) and motion/layout variant (**A Slide**, **B Spring**, **C Stagger**, **D Exclusive chips**). |
+| **Exports (Footer)** | **Copy changes**, **Copy full working file**, **Undo**, **Reset**, and **`N changed`**. | Same export bar in both modes so you never have to switch modes just to copy. |
 
-Speed is measured over the last 90 ms of the drag.
+---
 
-- **Rail toolbar button**: click, tap or Enter/Space toggles the toolbar.
-  **Flick toward the stage** throws the icon out of the rail with inertia, then
-  opens groups: gentle opens the next one, strong opens both. **Flick back**
-  (away from the stage) closes one group, or if it is closed (or the flick is
-  strong) retracts everything and flies the icon back into the rail.
-- **Toolbar icon**: flick right opens the next group (strong = all); a gentle
-  flick left closes one group; a **strong flick left or up** (away from the
-  corner) **dismisses** it for this session only. The saved setting is not
-  changed: it comes back on reload or when you switch component, and the rail
-  button brings it back with the throw-in.
+## Stage, Dock & Floating Toolbar
 
-### Extension point
+### Sandbox Stage & Viewport Presets
+- The stage previews components inside a scaled sandbox frame:
+  - **`1600×770` (Default):** Tuned for Rob's HP laptop (Chrome window on a `1600×900` display).
+  - **`1366×768` & `Fit`:** Available under **Settings › Viewport** for secondary laptop/responsive checks.
+- The component automatically re-centres in the remaining stage space when the control dock opens on the right or bottom.
 
-`TOOLBAR_GROUPS` in `lab/lab.js` is the list of groups (id, label, primary,
-optional `when()`). A group is a `.tb-group[data-group]` in `index.html`; the
-code orders and hides groups from the list, so adding one is markup plus one
-line. The **Viewport** group is still in the markup and wired to the same
-`setView()` as Settings; re-add it with `{ id: 'viewport', label: 'Viewport' }`.
-Future device presets (iOS, Chrome sizes) and the layout options / left, right
-and bottom panel windows plug in here; they are not built yet.
+### Control Dock & Right Rail
+- **Opening & Pinning:** Hover or click the round trigger button (`#dockTrigger`) to open the glass card. Clicking or tabbing inside the card pins it open; pressing **`Esc`** or clicking the stage backdrop unpins and closes it (`Esc` closes any open colour arc or popover first).
+- **Rail Icons (top to bottom):**
+  1. **Categories:** `Color`, `Interaction` (shown only when the component has cursor/touch/key behaviour), `Surface`, `Type`, `Motion`, `Rate`, `Layout`.
+  2. **Actions:** **`+`** (New Component modal) and **Toolbar** (shows/throws out the floating stage toolbar).
+  3. **Settings (Gear):** Always last on the rail and can never be hidden.
+- **Quick Shortcuts:**
+  - **Double-click any control label** to reset that single control to its default.
+  - **`Ctrl+Z`** undoes and **`Ctrl+Shift+Z` / `Ctrl+Y`** redoes (up to 100 steps; a full slider drag counts as one step).
+  - **URL Hash State:** Tuned values sync live to the URL hash (e.g. `http://127.0.0.1:5179/#c=helix&SPEED=1.5&CARD_OPACITY=0.6`) for bookmarking or sharing.
 
-## Adding a component
+### Floating Stage Toolbar & Flick Physics
+- Floats at the top-left of the stage (moves to top-right if the dock is anchored on the left) without affecting sandbox dimensions.
+- **Groups (left to right):**
+  1. **Component Picker:** Switches between registered components (also accessible by clicking the component title in the dock header).
+  2. **Playback:** Play/Pause (`Space`) and loop speed/scrub slider (shown for animated components).
+- **Progressive Open/Close:** Clicking the toolbar icon opens or closes all groups; **`Shift+Click`** or **`←` / `→`** steps one group at a time on a staggered spring (`TB_OPEN_ORDER` / `TB_CLOSE_ORDER` in `lab/lab.js`).
+- **Flick Physics (`lab/motion.js` — `Motion.Flick`):**
+  - Dragging `< 6 px` acts as a click; dragging further pulls with rubber-band resistance and measures release velocity over the last `90 ms`:
 
-**From the lab:** press **+**. Pick a kind (Card, Nav, Hero, Animated bg, List,
-Button), then a palette, then a name, and press **Create**. This creates
-`components/<name>/` from `components/_template/` with that kind's featured
-controls, frame sizes and colours, and adds it to `components/registry.js`.
-The lab then loads it.
+| Strength Setting | Gentle Flick (speed or distance) | Strong Flick (speed or distance) |
+|---|---|---|
+| **Light** | `≥ 0.22 px/ms` or `≥ 40 px` | `≥ 0.75 px/ms` or `≥ 120 px` |
+| **Normal** | `≥ 0.35 px/ms` or `≥ 60 px` | `≥ 1.10 px/ms` or `≥ 170 px` |
+| **Heavy** | `≥ 0.55 px/ms` or `≥ 85 px` | `≥ 1.60 px/ms` or `≥ 230 px` |
 
-**From the command line:**
+  - **Rail Toolbar Button:** Flick toward the stage to throw the toolbar out of the rail (gentle = 1 group, strong = all groups). Flick back toward the rail to retract.
+  - **Floating Toolbar Icon:** Flick right to open groups; gentle flick left closes one group; **strong flick left/up** dismisses the floating toolbar for the current session (click the rail toolbar icon or toggle **Settings › Show toolbar icon** to bring it back).
+- **Extension Point (`TOOLBAR_GROUPS`):** Defined in `lab/lab.js` (`{ id, label, primary, when }`) matching `.tb-group[data-group]` elements in `index.html`. Re-enabling the built-in `#tbViewport` group requires only adding `{ id: 'viewport', label: 'Viewport' }` to `TOOLBAR_GROUPS`.
 
-```powershell
-python new-component.py quiz-score-card --kind card
-```
+---
 
-**By hand:** create a folder in `components/` and add its id to
-`components/registry.js`:
+## AI / Vibe-Coding Relay Guide (How Other AI Agents Should Use This Project)
 
-```
-components/<id>/
-  component.js    Lab.register({ title, css: ['style.css'], markup: 'markup.html', animated, mount })
-  style.css
-  markup.html
-  manifest.json   optional; the control list (see below)
-```
+When collaborating with an AI coding assistant (Cursor, Antigravity, Claude, Grok, ChatGPT) to build or refine UI components, use the following relay workflows and contracts.
 
-`mount(frame, { params, manifest, time })` returns `{ render(params, offset), rate(params, dt), destroy() }`.
-`rate` is optional: return a multiplier for the loop clock (0 pauses, 0.35 slows,
-1.8 speeds up), e.g. while the pointer is over the component. `time.nudge(d)`
-moves the clock (drag to spin) and `time.offset` reads or sets it.
-The lab calls `render` every animation frame. `offset` runs from 0 to 1 per loop
-for animated components. Values with a `css` custom property are also set on the
-frame element, so plain CSS components need no JS at all.
+### 1. Relaying Tuned Values From Component Lab to an AI Agent
+The card footer has two copy buttons designed for different AI chat contexts:
 
-## Manifest format
+1. **`Copy changes` (Default — Page with `+/−` icon):**
+   - **When to use:** You are continuing in an existing AI chat session that already has the component's source files.
+   - **What it puts on your clipboard:** A compact diff block listing the component folder, files, active interaction settings, only the modified parameters (`- Label [ID --css-var]: default -> new`), and a `#c=...` deep-link URL:
+     ```text
+     Component: PTCB26 home helix (components/helix/ — style.css, markup.html, component.js)
+     Interaction: hover = pause [HOVER], drag = spin [DRAG]
+     Changes:
+     - Speed [SPEED]: 1× -> 1.4×
+     - Card fill opacity [CARD_OPACITY --helix-card-opacity]: 0.9 -> 0.65
+     Link: http://127.0.0.1:5179/#c=helix&SPEED=1.4&CARD_OPACITY=0.65
+     ```
+2. **`Copy full working file` (Page with `</>` icon):**
+   - **When to use:** Starting a brand-new AI chat or handing off to another model/agent that has never seen the component.
+   - **What it puts on your clipboard:** A single, self-contained `.html` file containing the font links, tokens, component CSS, HTML markup, `component.js`, baked-in CSS custom properties on `.lab-frame`, `window.LAB_PARAMS` defaults, a summary comment of your changes, and a minimal standalone `requestAnimationFrame` runner that opens directly in Chrome.
 
-`components/<id>/manifest.json`:
+### 2. How an AI Agent Should Create or Import a Component Into the Lab
+Every component lives in `components/<id>/` and is listed in `components/registry.js`.
+
+- **Scaffold via CLI (recommended for agents):**
+  ```powershell
+  python new-component.py <component-id> --kind card
+  ```
+  *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `bg`, `list`, `button`.)*
+- **Component Folder Structure:**
+  ```text
+  components/<id>/
+    component.js    # Calls Lab.register({ id, title, css, markup, animated, mount })
+    style.css       # Component styles (prefer CSS custom properties on .lab-frame or :root)
+    markup.html     # Component HTML fragment injected inside .lab-frame
+    manifest.json   # Optional control definitions (auto-scanned by lab/scan.js if omitted)
+  ```
+- **`component.js` Lifecycle Contract:**
+  ```js
+  Lab.register({
+    id: 'my-widget',
+    title: 'My Widget',
+    css: ['style.css'],
+    markup: 'markup.html',
+    animated: true, // true if render() should be called every animation frame
+    mount(frame, { params, manifest, time }) {
+      // Query inside `frame` (never `document`) so styles/DOM stay isolated
+      return {
+        render(P, offset) {
+          // Called on parameter change and (if animated) each rAF tick.
+          // `P` holds current control values by ID; `offset` is 0..1 loop progress.
+        },
+        rate(P, dt) {
+          // Optional: return clock multiplier (0 = pause, 0.35 = slow, 1 = normal, 1.8 = fast)
+          return 1;
+        },
+        destroy() {
+          // Optional: remove window/document listeners or timers on component switch
+        }
+      };
+    }
+  });
+  ```
+- **Pure CSS Components Need Zero JS Logic:** Any manifest variable with a `"css": "--my-var"` property is automatically applied inline on `#labFrame` (with `unit` appended or `cssMap` translated), and any variable with `"bind": [{ "sel": ".my-el", "prop": "border-radius", "tpl": "{v}px" }]` is written into `<style id="labBinds">`.
+
+### 3. Manifest Schema (`components/<id>/manifest.json`)
+If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `markup.html`, and `component.js` to generate controls for CSS custom properties, colour literals, opacities, radii, font sizes, animation durations, `UPPER_CASE` numeric JS constants, and pointer/keyboard/CSS `:hover` interactions. Use **Settings › Save to disk** in Pro mode to write a curated `manifest.json` to disk.
 
 ```json
 {
@@ -252,95 +157,68 @@ frame element, so plain CSS components need no JS at all.
   "kind": "card",
   "title": "Quiz score card",
   "paletteFrom": ["project/tokens.css", "components/quiz-score-card/style.css"],
-  "frames": { "1600x770": { "w": 420, "h": 320 }, "1366x768": { "w": 380, "h": 300 } },
+  "frames": {
+    "1600x770": { "w": 420, "h": 320 },
+    "1366x768": { "w": 380, "h": 300 }
+  },
   "time": { "cycle": "CYCLE", "speed": "SPEED", "direction": "DIRECTION" },
+  "groups": { "color": ["Card", "Text", "Glow"] },
   "vars": [
-    { "id": "ACCENT", "label": "Accent", "category": "color", "control": "swatch-role",
-      "role": "accent", "default": "#00e5ff", "css": "--c-accent", "featured": true },
-    { "id": "FILL_OP", "label": "Fill opacity", "category": "surface", "control": "slider",
-      "min": 0, "max": 1, "step": 0.01, "default": 0.85, "css": "--fill-op", "featured": true },
-    { "id": "EASING", "label": "Easing", "category": "motion", "control": "segmented",
-      "default": "glide", "css": "--ease",
-      "options": [ { "value": "linear", "label": "Linear", "css": "linear" },
-                   { "value": "glide", "label": "Glide", "css": "cubic-bezier(0.22,1,0.36,1)" } ] },
-    { "id": "CYCLE", "label": "Seconds per loop", "category": "rate", "control": "slider",
-      "min": 2, "max": 60, "step": 1, "default": 26, "advanced": true }
+    {
+      "id": "ACCENT",
+      "label": "Accent",
+      "category": "color",
+      "group": "Card",
+      "control": "swatch-role",
+      "role": "accent",
+      "default": "#00e5ff",
+      "css": "--c-accent",
+      "featured": true,
+      "signature": true
+    }
   ]
 }
 ```
+- **Categories (`category`):** `color`, `interact`, `surface`, `type`, `motion`, `rate`, `layout`.
+- **Controls (`control`):** `slider`, `swatch-role`, `switch`, `segmented`, `select` (auto-expands integer range if `min`/`max` are given without `options`), `radial` (angle dial with `unit: "°"`).
+- **Colour roles (`role`):** `accent`, `border`, `glow`, `text`, `muted`, `surface`, `surface2`, `danger`.
+- **Interactions (`interaction`):** `hover` (`keep`/`pause`/`slow`/`fast`), `drag` (`spin`/`ignore`), `touch` (`hover`/`ignore`), `key`, `wheel`, `click`, `hover-css` (toggles CSS `:hover` rules on/off).
 
-- `category`: `color`, `interact`, `surface`, `type`, `motion`, `rate` or `layout`.
-- `control`: `slider`, `swatch-role`, `switch`, `segmented`, `select` or
-  `radial` (angles; `unit: "°"`). A `select` with `min`/`max` lists every step.
-- `group`: the mini card a control sits in (e.g. `Card`, `Text`, `Glow`).
-  `"groups": { "color": ["Card", "Text", "Glow"] }` at the top level sets the
-  order. Without it the lab guesses groups from the id and label.
-- `short`: a shorter label for tight rows. `signature: true`: shown first, with ✦.
-- `interaction` (with `category: "interact"`): `hover`, `drag`, `touch`,
-  `key`, `wheel`, `click` or `hover-css`. A `hover-css` switch turns the
-  component's CSS `:hover` rules on and off (also in the exported file).
-- `role` (colours): `accent`, `border`, `glow`, `text`, `muted`, `surface`,
-  `surface2` or `danger`. The role decides which palette colours are offered first.
-- `css`: a custom property set on the frame. `unit` is appended (`px`, `s`, …).
-  `cssMap` maps values to CSS, for example `{ "true": "running", "false": "paused" }`.
-- `bind`: `[{ "sel": ".btn", "prop": "opacity", "tpl": "{v}" }]` writes the value
-  straight into a rule, for CSS that has no custom property.
-- `featured`: shown in Basic (8 at most). `advanced`: under Advanced in Pro.
-- `time.cycle` / `speed` / `direction` name the vars that drive the loop clock.
+---
 
-## Auto-scan (no manifest)
+## Repository Layout
 
-If a component has no `manifest.json`, `lab/scan.js` builds one when the
-component loads. It reads:
-
-- CSS custom properties
-- colour literals (grouped by value)
-- opacities, border radii, font sizes and durations (durations follow one
-  Speed master)
-- `UPPER_CASE` number constants in `component.js`
-- **interaction**: `lab/scan.js` strips comments and strings, then looks in
-  `component.js` for pointer/mouse enter-leave (hover), pointerdown + move
-  (drag), wheel, click handlers (ignoring ones that only call
-  `preventDefault()`), key/focus handlers and touch events, and in the CSS for
-  `:hover` rules and `touch-action: none`. Each finding becomes a control with
-  options: hover → Keep / Pause / Slow / Fast, drag → Spin / Ignore, touch →
-  Same as hover / Ignore, focus → a switch, CSS hover → on/off. The findings
-  are listed in Settings › Interaction scan. When nothing is found the scan
-  note says so and the card shows no Interaction section, rail icon or quick
-  toggle. The template has none by default; `components/_template/component.js`
-  has a comment showing how to add one.
-
-It guesses the kind and features up to 8 controls. The result is kept in the
-browser. Press **Settings › Save to disk** to write it as a real
-`manifest.json` that you can then edit. Saving also writes your stars.
-
-## Files
-
-```
-index.html               the page
-lab/lab.js               dock, pages, controls, stepper, state
-lab/motion.js            shared curves, content in/out, sliding pages, velocity pill
-lab/scan.js              auto-manifest + palette extraction
-lab/lab.css              lab chrome
-project/tokens.css       the app's colour tokens (palette source only)
-components/helix/        helix + manifest
-components/_template/    blank starter (all kinds) + kinds.json
-new-component.py         create a component (also used by serve.py)
-serve.py                 static server + /api/new + /api/manifest
-compare/                 original helix (v109) for side-by-side checks
-shots/v2-*.png           screenshots at 1600×770 and 1366×768 (v2-tb-*, v2-flick-* = toolbar pass)
+```text
+index.html                      # Lab shell HTML (stage, floating toolbar, right/bottom dock)
+serve.py                        # Local Python HTTP server + POST /api/new and /api/manifest
+new-component.py                # CLI & backend scaffolder for new components from _template
+run.bat                         # Windows double-click launcher
+project/
+  tokens.css                    # Shared project colour/token definitions (palette source)
+lab/
+  lab.css                       # Lab UI chrome styles
+  motion.js                     # Spring presets, FLIP helpers, and Motion.Flick physics
+  scan.js                       # Auto-manifest generator & CSS/JS interaction scanner
+  lab.js                        # Core lab state, dock, controls, toolbar, and export logic
+  fonts/                        # Offline Chakra Petch & JetBrains Mono font files + fonts.css
+components/
+  registry.js                   # Ordered list of components shown in the lab picker
+  helix/                        # Reference component: PTCB26 3D rotating card helix
+  _template/                    # Starter template & kinds.json for new components
+compare/
+  original.html                 # Untouched v109 helix baseline for visual A/B verification
+  original-home.js              # Original home.js helix script
+COMPONENT-LAB-REVIEW-MVP.md     # Consolidated code review, MVP execution plan & future audit log
+mvp-decision-selector.html      # Interactive HTML decision selector for the MVP plan
 ```
 
-## Helix notes
+---
 
-`components/helix/component.js` is `initHelix()`/`layout()` from `js/home.js`
-v109, with the constants read from the manifest. **Speed** and **Intensity**
-are masters. Turn per card is a radial dial; the other rates and angles are
-under Pro › Rate › Advanced. `compare/original.html` runs the untouched v109 file
-(`compare/original.html#f=1600&o=0.62`).
+## Git Branching & Safe Development Workflow
 
-The helix interaction is wired live, like `js/home.js`: hovering pauses it
-(**On hover**: Keep / Pause / Slow / Fast), dragging up or down spins it
-(**On drag**: Spin / Ignore), touch follows hover unless set to Ignore, and
-keyboard focus on a card brings it to the front and pauses (**Focus pauses**).
-Using the helix does not close the card.
+- **`main` branch (Failsafe Baseline):** Preserves the untouched starting snapshot of Component Lab v2. Do not commit experimental or untested work directly to `main`.
+- **`feat/mvp-v2` branch (Active Development):** All MVP bug fixes, recovery paths, `PRO_FEATURES` organization, enhancements, and documentation updates happen on `feat/mvp-v2` with clean checkpoint commits after each major phase:
+  1. **Step 1 Checkpoint:** Backend, launcher & `_template` fixes (`serve.py`, `new-component.py`, `run.bat`, `_template/component.js`, `jsconfig.json`).
+  2. **Step 2 Checkpoint:** Auto-scan & motion fixes (`lab/scan.js`, `lab/motion.js`).
+  3. **Step 3 Checkpoint:** Core lab fixes, `PRO_FEATURES` gating, enhancements (`4.1–4.7`), `@scope` CSS isolation, and `lab/controls.js` + `lab/export.js` split.
+- **Merging to `main`:** Only merge `feat/mvp-v2` into `main` after full verification in Chrome (`1600×770` and `1366×768`) and explicit user approval.

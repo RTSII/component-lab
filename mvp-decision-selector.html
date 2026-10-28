@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Component Lab v2 — Interactive MVP Decision Selector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --background: #07090d;
+      --card: #0f131c;
+      --sidebar: #141925;
+      --border: rgba(255, 255, 255, 0.12);
+      --foreground: #e9edf3;
+      --muted-foreground: #94a0b4;
+      --primary: #38bdf8;
+      --primary-foreground: #041019;
+      --secondary: #1e2638;
+      --secondary-foreground: #e2e8f0;
+    }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+    }
+    .opt-card {
+      transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+      cursor: pointer;
+    }
+    .opt-card:hover { transform: translateY(-1px); }
+    .opt-selected {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 1px var(--primary);
+      background-color: rgba(56, 189, 248, 0.07) !important;
+    }
+    .blank-col {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 8px,
+        rgba(148, 160, 180, 0.06) 8px,
+        rgba(148, 160, 180, 0.06) 16px
+      );
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-4 md:p-6 pb-28">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Top Banner & Gauge -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]">Sequential MVP Selector</span>
+            <span class="text-xs text-[var(--muted-foreground)]">Component Lab v2 · Gemini 4 Argon vs. Claude Opus</span>
+          </div>
+          <h1 class="text-xl font-bold text-[var(--foreground)]">Component Lab v2 — Conflict Resolver &amp; Feature Selector</h1>
+          <p class="text-sm text-[var(--muted-foreground)]">
+            Step sequentially through all <strong>4 sections</strong> (1. Conflicts, 2. Core Bugs &amp; Recovery, 3. Structure &amp; Base/Pro, 4. Extra Enhancements). Every item has clickable selector cards and side-by-side model columns (with blank columns where a model did not reach or suggest an item).
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="viewModeBtn" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90">
+            Switch to All-in-One View
+          </button>
+          <button id="resetBtn" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+            Reset to Recommended
+          </button>
+        </div>
+      </div>
+
+      <!-- Opus Completion Gauge -->
+      <div class="border-t border-[var(--border)] pt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div class="p-3 rounded-lg bg-[var(--sidebar)] border border-[var(--border)] space-y-1">
+          <div class="flex items-center justify-between font-semibold">
+            <span>Claude Opus Progress Estimate</span>
+            <span class="text-[var(--primary)]">~93% Analysed</span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-[var(--border)] overflow-hidden">
+            <div class="h-full bg-[var(--primary)]" style="width: 93%"></div>
+          </div>
+          <p class="text-[var(--muted-foreground)]">Finished 100% of file scanning &amp; bug prioritisation; paused on snippet #6 of final write-up. Skipped full read of <code>_template/component.js</code>.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-[var(--sidebar)] border border-[var(--border)] space-y-1">
+          <div class="flex items-center justify-between font-semibold">
+            <span>Gemini 4 Argon (High) Coverage</span>
+            <span class="text-[var(--primary)]">100% Complete</span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-[var(--border)] overflow-hidden">
+            <div class="h-full bg-[var(--primary)]" style="width: 100%"></div>
+          </div>
+          <p class="text-[var(--muted-foreground)]">Read all 25 files line-by-line, caught the <code>_template</code> HTML overwrite, Basic rail lockout, toolbar switch desync, and merged Opus's trace.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-[var(--sidebar)] border border-[var(--border)] space-y-1">
+          <div class="font-semibold">Recorded Future-Review Note (1.7)</div>
+          <p class="text-[var(--muted-foreground)]">Opus’s ES Module (<code>&lt;script type="module"&gt;</code>) + shared state object proposal is saved for the final path docs to review later under higher stress/variables/edge-cases.</p>
+        </div>
+      </div>
+
+      <!-- Wizard Step Tabs -->
+      <nav id="wizardTabs" class="border-t border-[var(--border)] pt-3 flex flex-wrap gap-2"></nav>
+    </header>
+
+    <!-- Main Dynamic Container -->
+    <main id="sectionsHost" class="space-y-8"></main>
+
+    <!-- Live Output & Handoff Prompt Box -->
+    <section id="outputSection" class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold text-[var(--foreground)]">Generated Custom MVP Plan &amp; Handoff Prompt</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">Updates live as you click options above. Copy and paste into chat (or download as <code>.md</code>) to execute your exact selections.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="copyOutBtn" type="button" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+            Copy MVP Plan &amp; Prompt
+          </button>
+          <button id="downloadOutBtn" type="button" class="px-3.5 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90">
+            Download .md File
+          </button>
+        </div>
+      </div>
+      <textarea id="markdownOut" readonly rows="15" class="w-full font-mono text-xs p-3 rounded-lg bg-[var(--sidebar)] text-[var(--foreground)] border border-[var(--border)] focus:outline-none"></textarea>
+    </section>
+  </div>
+
+  <!-- Sticky Bottom Summary Bar -->
+  <div class="fixed bottom-0 inset-x-0 bg-[var(--card)] border-t border-[var(--border)] px-4 py-3 shadow-lg z-40">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex flex-wrap items-center gap-4">
+        <span><strong>1. Conflicts:</strong> <span id="statConflicts" class="text-[var(--primary)] font-semibold">7/7</span></span>
+        <span><strong>2. Core Fixes:</strong> <span id="statFixes" class="text-[var(--primary)] font-semibold">10/10</span></span>
+        <span><strong>3. Structure:</strong> <span id="statStruct" class="text-[var(--primary)] font-semibold">4/4</span></span>
+        <span><strong>4. Enhancements:</strong> <span id="statExtras" class="text-[var(--primary)] font-semibold">5/7</span></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="copyStatus" class="text-[var(--muted-foreground)]"></span>
+        <button id="stickyCopyBtn" type="button" class="px-3.5 py-1.5 font-semibold rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+          Copy Custom MVP Prompt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'componentLab:mvpSelector:v2';
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    const CONFLICTS = [
+      {
+        id: 'c1_loader',
+        num: '1.1',
+        title: 'Component Script Loader & Error Isolation (loadComponent)',
+        summary: 'How lab/lab.js loads components/<id>/component.js and handles syntax errors or top-level const redeclarations.',
+        benefit: 'Prevents the entire lab from hanging when a component has a typo or top-level const, and eliminates a duplicate HTTP fetch.',
+        whyRecommended: 'Opus’s single-fetch new Function() approach catches syntax/runtime errors immediately without a 4-second timeout, stops top-level const collisions on reload (A → B → A), and removes the second fetchText() call.',
+        defaultPick: 'opus',
+        options: [
+          {
+            key: 'gemini',
+            model: 'Gemini 4 Argon (High)',
+            label: 'Keep <script> tag + 4s timeout on pendingResolve',
+            desc: 'Keeps loadScript() DOM injection, adds a 4-second rejection timer if Lab.register() is not called, and checks loadSeq.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus (Recommended)',
+            label: 'Single fetchText() + new Function() with //# sourceURL',
+            desc: 'Fetches component.js once as text and runs it inside new Function(jsText + "\\n//# sourceURL=...")() wrapped in try/catch. Isolates top-level const/let scope and catches errors synchronously.'
+          }
+        ]
+      },
+      {
+        id: 'c2_alpha_binds',
+        num: '1.2',
+        title: 'Auto-Scan RGBA Alpha Preservation & !important Bind Timing',
+        summary: 'How scan.js and flushBinds() handle semi-transparent colours and apply CSS overrides.',
+        benefit: 'Keeps untouched components 100% faithful to their original CSS (including :hover and @media rules) while preserving exact alpha transparency when colours are tuned.',
+        whyRecommended: 'Combining both fixes is essential: Opus’s alphaOf() + h+"@"+alpha key keeps translucent colours translucent when edited, while Gemini’s isModified(v) guard stops flushBinds() from injecting !important overrides on initial load before you touch a control.',
+        defaultPick: 'both',
+        options: [
+          {
+            key: 'gemini',
+            model: 'Gemini 4 Argon (High)',
+            label: 'Only apply inline CSS & !important binds when isModified(v) is true',
+            desc: 'Leaves untouched controls completely out of inline styles and #labBinds so default component CSS (:hover, @media, rgba) is never clobbered on load.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus',
+            label: 'Group colours by hex@alpha and emit rgb(from {v} r g b / alpha)',
+            desc: 'Stores v.alpha in scan.js and outputs Chrome relative colour syntax in cssVal() and bind templates, but still applies all binds on load.'
+          },
+          {
+            key: 'both',
+            model: 'Combined: Gemini + Opus (Recommended)',
+            label: 'Use isModified(v) guard on load AND preserve hex@alpha via rgb(from ...)',
+            desc: 'Zero !important interference on untouched controls + full alpha preservation the moment you tune a semi-transparent colour.'
+          }
+        ]
+      },
+      {
+        id: 'c3_scan_cache',
+        num: '1.3',
+        title: 'Auto-Scan Manifest Caching vs. Live File Edits',
+        summary: 'How the lab knows when to re-run scan.js for components that do not have a saved manifest.json on disk.',
+        benefit: 'Editing style.css, markup.html, or component.js in your editor immediately updates the lab controls on browser refresh.',
+        whyRecommended: 'Opus’s fast djb2 signature hash (sig) invalidates the cache automatically whenever CSS/HTML/JS changes and shows a helpful toast ("Component files changed — controls re-scanned"), plus adds a manual Re-scan button in Settings.',
+        defaultPick: 'opus',
+        options: [
+          {
+            key: 'gemini',
+            model: 'Gemini 4 Argon (High)',
+            label: 'Always run S.analyze() on load when manifest.json is absent',
+            desc: 'Removes localStorage manifest:<id> caching entirely since S.analyze() runs in <2 ms and featured stars are stored separately in featured:<id>.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus (Recommended)',
+            label: 'Hash source text (sig) to auto-invalidate cache + Add "Re-scan" button',
+            desc: 'Stores a fast hash of CSS + markup + JS in manifest:<id>; re-scans and toasts when files change on disk, and adds a Re-scan button in Settings.'
+          }
+        ]
+      },
+      {
+        id: 'c4_full_copy',
+        num: '1.4',
+        title: '"Copy Full Working File" Button Visibility in Basic vs. Pro',
+        summary: 'Pro’s top strip (.pro-strip) says Pro adds "full-file copy", but the Copy Full File button (#fullBtn) is currently visible in Basic mode too.',
+        benefit: 'Resolves the UI contradiction between the Pro banner and the footer toolbar.',
+        whyRecommended: 'Opus’s choice wins: copying the standalone HTML working file for a new chat is a core everyday action (highlighted at the top of README.md). Keeping #fullBtn in both modes and removing the misleading badge from .pro-strip avoids unnecessary mode-switching.',
+        defaultPick: 'opus',
+        options: [
+          {
+            key: 'gemini',
+            model: 'Gemini 4 Argon (High)',
+            label: 'Gate #fullBtn to Pro mode to match .pro-strip',
+            desc: 'Hides Copy Full Working File in Basic mode (leaving Copy Changes as the sole export button in Basic) and reveals it in Pro.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus (Recommended)',
+            label: 'Keep #fullBtn in both modes & update .pro-strip badge',
+            desc: 'Keeps both Copy Changes and Copy Full File available in Basic and Pro, and replaces "full-file copy" in .pro-strip with "★ curate Basic".'
+          }
+        ]
+      },
+      {
+        id: 'c5_motion_variants',
+        num: '1.5',
+        title: 'Pro Accordion Motion Variants (A/B/C/D) & Header ⋮ Menu',
+        summary: 'Whether to keep Pro’s 4 section motion/layout variants (Slide, Spring, Stagger, Exclusive chips) or strip them out.',
+        benefit: 'Preserves Variant D (Exclusive chip layout, where closed sections shrink to horizontal pills) while keeping Basic mode completely clean.',
+        whyRecommended: 'Gemini’s choice wins: Variants A–D and the ⋮ menu are a finished, working v2 feature (~45 lines) and Variant D is a genuinely useful compact layout mode. Gating them strictly to Pro mode via PRO_FEATURES keeps Basic simple without deleting working features.',
+        defaultPick: 'gemini',
+        options: [
+          {
+            key: 'gemini',
+            model: 'Gemini 4 Argon (Recommended)',
+            label: 'Keep Variants A–D & ⋮ menu gated strictly to Pro mode',
+            desc: 'Retains Slide, Spring, Stagger, and Exclusive chip layout in Pro mode, while hiding Pro section settings when in Basic mode.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus',
+            label: 'Delete Variants A, C, D and remove the ⋮ header menu',
+            desc: 'Hardcodes Variant B (Spring) as the only Pro section behaviour and deletes the other three variants and quick menu as exploration code.'
+          }
+        ]
+      },
+      {
+        id: 'c6_css_scope',
+        num: '1.6',
+        title: 'CSS Isolation Between Lab Chrome (lab.css) and Component (#labFrame)',
+        summary: 'Preventing generic class names (.card, .btn, .chip, .switch) and :focus-visible in lab.css from bleeding into the component stage.',
+        benefit: 'Stops lab chrome styles from distorting components while keeping component CSS (:root, body, :hover) working reliably.',
+        whyRecommended: 'Wrapping lab/lab.css UI rules in @scope (:root) to (#labFrame) takes 2 lines of CSS and completely blocks lab styles from leaking into #labFrame, without breaking :root/body selectors or hoverRules() in component stylesheets.',
+        defaultPick: 'donut_only',
+        options: [
+          {
+            key: 'donut_only',
+            model: 'Gemini 4 Argon Refined (Recommended)',
+            label: 'Use @scope (:root) to (#labFrame) in lab.css only',
+            desc: 'Adds a 2-line Chrome CSS donut scope around lab.css UI rules so .card/.btn/:focus-visible never bleed into #labFrame; keeps <link class="lab-css"> untouched.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus (Paused mid-draft)',
+            label: 'Two-way @scope: wrap lab.css AND rewrite component CSS into <style>@scope (.lab-frame)',
+            desc: 'Replaces <link class="lab-css"> with inline @scope (.lab-frame) style blocks (requires regex-rewriting :root/body/html selectors and updating hoverRules()).'
+          }
+        ]
+      },
+      {
+        id: 'c7_file_split',
+        num: '1.7',
+        title: 'Splitting the 2,714-Line lab/lab.js Monolith',
+        summary: 'How to break lab/lab.js (148 KB) into smaller, maintainable files without adding a build step.',
+        benefit: 'Makes files small enough for easy human editing and AI chat sessions without breaking closure variables.',
+        whyRecommended: 'Plain IIFE scripts attaching to window.Lab (matching window.Motion in motion.js and window.Scan in scan.js) need zero ES-module state refactoring and work with classic <script> tags. Note: Opus’s ES Module suggestion will be documented in full in the final path docs for future stress/edge-case review.',
+        defaultPick: 'gemini',
+        options: [
+          {
+            key: 'gemini',
+            model: 'Gemini 4 Argon (Recommended)',
+            label: 'Split into 3 plain IIFE <script> files sharing window.Lab (+ doc note on ES Modules)',
+            desc: 'Extracts lab/controls.js (~450 lines) and lab/export.js (~180 lines) on window.Lab, and records Opus’s ES module architecture in the final docs for future evaluation.'
+          },
+          {
+            key: 'opus',
+            model: 'Claude Opus',
+            label: 'Convert lab/*.js to ES Modules (<script type="module">) now',
+            desc: 'Refactors shared closure state (def, inst, man, vars, P, mode, ui) into an exported state object imported across ES module files.'
+          }
+        ]
+      }
+    ];
+
+    const CORE_FIXES = [
+      {
+        id: 'f1_init_boot',
+        num: '2.1',
+        title: 'Unbrick init() Startup Order & Validate hashchange Against Registry',
+        severity: 'High',
+        benefit: 'If the first component has a bug, the dock, toolbar, and animation loop still start so you can switch components.',
+        gemini: 'Add loadSeq race guard and timeout protection inside loadComponent().',
+        opus: 'Start requestAnimationFrame(tick) before await loadComponent(), wrap boot in try/finally so TB.start() and openDock() always run, and validate hashchange IDs against LAB_REGISTRY.',
+        defaultPick: 'both'
+      },
+      {
+        id: 'f2_template_overwrite',
+        num: '2.2',
+        title: 'Fix _template/component.js Wiping Custom markup.html & Protect _template from Save',
+        severity: 'High',
+        benefit: 'Pasting custom HTML into a new component’s markup.html actually renders instead of being overwritten by KINDS[kind] on mount; protects _template/manifest.json from accidental overwrite.',
+        gemini: 'Only inject KINDS[kind] in _template/component.js when .cmp-host has no child elements (remembering kindManaged), and block overwriting _template in Save to disk and serve.py.',
+        opus: 'Add href="#" to KINDS.nav links so they are keyboard-focusable and guard _template in registry/Save. [Did not read _template/component.js lines 28–31 before quota pause.]',
+        defaultPick: 'both'
+      },
+      {
+        id: 'f3_scan_interactions',
+        num: '2.3',
+        title: 'Lab-Enforced Capture Guards for Auto-Scanned Interactions + Detection Fixes',
+        severity: 'High',
+        benefit: 'Auto-scanned HOVER, DRAG, CLICK, WHEEL, KEYS, and TOUCH controls actually work live on stage without editing component.js, and helix’s drag-click guard is no longer misdetected as a click feature.',
+        gemini: 'Fix scan.js interactions() so preventDefault click-guards (like helix’s dragMoved check) are ignored, CSS :focus-visible counts as keys, and @media queries are stripped before checking :hover.',
+        opus: 'Enforce v.source === "scan" interaction toggles/sliders on the lab side via capture-phase listeners on #stageScaler and clock scaling in tick(), require pointerdown + move for drag, and add uniq() for duplicate selector IDs.',
+        defaultPick: 'both'
+      },
+      {
+        id: 'f4_manifest_export_leak',
+        num: '2.4',
+        title: 'Clean Runtime Properties (scan, generated, _genOpts) from Saved manifest.json',
+        severity: 'Medium',
+        benefit: 'Saving a manifest to disk no longer freezes expanded select options (3..16) or leaks scan diagnostics into manifest.json.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Not flagged in initial pass; merged from Claude Opus.',
+        opus: 'Tag auto-expanded min..max select arrays with v._genOpts = true in normVar() and strip scan, generated, sig, and _genOpts in manifestForExport().',
+        defaultPick: 'opus'
+      },
+      {
+        id: 'f5_recovery_rail_tb',
+        num: '2.5',
+        title: 'Recovery Paths: Basic Rail Lockout, Toolbar Switch Sync, Header Picker & ?reset',
+        severity: 'High',
+        benefit: 'Guarantees no control, category, or component switcher can ever be hidden without an obvious way back.',
+        gemini: 'Ignore railHidden() when mode === "basic" (so Basic mode never loses categories that have no accordion fallback), and bind Settings › Show toolbar icon directly to TB.shown while auto-unhiding the rail toolbar button on dismiss.',
+        opus: 'Make #cmpName in the card header clickable to open the component picker even when the floating toolbar is hidden, disable the middle-center dock anchor, and add ?reset URL support.',
+        defaultPick: 'both'
+      },
+      {
+        id: 'f6_a11y_focus',
+        num: '2.6',
+        title: 'Five Keyboard & Focus Fixes (Ctrl+Z, Arc Owner Focus, Dock Open/Pin, Inert Footer)',
+        severity: 'Medium',
+        benefit: 'Ctrl+Z works reliably everywhere, Escape on the radial colour picker returns focus to the right swatch, hover-opened dock stays open when tabbed into, and hidden footer buttons are removed from Tab order.',
+        gemini: 'Remove the dock.contains(activeElement) restriction on Ctrl+Z / Ctrl+Y and store owner on Arc.open() so Escape returns focus to the triggering swatch.',
+        opus: 'Focus the active rail button when #dockTrigger is opened via keyboard, set pinned = true on dock focusin so mouseleave does not close it mid-Tab, and set cardFoot.inert = fc when the footer is collapsed.',
+        defaultPick: 'both'
+      },
+      {
+        id: 'f7_flick_velocity',
+        num: '2.7',
+        title: 'Zero Stale Flick Velocity After Drag-Hold-Release in lab/motion.js',
+        severity: 'Medium',
+        benefit: 'Dragging the toolbar icon, holding still, and releasing will smoothly snap back instead of firing a phantom flick or dismissing the toolbar.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Not flagged in initial pass; merged from Claude Opus.',
+        opus: 'In M.Flick.up() (lab/motion.js line 240), check if e.timeStamp - b.t > 90 and zero vx/vy so pausing before release never triggers a stale flick.',
+        defaultPick: 'opus'
+      },
+      {
+        id: 'f8_export_fonts',
+        num: '2.8',
+        title: 'Include lab/fonts/fonts.css Link in Standalone Export (workingFile)',
+        severity: 'Low',
+        benefit: 'Exported standalone HTML working files render with Chakra Petch and JetBrains Mono instead of falling back to system-ui.',
+        gemini: 'Add <link rel="stylesheet" href="lab/fonts/fonts.css"> to the <head> template in workingFile() (lab/lab.js line 2244).',
+        opus: null,
+        opusBlankReason: 'Blank — Claude Opus did not reach workingFile() font link check before quota pause.',
+        defaultPick: 'gemini'
+      },
+      {
+        id: 'f9_serve_hardening',
+        num: '2.9',
+        title: 'Harden serve.py & new-component.py (Origin Check, OSError Catch, Partial Folder Cleanup, No __pycache__)',
+        severity: 'Medium',
+        benefit: 'Blocks cross-tab localhost CSRF requests, cleans up failed component creations, stops __pycache__ clutter, and returns JSON on all errors.',
+        gemini: 'Broaden except ValueError to catch Exception/OSError in serve.py do_POST() and remove __pycache__.',
+        opus: 'Validate Host and Origin headers in serve.py do_POST(), set sys.dont_write_bytecode = True, and clean up partial component folders with shutil.rmtree() if new-component.py fails.',
+        defaultPick: 'both'
+      },
+      {
+        id: 'f10_run_bat',
+        num: '2.10',
+        title: 'Fix run.bat & serve.py --open Browser Launch Race & Python Launcher Order',
+        severity: 'Low',
+        benefit: 'Chrome opens only after the server socket is bound (or reuses the running server if port 5179 is already open), and avoids the Windows Store python.exe stub.',
+        gemini: 'Launch the browser only after the HTTP server socket is bound instead of racing start "" before python serve.py.',
+        opus: 'Add --open to serve.py (opening the existing tab if port 5179 is already running) and check where py before where python in run.bat.',
+        defaultPick: 'both'
+      }
+    ];
+
+    const STRUCT_ITEMS = [
+      {
+        id: 's1_pro_features',
+        num: '3.1',
+        title: 'Central PRO_FEATURES Map & Clean Basic / Pro / Settings Split',
+        benefit: 'Replaces 12 scattered mode === "pro" checks with one declarative map; keeps Basic settings simple while grouping authoring/layout tools under Pro.',
+        gemini: 'Keep Basic to ≤8 starred controls + simple Settings (Scale, Backdrop, Toolbar); gate rail category hiding, section layout/motion, and manifest authoring to Pro.',
+        opus: 'Centralize all mode gates in a single PRO_FEATURES config object at the top of lab/lab.js so Basic vs. Pro behaviour is scannable in one place.',
+        defaultPick: 'both'
+      },
+      {
+        id: 's2_persist_mode',
+        num: '3.2',
+        title: 'Remember Active Mode (Basic vs. Pro) Across Component Switches',
+        benefit: 'Switching components while inspecting in Pro mode keeps you in Pro mode instead of hard-resetting to Basic on every load.',
+        gemini: 'Read saved mode from ui.mode in loadComponent() instead of hardcoding mode = "basic" on every component switch.',
+        opus: 'Persist ui.mode in localStorage so switching components or refreshing retains your active Basic/Pro mode.',
+        defaultPick: 'both'
+      },
+      {
+        id: 's3_dead_code',
+        num: '3.3',
+        title: 'Remove Dead Pro Branch in buildCat() & Unconditional viewSeg Timer in TB.paint()',
+        benefit: 'Cleans up unreachable code in lab/lab.js and stops hidden DOM updates after every toolbar animation.',
+        gemini: 'Delete the unreachable mode === "pro" block inside buildCat() (lines 768–796) and guard the 520ms viewSeg.hidden timer in TB.paint() (line 536) behind !tb.hidden.',
+        opus: null,
+        opusBlankReason: 'Blank — Claude Opus did not reach buildCat() / TB.paint() dead-code cleanup before quota pause.',
+        defaultPick: 'gemini'
+      },
+      {
+        id: 's4_readme_sync',
+        num: '3.4',
+        title: 'Sync README.md with Actual Repo Files, Port Origin Note & Windows Toast Command',
+        benefit: 'Fixes references to missing folders (component-lab-v1/, shots/), documents the port localStorage caveat, and changes python3 to python in toasts.',
+        gemini: 'Remove stale references to component-lab-v1/ and shots/ in README.md and update python3 serve.py toast text to python serve.py on Windows.',
+        opus: 'Add a clear note in README.md explaining that browser localStorage is tied to the server port (5179 vs. 5180) and pointing to the JSON backup/restore buttons.',
+        defaultPick: 'both'
+      }
+    ];
+
+    const EXTRAS = [
+      {
+        id: 'e1_hold_compare',
+        num: '4.1',
+        title: 'Press-and-Hold "N changed" in Footer to Preview Defaults (Live A/B Compare)',
+        benefit: 'Instant visual A/B comparison between your tuned state and the original component in ~20 lines of code.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Suggested uniquely by Claude Opus.',
+        opus: 'Turn the "N changed" counter in the footer into a press-and-hold button: while held down, the stage temporarily renders all default values; releasing restores your tuned values without touching undo history.',
+        recommended: true,
+        defaultPick: 'include'
+      },
+      {
+        id: 'e2_click_to_type',
+        num: '4.2',
+        title: 'Click-to-Type Exact Numeric Value on Slider & Radial Dial Readouts',
+        benefit: 'Eliminates finicky mouse dragging when you already know the exact pixel, degree, or multiplier number you want.',
+        gemini: 'Clicking the numeric value readout (.ctl-val) on any slider or radial dial opens a compact inline number input so you can type an exact value (e.g. 156 or 44) and press Enter.',
+        opus: null,
+        opusBlankReason: 'Blank — Suggested uniquely by Gemini 4 Argon (High).',
+        recommended: true,
+        defaultPick: 'include'
+      },
+      {
+        id: 'e3_pro_where_hints',
+        num: '4.3',
+        title: 'Show "where / hint" Subtitle & Wiring Status (lab-bound vs. js-const) in Pro Mode',
+        benefit: 'Surfaces useful metadata already written in helix/manifest.json and scan.js that is currently hidden or ignored.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Suggested uniquely by Claude Opus.',
+        opus: 'Display the manifest’s existing where/hint notes as a subtle monospace line under controls in Pro mode, and badge auto-scanned JS constants that need P.<NAME> wired in render().',
+        recommended: true,
+        defaultPick: 'include'
+      },
+      {
+        id: 'e4_backup_restore',
+        num: '4.4',
+        title: 'One-Click Backup / Restore Lab localStorage (JSON) + Global UI Reset Button',
+        benefit: 'Protects your work if browser storage is cleared or if you ever switch server ports (5179 vs. 5180).',
+        gemini: 'Add a "Reset lab layout & settings" button in Settings that clears componentLab:v2:ui while keeping your tuned component values and palettes intact.',
+        opus: 'Add Export Lab Data and Import Lab Data buttons in Settings to save/load all componentLab:v2:* keys (values, stars, My Palette, UI prefs) as a portable JSON file.',
+        recommended: true,
+        defaultPick: 'include'
+      },
+      {
+        id: 'e5_jsconfig',
+        num: '4.5',
+        title: 'Zero-Build jsconfig.json for Editor Type & Typo Checking',
+        benefit: 'Free editor safety net for a solo maintainer with zero runtime or workflow overhead.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Suggested uniquely by Claude Opus.',
+        opus: 'Add a 6-line jsconfig.json at the project root so VS Code / Antigravity IDE highlights undefined variables and parameter mismatches without any build step or npm install.',
+        recommended: true,
+        defaultPick: 'include'
+      },
+      {
+        id: 'e6_selftest',
+        num: '4.6',
+        title: 'Built-In Automated Smoke Check (?selftest=1)',
+        benefit: 'Quick 3-second sanity check after editing component code or lab files.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Suggested uniquely by Claude Opus.',
+        opus: 'Add a lightweight URL query mode (?selftest=1) that cycles through registered components, checks that mount() and render() succeed without throwing, verifies sandbox frame dimensions at 1600×770 and 1366×768, and toasts a pass/fail summary.',
+        recommended: false,
+        defaultPick: 'skip'
+      },
+      {
+        id: 'e7_snapshots',
+        num: '4.7',
+        title: 'Named Snapshot Slots (Save A / B / C Looks per Component)',
+        benefit: 'Lets you compare 2–3 distinct colour/motion directions, though URL hash links and Hold-to-Compare (4.1) already cover most of this need with less UI.',
+        gemini: null,
+        geminiBlankReason: 'Blank — Suggested uniquely by Claude Opus.',
+        opus: 'Add 3 mini slot pills per component in localStorage so you can stash and switch between different tuned variations of the same component.',
+        recommended: false,
+        defaultPick: 'skip'
+      }
+    ];
+
+    function defaultState() {
+      const st = { wizard: true, step: 0, conflicts: {}, fixes: {}, struct: {}, extras: {} };
+      CONFLICTS.forEach((c) => { st.conflicts[c.id] = c.defaultPick; });
+      CORE_FIXES.forEach((f) => { st.fixes[f.id] = f.defaultPick; });
+      STRUCT_ITEMS.forEach((s) => { st.struct[s.id] = s.defaultPick; });
+      EXTRAS.forEach((e) => { st.extras[e.id] = e.defaultPick; });
+      return st;
+    }
+
+    let state = defaultState();
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && typeof saved === 'object') {
+        state = {
+          wizard: saved.wizard !== undefined ? !!saved.wizard : true,
+          step: typeof saved.step === 'number' ? saved.step : 0,
+          conflicts: Object.assign(state.conflicts, saved.conflicts || {}),
+          fixes: Object.assign(state.fixes, saved.fixes || {}),
+          struct: Object.assign(state.struct, saved.struct || {}),
+          extras: Object.assign(state.extras, saved.extras || {})
+        };
+      }
+    } catch (_) {}
+
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+      updateStatsAndOutput();
+    }
+
+    const STEPS = [
+      { id: 'conflicts', label: '1. Conflicting Choices (7)' },
+      { id: 'fixes', label: '2. Core Bugs & Recovery (10)' },
+      { id: 'struct', label: '3. Structure & Base/Pro (4)' },
+      { id: 'extras', label: '4. Enhancements & Extras (7)' }
+    ];
+
+    function fixChoicesFor(item) {
+      if (item.gemini && item.opus) {
+        return [
+          { key: 'both', label: 'Combine Both (Recommended)' },
+          { key: 'gemini', label: 'Gemini 4 Argon Only' },
+          { key: 'opus', label: 'Claude Opus Only' },
+          { key: 'skip', label: 'Skip' }
+        ];
+      }
+      if (item.gemini && !item.opus) {
+        return [
+          { key: 'gemini', label: 'Include Gemini Fix (Recommended)' },
+          { key: 'skip', label: 'Skip' }
+        ];
+      }
+      return [
+        { key: 'opus', label: 'Include Opus Fix (Recommended)' },
+        { key: 'skip', label: 'Skip' }
+      ];
+    }
+
+    function render() {
+      const host = document.getElementById('sectionsHost');
+      const tabs = document.getElementById('wizardTabs');
+      const viewBtn = document.getElementById('viewModeBtn');
+      viewBtn.textContent = state.wizard ? 'Show All Sections at Once' : 'Switch to Step-by-Step Wizard';
+
+      if (state.wizard) {
+        tabs.classList.remove('hidden');
+        tabs.innerHTML = STEPS.map((s, idx) => `
+          <button type="button" data-step="${idx}" class="px-3.5 py-2 text-xs font-semibold rounded-lg border transition ${state.step === idx ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]' : 'bg-[var(--sidebar)] text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'}">
+            ${esc(s.label)}
+          </button>
+        `).join('');
+        tabs.querySelectorAll('[data-step]').forEach((b) => {
+          b.addEventListener('click', () => { state.step = +b.dataset.step; saveState(); render(); });
+        });
+      } else {
+        tabs.classList.add('hidden');
+      }
+
+      host.innerHTML = '';
+      if (!state.wizard || state.step === 0) host.appendChild(renderConflicts());
+      if (!state.wizard || state.step === 1) host.appendChild(renderDualModelSection(
+        'Section 2: Core Bugs, Recovery Paths & Security Fixes (2.1 – 2.10)',
+        'Every item shows Gemini 4 Argon (High) and Claude Opus side-by-side (with blank columns where a model did not reach an item). Click either model card or use the choice buttons to select Combine Both, a single model, or Skip.',
+        CORE_FIXES,
+        state.fixes,
+        'fixes'
+      ));
+      if (!state.wizard || state.step === 2) host.appendChild(renderDualModelSection(
+        'Section 3: Structure & Base/Pro Organization (3.1 – 3.4)',
+        'Cleanly separating Basic (fast 8-control core) from Pro (full accordion, star curation, layout options, and manifest authoring). Click any card or selector button to customize.',
+        STRUCT_ITEMS,
+        state.struct,
+        'struct'
+      ));
+      if (!state.wizard || state.step === 3) host.appendChild(renderExtras());
+
+      if (state.wizard) {
+        const nav = document.createElement('div');
+        nav.className = 'flex items-center justify-between pt-2';
+        nav.innerHTML = `
+          <button type="button" id="prevStepBtn" ${state.step === 0 ? 'disabled' : ''} class="px-4 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--card)] disabled:opacity-40 hover:border-[var(--primary)]">← Previous Section</button>
+          <span class="text-xs text-[var(--muted-foreground)]">Section ${state.step + 1} of ${STEPS.length}</span>
+          <button type="button" id="nextStepBtn" ${state.step === STEPS.length - 1 ? 'disabled' : ''} class="px-4 py-2 text-xs font-semibold rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] disabled:opacity-40 hover:opacity-90">Next Section →</button>
+        `;
+        host.appendChild(nav);
+        nav.querySelector('#prevStepBtn').addEventListener('click', () => {
+          if (state.step > 0) { state.step--; saveState(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        });
+        nav.querySelector('#nextStepBtn').addEventListener('click', () => {
+          if (state.step < STEPS.length - 1) { state.step++; saveState(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        });
+      }
+
+      updateStatsAndOutput();
+    }
+
+    function renderConflicts() {
+      const sec = document.createElement('section');
+      sec.className = 'space-y-4';
+      sec.innerHTML = `
+        <div class="border-b border-[var(--border)] pb-2">
+          <h2 class="text-lg font-bold">Section 1: Conflicting Choices — Pick Your Preferred Approach (1.1 – 1.7)</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">Where Gemini 4 Argon and Claude Opus proposed different technical or UX solutions. The recommended winner is pre-selected; click any card to override.</p>
+        </div>
+      `;
+      CONFLICTS.forEach((c) => {
+        const picked = state.conflicts[c.id];
+        const gridCols = c.options.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2';
+        const card = document.createElement('div');
+        card.className = 'bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[var(--secondary)] text-[var(--secondary-foreground)]">${esc(c.num)}</span>
+              <h3 class="text-sm font-bold text-[var(--foreground)]">${esc(c.title)}</h3>
+            </div>
+            <span class="text-xs text-[var(--muted-foreground)]"><strong>Benefit:</strong> ${esc(c.benefit)}</span>
+          </div>
+          <p class="text-xs text-[var(--muted-foreground)]">${esc(c.summary)}</p>
+          <div class="grid grid-cols-1 ${gridCols} gap-3">
+            ${c.options.map((o) => {
+              const on = picked === o.key;
+              return `
+                <button type="button" data-cid="${esc(c.id)}" data-okey="${esc(o.key)}" class="opt-card text-left p-3.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] flex flex-col justify-between gap-2 ${on ? 'opt-selected' : 'opacity-80 hover:opacity-100'}">
+                  <div class="space-y-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="px-2 py-0.5 text-xs font-semibold rounded bg-[var(--card)] border border-[var(--border)]">${esc(o.model)}</span>
+                      <span class="text-xs font-bold ${on ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}">${on ? '✓ Selected' : 'Select'}</span>
+                    </div>
+                    <div class="text-xs font-bold text-[var(--foreground)]">${esc(o.label)}</div>
+                    <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">${esc(o.desc)}</p>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+          <div class="text-xs px-3 py-2 rounded-lg bg-[var(--sidebar)] border border-[var(--border)] text-[var(--muted-foreground)]">
+            <strong class="text-[var(--foreground)]">Why recommended wins:</strong> ${esc(c.whyRecommended)}
+          </div>
+        `;
+        card.querySelectorAll('[data-cid]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.conflicts[btn.dataset.cid] = btn.dataset.okey;
+            saveState();
+            render();
+          });
+        });
+        sec.appendChild(card);
+      });
+      return sec;
+    }
+
+    function renderDualModelSection(heading, subtitle, items, stateMap, stateKey) {
+      const sec = document.createElement('section');
+      sec.className = 'space-y-4';
+      sec.innerHTML = `
+        <div class="border-b border-[var(--border)] pb-2">
+          <h2 class="text-lg font-bold">${esc(heading)}</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">${esc(subtitle)}</p>
+        </div>
+      `;
+      items.forEach((item) => {
+        const picked = stateMap[item.id] || item.defaultPick;
+        const choices = fixChoicesFor(item);
+        const geminiActive = picked === 'both' || picked === 'gemini';
+        const opusActive = picked === 'both' || picked === 'opus';
+        const isSkipped = picked === 'skip';
+
+        const card = document.createElement('div');
+        card.className = `bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3 ${isSkipped ? 'opacity-65' : ''}`;
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[var(--secondary)] text-[var(--secondary-foreground)]">${esc(item.num)}</span>
+              <h3 class="text-sm font-bold text-[var(--foreground)]">${esc(item.title)}</h3>
+              ${item.severity ? `<span class="px-2 py-0.5 text-xs rounded border border-[var(--border)] text-[var(--muted-foreground)]">Severity: ${esc(item.severity)}</span>` : ''}
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              ${choices.map((ch) => {
+                const on = picked === ch.key;
+                return `
+                  <button type="button" data-itemid="${esc(item.id)}" data-pick="${esc(ch.key)}" class="px-2.5 py-1 text-xs font-semibold rounded-lg border transition ${on ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]' : 'bg-[var(--sidebar)] text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'}">
+                    ${on ? '✓ ' : ''}${esc(ch.label)}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <p class="text-xs text-[var(--muted-foreground)]"><strong>Benefit:</strong> ${esc(item.benefit)}</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            ${item.gemini ? `
+              <button type="button" data-cardclick="${esc(item.id)}" data-model="gemini" class="opt-card text-left p-3.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] flex flex-col justify-between gap-2 ${geminiActive ? 'opt-selected' : 'opacity-75 hover:opacity-100'}">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-[var(--card)] border border-[var(--border)]">Gemini 4 Argon (High)</span>
+                    <span class="text-xs font-bold ${geminiActive ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}">${geminiActive ? '✓ Included' : 'Click to Select'}</span>
+                  </div>
+                  <p class="text-xs text-[var(--foreground)] leading-relaxed">${esc(item.gemini)}</p>
+                </div>
+              </button>
+            ` : `
+              <div class="p-3.5 rounded-lg border border-[var(--border)] blank-col text-[var(--muted-foreground)] italic flex flex-col justify-center">
+                <div class="font-bold text-[var(--foreground)] not-italic mb-1">Gemini 4 Argon (High)</div>
+                <div>${esc(item.geminiBlankReason)}</div>
+              </div>
+            `}
+
+            ${item.opus ? `
+              <button type="button" data-cardclick="${esc(item.id)}" data-model="opus" class="opt-card text-left p-3.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] flex flex-col justify-between gap-2 ${opusActive ? 'opt-selected' : 'opacity-75 hover:opacity-100'}">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-[var(--card)] border border-[var(--border)]">Claude Opus</span>
+                    <span class="text-xs font-bold ${opusActive ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}">${opusActive ? '✓ Included' : 'Click to Select'}</span>
+                  </div>
+                  <p class="text-xs text-[var(--foreground)] leading-relaxed">${esc(item.opus)}</p>
+                </div>
+              </button>
+            ` : `
+              <div class="p-3.5 rounded-lg border border-[var(--border)] blank-col text-[var(--muted-foreground)] italic flex flex-col justify-center">
+                <div class="font-bold text-[var(--foreground)] not-italic mb-1">Claude Opus</div>
+                <div>${esc(item.opusBlankReason)}</div>
+              </div>
+            `}
+          </div>
+        `;
+
+        card.querySelectorAll('[data-itemid]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state[stateKey][btn.dataset.itemid] = btn.dataset.pick;
+            saveState();
+            render();
+          });
+        });
+
+        card.querySelectorAll('[data-cardclick]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.cardclick;
+            const m = btn.dataset.model;
+            const cur = state[stateKey][id] || item.defaultPick;
+            if (item.gemini && item.opus) {
+              state[stateKey][id] = (cur === m) ? 'both' : m;
+            } else {
+              state[stateKey][id] = (cur === m) ? 'skip' : m;
+            }
+            saveState();
+            render();
+          });
+        });
+
+        sec.appendChild(card);
+      });
+      return sec;
+    }
+
+    function renderExtras() {
+      const sec = document.createElement('section');
+      sec.className = 'space-y-4';
+      sec.innerHTML = `
+        <div class="border-b border-[var(--border)] pb-2">
+          <h2 class="text-lg font-bold">Section 4: Non-Duplicate Extras &amp; Worthwhile Enhancements (4.1 – 4.7)</h2>
+          <p class="text-xs text-[var(--muted-foreground)]">Every extra feature suggested by either model, shown in side-by-side model columns (blank where only the other model proposed it). Click any card or button to Include or Skip.</p>
+        </div>
+      `;
+      EXTRAS.forEach((e) => {
+        const picked = state.extras[e.id] || e.defaultPick;
+        const on = picked === 'include';
+
+        const card = document.createElement('div');
+        card.className = `bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3 ${on ? '' : 'opacity-70'}`;
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-[var(--secondary)] text-[var(--secondary-foreground)]">${esc(e.num)}</span>
+              <h3 class="text-sm font-bold text-[var(--foreground)]">${esc(e.title)}</h3>
+              ${e.recommended
+                ? '<span class="px-2 py-0.5 text-xs font-semibold rounded bg-[var(--primary)] text-[var(--primary-foreground)]">Recommended</span>'
+                : '<span class="px-2 py-0.5 text-xs rounded border border-[var(--border)] text-[var(--muted-foreground)]">Optional</span>'}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" data-eid="${esc(e.id)}" data-epick="include" class="px-3 py-1 text-xs font-semibold rounded-lg border transition ${on ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]' : 'bg-[var(--sidebar)] text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'}">
+                ${on ? '✓ Included' : 'Include Enhancement'}
+              </button>
+              <button type="button" data-eid="${esc(e.id)}" data-epick="skip" class="px-3 py-1 text-xs font-semibold rounded-lg border transition ${!on ? 'bg-[var(--secondary)] text-[var(--foreground)] border-[var(--primary)]' : 'bg-[var(--sidebar)] text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'}">
+                ${!on ? '✓ Skipped' : 'Skip'}
+              </button>
+            </div>
+          </div>
+
+          <p class="text-xs text-[var(--muted-foreground)]"><strong>Benefit:</strong> ${esc(e.benefit)}</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            ${e.gemini ? `
+              <button type="button" data-etoggle="${esc(e.id)}" class="opt-card text-left p-3.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] flex flex-col justify-between gap-2 ${on ? 'opt-selected' : 'opacity-80 hover:opacity-100'}">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-[var(--card)] border border-[var(--border)]">Gemini 4 Argon (High)</span>
+                    <span class="text-xs font-bold ${on ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}">${on ? '✓ Selected' : 'Click to Include'}</span>
+                  </div>
+                  <p class="text-xs text-[var(--foreground)] leading-relaxed">${esc(e.gemini)}</p>
+                </div>
+              </button>
+            ` : `
+              <div class="p-3.5 rounded-lg border border-[var(--border)] blank-col text-[var(--muted-foreground)] italic flex flex-col justify-center">
+                <div class="font-bold text-[var(--foreground)] not-italic mb-1">Gemini 4 Argon (High)</div>
+                <div>${esc(e.geminiBlankReason)}</div>
+              </div>
+            `}
+
+            ${e.opus ? `
+              <button type="button" data-etoggle="${esc(e.id)}" class="opt-card text-left p-3.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] flex flex-col justify-between gap-2 ${on ? 'opt-selected' : 'opacity-80 hover:opacity-100'}">
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded bg-[var(--card)] border border-[var(--border)]">Claude Opus</span>
+                    <span class="text-xs font-bold ${on ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}">${on ? '✓ Selected' : 'Click to Include'}</span>
+                  </div>
+                  <p class="text-xs text-[var(--foreground)] leading-relaxed">${esc(e.opus)}</p>
+                </div>
+              </button>
+            ` : `
+              <div class="p-3.5 rounded-lg border border-[var(--border)] blank-col text-[var(--muted-foreground)] italic flex flex-col justify-center">
+                <div class="font-bold text-[var(--foreground)] not-italic mb-1">Claude Opus</div>
+                <div>${esc(e.opusBlankReason)}</div>
+              </div>
+            `}
+          </div>
+        `;
+
+        card.querySelectorAll('[data-eid]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.extras[btn.dataset.eid] = btn.dataset.epick;
+            saveState();
+            render();
+          });
+        });
+        card.querySelectorAll('[data-etoggle]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.etoggle;
+            state.extras[id] = state.extras[id] === 'include' ? 'skip' : 'include';
+            saveState();
+            render();
+          });
+        });
+
+        sec.appendChild(card);
+      });
+      return sec;
+    }
+
+    function describeDualPick(item, pick) {
+      if (pick === 'both') return `Combine Both — Gemini (${item.gemini}) + Opus (${item.opus})`;
+      if (pick === 'gemini') return `Gemini 4 Argon — ${item.gemini}`;
+      if (pick === 'opus') return `Claude Opus — ${item.opus}`;
+      return 'Skipped';
+    }
+
+    function buildMarkdown() {
+      const lines = [
+        '# Component Lab v2 — Selected MVP Execution Plan & Handoff Prompt',
+        '',
+        '> **HANDOFF PROMPT:** Implement the exact selected items below in `C:\\Users\\rtsii\\Desktop\\component-lab`. Follow the numbered steps in `COMPONENT-LAB-REVIEW-MVP.md` for each selected item, preserve plain HTML/CSS/JS + Python stdlib (no build step), and verify in Chrome at `1600×770` and `1366×768`.',
+        '',
+        '## 1. Selected Architectural & Conflict Decisions (1.1 – 1.7)'
+      ];
+      CONFLICTS.forEach((c) => {
+        const pickKey = state.conflicts[c.id];
+        const opt = c.options.find((o) => o.key === pickKey) || c.options[0];
+        lines.push(`- **${c.num} ${c.title}:** **${opt.label}** *(Model: ${opt.model})* — ${opt.desc}`);
+      });
+
+      lines.push(
+        '',
+        '### Recorded Architecture Note for Final Path Docs (Item 1.7)',
+        '- **Future Review — Claude Opus ES Module (`<script type="module">`) Proposal:** Document all details of Opus’s ES module split (converting `lab/*.js` to `<script type="module">`, moving shared closure variables `def, inst, man, vars, P, mode, ui, history, histIdx, pinned, openId` into an exported shared `state` module, and evaluating trade-offs under higher component stress, variable volume, and edge-cases) in the final path documentation for future evaluation.'
+      );
+
+      lines.push('', '## 2. Selected Core Bug & Recovery Fixes (2.1 – 2.10)');
+      CORE_FIXES.forEach((f) => {
+        const pick = state.fixes[f.id] || f.defaultPick;
+        if (pick !== 'skip') {
+          lines.push(`- [x] **${f.num} ${f.title}** — ${describeDualPick(f, pick)}`);
+        } else {
+          lines.push(`- [ ] *Skipped:* **${f.num} ${f.title}**`);
+        }
+      });
+
+      lines.push('', '## 3. Selected Structure & Base/Pro Organization (3.1 – 3.4)');
+      STRUCT_ITEMS.forEach((s) => {
+        const pick = state.struct[s.id] || s.defaultPick;
+        if (pick !== 'skip') {
+          lines.push(`- [x] **${s.num} ${s.title}** — ${describeDualPick(s, pick)}`);
+        } else {
+          lines.push(`- [ ] *Skipped:* **${s.num} ${s.title}**`);
+        }
+      });
+
+      lines.push('', '## 4. Selected Enhancements & Extras (4.1 – 4.7)');
+      EXTRAS.forEach((e) => {
+        const pick = state.extras[e.id] || e.defaultPick;
+        if (pick === 'include') {
+          const detail = [e.gemini, e.opus].filter(Boolean).join(' + ');
+          lines.push(`- [x] **${e.num} ${e.title}** — ${detail}`);
+        } else {
+          lines.push(`- [ ] *Skipped Extra:* **${e.num} ${e.title}**`);
+        }
+      });
+
+      return lines.join('\n');
+    }
+
+    function updateStatsAndOutput() {
+      const fixCount = CORE_FIXES.filter((f) => (state.fixes[f.id] || f.defaultPick) !== 'skip').length;
+      const structCount = STRUCT_ITEMS.filter((s) => (state.struct[s.id] || s.defaultPick) !== 'skip').length;
+      const extraCount = EXTRAS.filter((e) => (state.extras[e.id] || e.defaultPick) === 'include').length;
+      document.getElementById('statConflicts').textContent = `${CONFLICTS.length}/${CONFLICTS.length}`;
+      document.getElementById('statFixes').textContent = `${fixCount}/${CORE_FIXES.length}`;
+      document.getElementById('statStruct').textContent = `${structCount}/${STRUCT_ITEMS.length}`;
+      document.getElementById('statExtras').textContent = `${extraCount}/${EXTRAS.length}`;
+      const md = buildMarkdown();
+      const out = document.getElementById('markdownOut');
+      if (out) out.value = md;
+    }
+
+    async function copyPlan() {
+      const text = buildMarkdown();
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_) {
+        const ta = document.getElementById('markdownOut');
+        ta.select();
+        document.execCommand('copy');
+      }
+      const st = document.getElementById('copyStatus');
+      st.textContent = '✓ Copied to clipboard!';
+      setTimeout(() => { st.textContent = ''; }, 2500);
+    }
+
+    document.getElementById('viewModeBtn').addEventListener('click', () => {
+      state.wizard = !state.wizard;
+      saveState();
+      render();
+    });
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      const keepWizard = state.wizard;
+      const keepStep = state.step;
+      state = defaultState();
+      state.wizard = keepWizard;
+      state.step = keepStep;
+      saveState();
+      render();
+    });
+    document.getElementById('copyOutBtn').addEventListener('click', copyPlan);
+    document.getElementById('stickyCopyBtn').addEventListener('click', copyPlan);
+    document.getElementById('downloadOutBtn').addEventListener('click', () => {
+      const blob = new Blob([buildMarkdown() + '\n'], { type: 'text/markdown;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'SELECTED-MVP-PLAN.md';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+
+    render();
+  </script>
+</body>
+</html>
