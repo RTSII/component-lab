@@ -19,11 +19,12 @@ Double-click **`run.bat`** to start the local server and open Chrome, or run fro
 
 ```powershell
 cd C:\Users\rtsii\Desktop\component-lab
-python serve.py          # serves http://127.0.0.1:5179/
-python serve.py 5180     # use another port if 5179 is busy
+python serve.py               # serves http://127.0.0.1:5179/
+python serve.py 5179 --open   # starts server and opens browser once bound
+python serve.py 5180          # use another port if 5179 is busy
 ```
-- If `python` is not on `PATH`, use `py serve.py`.
-- Plain `python -m http.server` can preview components, but **`serve.py` is required** for the in-app **New Component (`+`)** modal (`/api/new`) and **Save to disk** (`/api/manifest`).
+- If `python` is not on `PATH`, use `py serve.py` (`run.bat` checks `py` first to avoid the Windows Store alias stub).
+- Plain `python -m http.server` can preview components, but **`serve.py` is required** for the in-app **New Component (`+`)** modal (`/api/new`) and **Save to disk** (`/api/manifest`). `serve.py` validates local `Host`/`Origin` headers, protects `_template` as read-only, and suppresses `__pycache__` generation.
 - **Important Port / `localStorage` Note:** Browser `localStorage` is scoped by origin and port (`http://127.0.0.1:5179` vs. `http://127.0.0.1:5180`). Always use the same port (default `5179`) so your saved parameter values, starred Basic controls, and custom palettes stay visible, or use the JSON backup/restore tools in **Settings**.
 
 ---
@@ -68,7 +69,7 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
   2. **Playback:** Play/Pause (`Space`) and loop speed/scrub slider (shown for animated components).
 - **Progressive Open/Close:** Clicking the toolbar icon opens or closes all groups; **`Shift+Click`** or **`←` / `→`** steps one group at a time on a staggered spring (`TB_OPEN_ORDER` / `TB_CLOSE_ORDER` in `lab/lab.js`).
 - **Flick Physics (`lab/motion.js` — `Motion.Flick`):**
-  - Dragging `< 6 px` acts as a click; dragging further pulls with rubber-band resistance and measures release velocity over the last `90 ms`:
+  - Dragging `< 6 px` acts as a click; dragging further pulls with rubber-band resistance and measures release velocity over the last `90 ms` (pausing stationary for `> 90 ms` before release zeroes velocity and snaps back without triggering a flick):
 
 | Strength Setting | Gentle Flick (speed or distance) | Strong Flick (speed or distance) |
 |---|---|---|
@@ -149,7 +150,7 @@ Every component lives in `components/<id>/` and is listed in `components/registr
 - **Pure CSS Components Need Zero JS Logic:** Any manifest variable with a `"css": "--my-var"` property is automatically applied inline on `#labFrame` (with `unit` appended or `cssMap` translated), and any variable with `"bind": [{ "sel": ".my-el", "prop": "border-radius", "tpl": "{v}px" }]` is written into `<style id="labBinds">`.
 
 ### 3. Manifest Schema (`components/<id>/manifest.json`)
-If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `markup.html`, and `component.js` to generate controls for CSS custom properties, colour literals, opacities, radii, font sizes, animation durations, `UPPER_CASE` numeric JS constants, and pointer/keyboard/CSS `:hover` interactions. Use **Settings › Save to disk** in Pro mode to write a curated `manifest.json` to disk.
+If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `markup.html`, and `component.js` to generate controls for CSS custom properties, colour literals (grouped by `hex@alpha` and preserving transparency via `rgb(from {v} r g b / alpha)`), opacities, radii, font sizes (auto-suffixed `_2`, `_3` on selector collisions), animation durations, `UPPER_CASE` numeric JS constants, and pointer/keyboard/CSS `:hover` interactions (requiring down+move for drag, ignoring `preventDefault` click guards, scanning `:focus-visible`, and stripping `@media` wrappers before `:hover`). Use **Settings › Save to disk** in Pro mode to write a curated `manifest.json` to disk.
 
 ```json
 {
@@ -192,7 +193,8 @@ If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `m
 index.html                      # Lab shell HTML (stage, floating toolbar, right/bottom dock)
 serve.py                        # Local Python HTTP server + POST /api/new and /api/manifest
 new-component.py                # CLI & backend scaffolder for new components from _template
-run.bat                         # Windows double-click launcher
+run.bat                         # Windows double-click launcher (py/python serve.py 5179 --open)
+jsconfig.json                   # Zero-build ES2022 editor config for VS Code / Antigravity
 project/
   tokens.css                    # Shared project colour/token definitions (palette source)
 lab/

@@ -468,14 +468,14 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Workspace root:** `C:\Users\rtsii\Desktop\component-lab`
 - **User-confirmed selections:** All recommended conflict resolutions (`1.1–1.7`), all 10 core bug/recovery fixes (`2.1–2.10`), all 4 structure/Base-Pro items (`3.1–3.4`), and **all 7 enhancements (`4.1–4.7`, including Opus's `?selftest=1` smoke check and `A/B/C` snapshot slots)**.
 - **Execution order for the implementation session:**
-  1. **Backend & launcher hardening (`serve.py`, `new-component.py`, `run.bat`, `components/_template/component.js`, `jsconfig.json`):**
-     - Add `sys.dont_write_bytecode = True`, `Origin`/`Host` validation, `_template` write protection, `Exception` handler, and `--open` browser launch to `serve.py`; remove `__pycache__/`.
-     - Add partial-folder cleanup on failure to `new-component.py`, add `jsconfig.json`, and fix `_template/component.js` so `KINDS[kind]` only populates an empty `.cmp-host` and `KINDS.nav` links have `href="#"`.
-  2. **Auto-scan & motion fixes (`lab/scan.js`, `lab/motion.js`):**
-     - Add `alphaOf()` and `h + '@' + a` colour grouping with `rgb(from {v} r g b / a)` in `scan.js`.
-     - Add `uniq()` ID collision suffixing and tighten `interactions()` (`drag` requires move, ignore `preventDefault` click guards, check CSS `:focus-visible`, strip `@media` before `:hover`).
-     - Add the `e.timeStamp - b.t > 90` stale-velocity check in `M.Flick` in `motion.js`.
-  3. **Core lab fixes, `PRO_FEATURES` organization, enhancements & file split (`lab/lab.js`, `lab/controls.js`, `lab/export.js`, `lab/lab.css`, `index.html`, `README.md`):**
+  1. ✅ **[COMPLETED — `5526d26`] Backend & launcher hardening (`serve.py`, `new-component.py`, `run.bat`, `components/_template/component.js`, `jsconfig.json`):**
+     - Added `sys.dont_write_bytecode = True`, `Origin`/`Host` validation, `_template` write protection, `Exception` + `KeyboardInterrupt` handlers, and `--open` browser launch to `serve.py`; removed `__pycache__/`.
+     - Added partial-folder cleanup on failure to `new-component.py`, added `jsconfig.json`, and fixed `_template/component.js` so `KINDS[kind]` only populates an empty `.cmp-host` and `KINDS.nav` links have `href="#"`.
+  2. ✅ **[COMPLETED — `cf0900c`] Auto-scan & motion fixes (`lab/scan.js`, `lab/motion.js`):**
+     - Added `alphaOf()` and `h + '@' + a` colour grouping with `rgb(from {v} r g b / a)` in `scan.js`.
+     - Added `uniq()` ID collision suffixing and tightened `interactions()` (`drag` requires move, ignore `preventDefault`/`stopPropagation` click guards, check CSS `:focus-visible`, strip `@media` before `:hover`).
+     - Added the `e.timeStamp - b.t > 90` stale-velocity and power zeroing check in `M.Flick` in `motion.js`.
+  3. ⏳ **[NEXT — Main Step 3] Core lab fixes, `PRO_FEATURES` organization, enhancements & file split (`lab/lab.js`, `lab/controls.js`, `lab/export.js`, `lab/lab.css`, `index.html`, `README.md`):**
      - Replace `loadScript` in `loadComponent()` with single-fetch `new Function` + `//# sourceURL=` and harden `init()` startup order.
      - Add `isModified(v)` guard to `applyVar()` / `flushBinds()`, `v.alpha` support in `cssVal()`, `sig` hash invalidation for `manifest:<id>`, clean `manifestForExport()`, and capture-phase enforcement for scan-sourced interactions.
      - Apply the 5 recovery fixes (`railCats` Basic guard, `TB.shown` switch sync + rail unhide, clickable `#cmpName` picker, disabled `middle-center` anchor, `?reset` URL parameter) and 5 keyboard/focus fixes (`Ctrl+Z` without `dock.contains`, `Arc` owner focus, `openDock` keyboard focus, `focusin` pin, `cardFoot.inert`).

@@ -244,7 +244,7 @@
       // 'xy': the dominant axis of the throw decides the direction
       const ax = axis === 'xy' ? (Math.abs(vx) + Math.abs(dx) / 300 >= Math.abs(vy) + Math.abs(dy) / 300 ? 'x' : 'y') : axis;
       const d = ax === 'x' ? dx : dy, v = ax === 'x' ? vx : vy;
-      const power = e.type === 'pointercancel' ? 0 : axis === 'xy' ? M.flickPower(Math.hypot(dx, dy), Math.hypot(vx, vy)) : M.flickPower(d, v);
+      const power = (e.type === 'pointercancel' || stale) ? 0 : axis === 'xy' ? M.flickPower(Math.hypot(dx, dy), Math.hypot(vx, vy)) : M.flickPower(d, v);
       const dir = Math.sign(Math.abs(v) > 0.05 ? v : d) || 1;
       if (o.onRelease) o.onRelease({ d, v, dir, power, axis: ax, dx, dy, vx, vy });
     };
