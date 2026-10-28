@@ -1,0 +1,310 @@
+{
+  "version": 2,
+  "kind": "card",
+  "title": "Blank template",
+  "paletteFrom": [
+    "project/tokens.css"
+  ],
+  "frames": {
+    "1600x770": {
+      "w": 420,
+      "h": 320
+    },
+    "1366x768": {
+      "w": 380,
+      "h": 300
+    }
+  },
+  "vars": [
+    {
+      "id": "ACCENT",
+      "label": "Accent",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "accent",
+      "default": "#00e5ff",
+      "css": "--c-accent",
+      "featured": true
+    },
+    {
+      "id": "TEXT",
+      "label": "Title text",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "text",
+      "default": "#d8f3ff",
+      "css": "--c-text",
+      "featured": true
+    },
+    {
+      "id": "SURFACE",
+      "label": "Card fill",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "surface",
+      "default": "#04121f",
+      "css": "--c-surface",
+      "featured": true
+    },
+    {
+      "id": "BORDER",
+      "label": "Card border",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "border",
+      "default": "#00e5ff",
+      "css": "--c-border",
+      "featured": false
+    },
+    {
+      "id": "MUTED",
+      "label": "Body text",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "muted",
+      "default": "#8ea3c0",
+      "css": "--c-muted",
+      "featured": false
+    },
+    {
+      "id": "GLOW_COLOR",
+      "label": "Glow",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "glow",
+      "default": "#00e5ff",
+      "css": "--c-glow",
+      "featured": false
+    },
+    {
+      "id": "FILL_OP",
+      "label": "Fill opacity",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.86,
+      "css": "--fill-op",
+      "featured": true
+    },
+    {
+      "id": "BORDER_OP",
+      "label": "Border opacity",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.6,
+      "css": "--border-op",
+      "featured": true
+    },
+    {
+      "id": "GLOW",
+      "label": "Glow strength",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 3,
+      "step": 0.05,
+      "default": 1,
+      "unit": "\u00d7",
+      "css": "--glow-k",
+      "featured": false
+    },
+    {
+      "id": "BLUR",
+      "label": "Backdrop blur",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 8,
+      "unit": "px",
+      "css": "--blur",
+      "featured": false
+    },
+    {
+      "id": "FONT_SIZE",
+      "label": "Font size",
+      "category": "type",
+      "control": "slider",
+      "min": 10,
+      "max": 40,
+      "step": 1,
+      "default": 18,
+      "unit": "px",
+      "css": "--fs",
+      "featured": true
+    },
+    {
+      "id": "WEIGHT",
+      "label": "Weight",
+      "category": "type",
+      "control": "segmented",
+      "default": "700",
+      "css": "--fw",
+      "options": [
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "600",
+          "label": "Semi"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "featured": false
+    },
+    {
+      "id": "TRACKING",
+      "label": "Letter spacing",
+      "category": "type",
+      "control": "slider",
+      "min": -0.05,
+      "max": 0.3,
+      "step": 0.01,
+      "default": 0.02,
+      "unit": "em",
+      "css": "--track",
+      "featured": false
+    },
+    {
+      "id": "WIDTH",
+      "label": "Width",
+      "category": "layout",
+      "control": "slider",
+      "min": 160,
+      "max": 520,
+      "step": 1,
+      "default": 300,
+      "unit": "px",
+      "css": "--w",
+      "featured": false
+    },
+    {
+      "id": "PAD",
+      "label": "Padding",
+      "category": "layout",
+      "control": "slider",
+      "min": 0,
+      "max": 48,
+      "step": 1,
+      "default": 20,
+      "unit": "px",
+      "css": "--pad",
+      "featured": false
+    },
+    {
+      "id": "GAP",
+      "label": "Gap",
+      "category": "layout",
+      "control": "slider",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "default": 10,
+      "unit": "px",
+      "css": "--gap",
+      "featured": false
+    },
+    {
+      "id": "RADIUS",
+      "label": "Corner radius",
+      "category": "layout",
+      "control": "slider",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "default": 14,
+      "unit": "px",
+      "css": "--radius",
+      "featured": false
+    },
+    {
+      "id": "EASING",
+      "label": "Easing",
+      "category": "motion",
+      "control": "segmented",
+      "default": "settle",
+      "css": "--ease",
+      "options": [
+        {
+          "value": "settle",
+          "label": "Settle",
+          "css": "cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        {
+          "value": "spring",
+          "label": "Spring",
+          "css": "cubic-bezier(0.34, 1.4, 0.64, 1)"
+        },
+        {
+          "value": "linear",
+          "label": "Linear",
+          "css": "linear"
+        }
+      ],
+      "featured": true
+    },
+    {
+      "id": "IDLE",
+      "label": "Idle float",
+      "category": "motion",
+      "control": "switch",
+      "default": true,
+      "css": "--idle",
+      "cssMap": {
+        "true": "running",
+        "false": "paused"
+      },
+      "featured": false
+    },
+    {
+      "id": "LIFT",
+      "label": "Float height",
+      "category": "motion",
+      "control": "slider",
+      "min": 0,
+      "max": 16,
+      "step": 1,
+      "default": 4,
+      "unit": "px",
+      "css": "--lift",
+      "featured": false
+    },
+    {
+      "id": "SPEED",
+      "label": "Speed",
+      "category": "rate",
+      "control": "slider",
+      "min": 0.25,
+      "max": 3,
+      "step": 0.05,
+      "default": 1,
+      "unit": "\u00d7",
+      "css": "--speed",
+      "master": "speed",
+      "featured": false
+    },
+    {
+      "id": "PULSE",
+      "label": "Glow / blob intensity",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.5,
+      "css": "--pulse",
+      "master": "intensity",
+      "featured": false
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "kinds": {
+    "card": {
+      "label": "Card",
+      "desc": "Title, text, action",
+      "frames": {
+        "1600x770": {
+          "w": 420,
+          "h": 320
+        },
+        "1366x768": {
+          "w": 380,
+          "h": 300
+        }
+      },
+      "featured": [
+        "ACCENT",
+        "TEXT",
+        "SURFACE",
+        "FILL_OP",
+        "BORDER_OP",
+        "FONT_SIZE",
+        "EASING"
+      ]
+    },
+    "nav": {
+      "label": "Nav",
+      "desc": "Tabs or menu bar",
+      "frames": {
+        "1600x770": {
+          "w": 560,
+          "h": 140
+        },
+        "1366x768": {
+          "w": 520,
+          "h": 130
+        }
+      },
+      "defaults": {
+        "PAD": 16,
+        "RADIUS": 16
+      },
+      "featured": [
+        "ACCENT",
+        "TEXT",
+        "SURFACE",
+        "FILL_OP",
+        "FONT_SIZE",
+        "GAP",
+        "EASING"
+      ]
+    },
+    "hero": {
+      "label": "Hero",
+      "desc": "Headline block",
+      "frames": {
+        "1600x770": {
+          "w": 820,
+          "h": 420
+        },
+        "1366x768": {
+          "w": 720,
+          "h": 380
+        }
+      },
+      "defaults": {
+        "FONT_SIZE": 22,
+        "WIDTH": 320
+      },
+      "featured": [
+        "ACCENT",
+        "TEXT",
+        "SURFACE",
+        "FILL_OP",
+        "FONT_SIZE",
+        "WEIGHT",
+        "PAD",
+        "EASING"
+      ]
+    },
+    "animated-background": {
+      "label": "Animated bg",
+      "desc": "Moving backdrop",
+      "frames": {
+        "1600x770": {
+          "w": 900,
+          "h": 520
+        },
+        "1366x768": {
+          "w": 760,
+          "h": 460
+        }
+      },
+      "defaults": {
+        "FILL_OP": 1,
+        "GLOW": 1.2,
+        "PULSE": 0.55,
+        "LIFT": 0
+      },
+      "featured": [
+        "ACCENT",
+        "GLOW_COLOR",
+        "SURFACE",
+        "FILL_OP",
+        "GLOW",
+        "SPEED"
+      ]
+    },
+    "list": {
+      "label": "List",
+      "desc": "Rows with values",
+      "frames": {
+        "1600x770": {
+          "w": 420,
+          "h": 320
+        },
+        "1366x768": {
+          "w": 380,
+          "h": 300
+        }
+      },
+      "defaults": {
+        "PAD": 16,
+        "GAP": 8,
+        "FONT_SIZE": 17
+      },
+      "featured": [
+        "ACCENT",
+        "TEXT",
+        "MUTED",
+        "BORDER_OP",
+        "FONT_SIZE",
+        "GAP",
+        "PAD"
+      ]
+    },
+    "button": {
+      "label": "Button",
+      "desc": "One call to action",
+      "frames": {
+        "1600x770": {
+          "w": 360,
+          "h": 200
+        },
+        "1366x768": {
+          "w": 340,
+          "h": 180
+        }
+      },
+      "defaults": {
+        "FONT_SIZE": 17,
+        "RADIUS": 12,
+        "GLOW": 1.2
+      },
+      "featured": [
+        "ACCENT",
+        "TEXT",
+        "GLOW_COLOR",
+        "GLOW",
+        "FONT_SIZE",
+        "RADIUS",
+        "EASING"
+      ]
+    }
+  }
+}

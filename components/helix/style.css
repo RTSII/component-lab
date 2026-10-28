@@ -1,0 +1,143 @@
+/* PTCB26 home helix, lab copy.
+   Part 1: tokens the helix uses (from css/style.css :root and body.home in css/home.css).
+   Part 2: the helix rules copied verbatim from css/home.css (v109, lines 462-536).
+   Part 3: lab overrides. The real CSS sizes cards from vh/vw; in the lab the frame
+   preset sets those values instead, so the frame matches the real column at each viewport. */
+.lab-frame[data-component="helix"] {
+  --neon-blue: #00e5ff;
+  --neon-red: #c90a1d;
+  --neon-glass-a: rgba(0, 50, 78, 0.82);
+  --neon-glass-b: rgba(1, 18, 32, 0.9);
+  --neon-dim: #8fd0df;
+  --hx-ice: #f2fff5;
+  --hx-fit: 1;
+  --hx-display: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+  --hx-mono: "JetBrains Mono", "Share Tech Mono", ui-monospace, Consolas, monospace;
+}
+
+/* ---- verbatim from css/home.css v109 ---- */
+.hx-helix {
+  position: relative;
+  min-width: 0;
+  min-height: min(68vh, 520px);
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+.hx-helix.is-dragging { cursor: grabbing; }
+.hx-helix-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 900px;
+  perspective-origin: 50% 46%;
+}
+.hx-helix-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(156px, 60%);
+  height: calc(clamp(64px, 12vh, 92px) * var(--hx-fit));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 10px;
+  text-decoration: none;
+  color: var(--hx-ice);
+  background: linear-gradient(180deg, var(--neon-glass-a), var(--neon-glass-b));
+  border: 0;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  user-select: none;
+  -webkit-user-select: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+/* Liquid border: four quarter-paths grow from the middle of the top and bottom edges, round the corners and meet at the
+   middle of each side. --bp (0..1) is set from the card's place on the helix: hollow at the ends, full in the middle. */
+.hx-helix-edge { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.hx-helix-edge path {
+  fill: none;
+  stroke: var(--neon-blue);
+  stroke-width: 2;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--bp, 1) * 100);
+  opacity: calc(var(--bp, 1) * 30);
+  filter: drop-shadow(0 0 3px rgba(0, 229, 255, 0.85));
+}
+.hx-helix-num {
+  font-family: var(--hx-display);
+  font-weight: 700;
+  font-size: calc(clamp(1.05rem, 1.2vw, 1.6rem) * var(--hx-fit));
+  line-height: 1;
+  color: var(--neon-blue);
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hx-helix-num.is-zero { color: var(--neon-red); text-shadow: 0 0 12px rgba(201, 10, 29, 0.6); }
+.hx-helix-lbl {
+  font-family: var(--hx-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--neon-dim);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 16ch;
+}
+.hx-helix-card > :not(.hx-helix-edge) { opacity: var(--tx, 1); }
+.hx-helix-card:focus-visible { outline: none; }
+.hx-helix-card:focus-visible .hx-helix-edge path { stroke-width: 3; }
+/* ---- end verbatim ---- */
+
+/* Lab overrides: frame preset values instead of viewport units. */
+.lab-frame[data-component="helix"] .hx-helix { position: absolute; inset: 0; min-height: 0; height: 100%; }
+.lab-frame[data-component="helix"] .hx-helix-card {
+  height: calc(var(--lab-card-h, 92px) * var(--hx-fit));
+  width: min(var(--lab-card-w, 156px), 60%);
+}
+.lab-frame[data-component="helix"] .hx-helix-num { font-size: calc(var(--lab-num-fs, 19.2px) * var(--hx-fit)); }
+.lab-frame[data-component="helix"] .hx-helix-stage { perspective: var(--lab-perspective, 900px); }
+
+/* Lab v2 colour / surface / type controls (manifest.json "css" keys). The lab sets these custom
+   properties on the frame; the defaults below reproduce the original look exactly. */
+.lab-frame[data-component="helix"] {
+  --hx-c-border: #00e5ff;
+  --hx-c-title: #00e5ff;
+  --hx-c-glow: #00e5ff;
+  --hx-c-fill: #00324e;
+  --hx-c-fill2: #011220;
+  --hx-c-label: #8fd0df;
+  --hx-c-zero: #c90a1d;
+  --hx-fill-op: 1;
+  --hx-border-op: 1;
+  --hx-glow-k: 1;
+  --hx-num-k: 1;
+  --hx-lbl-k: 1;
+}
+.lab-frame[data-component="helix"] .hx-helix-card {
+  background: linear-gradient(180deg,
+    rgb(from var(--hx-c-fill) r g b / calc(0.82 * var(--hx-fill-op))),
+    rgb(from var(--hx-c-fill2) r g b / calc(0.9 * var(--hx-fill-op))));
+}
+.lab-frame[data-component="helix"] .hx-helix-edge path {
+  stroke: var(--hx-c-border);
+  stroke-opacity: var(--hx-border-op);
+  filter: drop-shadow(0 0 calc(3px * var(--hx-glow-k)) rgb(from var(--hx-c-glow) r g b / 0.85));
+}
+.lab-frame[data-component="helix"] .hx-helix-num {
+  color: var(--hx-c-title);
+  text-shadow: 0 0 calc(12px * var(--hx-glow-k)) rgb(from var(--hx-c-glow) r g b / 0.55);
+  font-size: calc(var(--lab-num-fs, 19.2px) * var(--hx-fit) * var(--hx-num-k));
+}
+.lab-frame[data-component="helix"] .hx-helix-num.is-zero {
+  color: var(--hx-c-zero);
+  text-shadow: 0 0 calc(12px * var(--hx-glow-k)) rgb(from var(--hx-c-zero) r g b / 0.6);
+}
+.lab-frame[data-component="helix"] .hx-helix-lbl {
+  color: var(--hx-c-label);
+  font-size: calc(0.64rem * var(--hx-lbl-k));
+}

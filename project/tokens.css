@@ -1,0 +1,27 @@
+/* Project colour tokens (PTCB26), copied from ptcb26 css/style.css :root and css/home.css body.home (v112).
+   The lab never applies this file to the page; it only scans it so palettes come from the project's own styles.
+   Swap this file for another project's tokens to change the default swatches everywhere. */
+:root {
+  --bg: #030014;
+  --bg2: #0a0221;
+  --panel: rgba(16, 6, 40, 0.82);
+  --pink: #ff2a6d;
+  --cyan: #05d9e8;
+  --neon-blue: #00e5ff;
+  --neon-red: #c90a1d;
+  --neon-glass-a: rgba(0, 50, 78, 0.82);
+  --neon-glass-b: rgba(1, 18, 32, 0.9);
+  --neon-dim: #8fd0df;
+  --violet: #b967ff;
+  --green: #00ff41;
+  --amber: #ffd319;
+  --red: #ff3860;
+  --ink: #d8f3ff;
+  --ink-dim: #8ea3c0;
+  --hx-green: #00ff41;
+  --hx-mint: #b6ffc9;
+  --hx-ice: #f2fff5;
+  --hx-dim: #9cc9a9;
+  --hx-fill-a: rgba(9, 32, 18, 0.84);
+  --hx-fill-b: rgba(3, 15, 9, 0.84);
+}

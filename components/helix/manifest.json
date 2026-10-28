@@ -1,0 +1,718 @@
+{
+  "version": 2,
+  "kind": "card",
+  "title": "PTCB26 home helix",
+  "paletteFrom": [
+    "project/tokens.css",
+    "components/helix/style.css"
+  ],
+  "time": {
+    "cycle": "CYCLE",
+    "speed": "SPEED",
+    "direction": "DIRECTION"
+  },
+  "vars": [
+    {
+      "id": "CARD_BORDER",
+      "label": "Card border",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "border",
+      "default": "#00e5ff",
+      "css": "--hx-c-border",
+      "featured": true,
+      "group": "Card",
+      "short": "Border",
+      "signature": true
+    },
+    {
+      "id": "TITLE_TEXT",
+      "label": "Title text",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "accent",
+      "default": "#00e5ff",
+      "css": "--hx-c-title",
+      "featured": true,
+      "group": "Text",
+      "short": "Number"
+    },
+    {
+      "id": "GLOW",
+      "label": "Glow",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "glow",
+      "default": "#00e5ff",
+      "css": "--hx-c-glow",
+      "featured": true,
+      "group": "Glow",
+      "short": "Glow"
+    },
+    {
+      "id": "CARD_FILL",
+      "label": "Card fill (top)",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "surface",
+      "default": "#00324e",
+      "css": "--hx-c-fill",
+      "featured": false,
+      "group": "Card",
+      "short": "Fill top",
+      "advanced": true
+    },
+    {
+      "id": "CARD_FILL_2",
+      "label": "Card fill (bottom)",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "surface2",
+      "default": "#011220",
+      "css": "--hx-c-fill2",
+      "featured": false,
+      "group": "Card",
+      "short": "Fill bottom",
+      "advanced": true
+    },
+    {
+      "id": "LABEL_TEXT",
+      "label": "Label text",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "muted",
+      "default": "#8fd0df",
+      "css": "--hx-c-label",
+      "featured": false,
+      "group": "Text",
+      "short": "Label",
+      "advanced": true
+    },
+    {
+      "id": "ZERO_TEXT",
+      "label": "Zero value text",
+      "category": "color",
+      "control": "swatch-role",
+      "role": "danger",
+      "default": "#c90a1d",
+      "css": "--hx-c-zero",
+      "featured": false,
+      "group": "Text",
+      "short": "Zero value",
+      "advanced": true
+    },
+    {
+      "id": "HOVER",
+      "label": "On hover",
+      "short": "Hover",
+      "category": "interact",
+      "group": "Pointer",
+      "interaction": "hover",
+      "control": "segmented",
+      "default": "pause",
+      "featured": true,
+      "signature": true,
+      "options": [
+        {
+          "value": "play",
+          "label": "Keep"
+        },
+        {
+          "value": "pause",
+          "label": "Pause"
+        },
+        {
+          "value": "slow",
+          "label": "Slow"
+        },
+        {
+          "value": "fast",
+          "label": "Fast"
+        }
+      ],
+      "hint": "What the helix does while the pointer is over it. Pause is the site (home.js v109).",
+      "where": "component.js rate(): pointerenter / pointerleave on .hx-helix"
+    },
+    {
+      "id": "DRAG",
+      "label": "On drag",
+      "short": "Drag",
+      "category": "interact",
+      "group": "Pointer",
+      "interaction": "drag",
+      "control": "segmented",
+      "default": "scrub",
+      "options": [
+        {
+          "value": "scrub",
+          "label": "Spin"
+        },
+        {
+          "value": "ignore",
+          "label": "Ignore"
+        }
+      ],
+      "hint": "Vertical drag spins the helix (pauses while held).",
+      "where": "component.js: pointerdown + window pointermove -> ctx.time.nudge()"
+    },
+    {
+      "id": "TOUCH",
+      "label": "Touch",
+      "short": "Touch",
+      "category": "interact",
+      "group": "Touch & keys",
+      "interaction": "touch",
+      "control": "segmented",
+      "default": "hover",
+      "advanced": true,
+      "options": [
+        {
+          "value": "hover",
+          "label": "Same as hover"
+        },
+        {
+          "value": "ignore",
+          "label": "Ignore"
+        }
+      ],
+      "hint": "Touch acts like hover + drag, or is ignored.",
+      "where": "component.js: e.pointerType === 'touch'"
+    },
+    {
+      "id": "KEY_PAUSE",
+      "label": "Keyboard focus pauses",
+      "short": "Focus pauses",
+      "category": "interact",
+      "group": "Touch & keys",
+      "interaction": "key",
+      "control": "switch",
+      "default": true,
+      "advanced": true,
+      "hint": "Tab to a card: it turns to the front and the helix holds.",
+      "where": "component.js: focusin / focusout"
+    },
+    {
+      "id": "CARD_OPACITY",
+      "label": "Card opacity",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 1.2,
+      "step": 0.01,
+      "default": 1,
+      "unit": "×",
+      "css": "--hx-fill-op",
+      "featured": true,
+      "where": "alpha of the card gradient (0.82 / 0.9 at 1)",
+      "group": "Opacity",
+      "short": "Card"
+    },
+    {
+      "id": "BORDER_OPACITY",
+      "label": "Border opacity",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 1,
+      "css": "--hx-border-op",
+      "featured": true,
+      "group": "Opacity",
+      "short": "Border"
+    },
+    {
+      "id": "GLOW_STRENGTH",
+      "label": "Glow strength",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 3,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--hx-glow-k",
+      "where": "text-shadow 12px / drop-shadow 3px at 1",
+      "featured": false,
+      "group": "Glow",
+      "short": "Strength"
+    },
+    {
+      "id": "BACK_OPACITY",
+      "label": "Back-card opacity",
+      "category": "surface",
+      "control": "slider",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.3,
+      "where": "body in layout()",
+      "featured": false,
+      "group": "Opacity",
+      "short": "Back cards",
+      "advanced": true
+    },
+    {
+      "id": "TEXT_FADE_ON",
+      "label": "Fade text on turned cards",
+      "category": "surface",
+      "control": "switch",
+      "default": true,
+      "featured": false,
+      "group": "Fades",
+      "short": "Text on turned cards"
+    },
+    {
+      "id": "END_FADE_ON",
+      "label": "Fade cards at the ends",
+      "category": "surface",
+      "control": "switch",
+      "default": true,
+      "featured": false,
+      "group": "Fades",
+      "short": "Cards at the ends"
+    },
+    {
+      "id": "NUM_SCALE",
+      "label": "Number size",
+      "category": "type",
+      "control": "slider",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--hx-num-k",
+      "featured": false,
+      "group": "Size",
+      "short": "Number"
+    },
+    {
+      "id": "LABEL_SCALE",
+      "label": "Label size",
+      "category": "type",
+      "control": "slider",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--hx-lbl-k",
+      "featured": false,
+      "group": "Size",
+      "short": "Label"
+    },
+    {
+      "id": "EASING",
+      "label": "Easing",
+      "category": "motion",
+      "control": "segmented",
+      "default": "linear",
+      "featured": true,
+      "options": [
+        {
+          "value": "linear",
+          "label": "Linear"
+        },
+        {
+          "value": "glide",
+          "label": "Glide"
+        },
+        {
+          "value": "snap",
+          "label": "Snap"
+        }
+      ],
+      "where": "how the loop moves between card slots: constant, ease in/out per slot, or overshoot per slot",
+      "group": "Loop",
+      "short": "Easing"
+    },
+    {
+      "id": "DIRECTION",
+      "label": "Direction",
+      "category": "motion",
+      "control": "segmented",
+      "default": 1,
+      "options": [
+        {
+          "value": 1,
+          "label": "Up"
+        },
+        {
+          "value": -1,
+          "label": "Down"
+        }
+      ],
+      "featured": false,
+      "group": "Loop",
+      "short": "Direction"
+    },
+    {
+      "id": "PERSPECTIVE",
+      "label": "Stage perspective",
+      "category": "motion",
+      "control": "slider",
+      "min": 200,
+      "max": 2000,
+      "step": 10,
+      "default": 900,
+      "where": ".hx-helix-stage in home.css",
+      "featured": false,
+      "group": "Depth",
+      "short": "Perspective",
+      "advanced": true,
+      "unit": "px"
+    },
+    {
+      "id": "SPEED",
+      "label": "Speed",
+      "category": "rate",
+      "control": "slider",
+      "min": 0.25,
+      "max": 3,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "master": "speed",
+      "featured": true,
+      "where": "loop time = CYCLE / Speed",
+      "group": "Tempo",
+      "short": "Speed"
+    },
+    {
+      "id": "INTENSITY",
+      "label": "Intensity",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "master": "intensity",
+      "featured": false,
+      "where": "scales STEP, TILT, WAVE and depth scaling together",
+      "group": "Tempo",
+      "short": "Intensity",
+      "advanced": true
+    },
+    {
+      "id": "CYCLE",
+      "label": "Seconds per full loop",
+      "category": "rate",
+      "control": "slider",
+      "min": 4,
+      "max": 120,
+      "step": 1,
+      "default": 26,
+      "advanced": true,
+      "featured": false,
+      "group": "Loop time",
+      "short": "Seconds per loop"
+    },
+    {
+      "id": "STEP",
+      "label": "Turn per card",
+      "category": "rate",
+      "control": "radial",
+      "min": 0,
+      "max": 90,
+      "step": 1,
+      "default": 44,
+      "advanced": false,
+      "featured": false,
+      "group": "Turn",
+      "short": "Turn per card",
+      "unit": "°",
+      "signature": true
+    },
+    {
+      "id": "TILT",
+      "label": "Card twist (x turn angle)",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "advanced": true,
+      "featured": false,
+      "group": "Turn",
+      "short": "Card twist"
+    },
+    {
+      "id": "TEXT_FADE_A",
+      "label": "Text fade starts",
+      "category": "rate",
+      "control": "radial",
+      "min": 0,
+      "max": 180,
+      "step": 1,
+      "default": 52,
+      "advanced": true,
+      "featured": false,
+      "group": "Text fade",
+      "short": "Starts",
+      "unit": "°"
+    },
+    {
+      "id": "TEXT_FADE_B",
+      "label": "Text fully gone",
+      "category": "rate",
+      "control": "radial",
+      "min": 0,
+      "max": 180,
+      "step": 1,
+      "default": 86,
+      "advanced": true,
+      "featured": false,
+      "group": "Text fade",
+      "short": "Gone",
+      "unit": "°"
+    },
+    {
+      "id": "BACK_FADE_A",
+      "label": "Shell dim starts",
+      "category": "rate",
+      "control": "radial",
+      "min": 0,
+      "max": 180,
+      "step": 1,
+      "default": 70,
+      "advanced": true,
+      "where": "body in layout()",
+      "featured": false,
+      "group": "Shell dim",
+      "short": "Starts",
+      "unit": "°"
+    },
+    {
+      "id": "BACK_FADE_B",
+      "label": "Shell dim full",
+      "category": "rate",
+      "control": "radial",
+      "min": 0,
+      "max": 180,
+      "step": 1,
+      "default": 110,
+      "advanced": true,
+      "where": "body in layout()",
+      "featured": false,
+      "group": "Shell dim",
+      "short": "Full",
+      "unit": "°"
+    },
+    {
+      "id": "END_FADE_A",
+      "label": "End fade starts (slots)",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 8,
+      "step": 0.05,
+      "default": 3.0,
+      "advanced": true,
+      "featured": false,
+      "group": "End fade",
+      "short": "Starts (slots)"
+    },
+    {
+      "id": "END_FADE_B",
+      "label": "End fade done (slots)",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 8,
+      "step": 0.05,
+      "default": 3.85,
+      "advanced": true,
+      "featured": false,
+      "group": "End fade",
+      "short": "Done (slots)"
+    },
+    {
+      "id": "FILL_FULL_AT",
+      "label": "Border full within (slots)",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 6,
+      "step": 0.05,
+      "default": 0.2,
+      "advanced": true,
+      "where": "borderFill()",
+      "featured": false,
+      "group": "Border fill",
+      "short": "Full within"
+    },
+    {
+      "id": "FILL_EMPTY_AT",
+      "label": "Border empty beyond (slots)",
+      "category": "rate",
+      "control": "slider",
+      "min": 0,
+      "max": 8,
+      "step": 0.05,
+      "default": 3.4,
+      "advanced": true,
+      "where": "borderFill()",
+      "featured": false,
+      "group": "Border fill",
+      "short": "Empty beyond"
+    },
+    {
+      "id": "N",
+      "label": "Card count",
+      "category": "layout",
+      "control": "select",
+      "min": 3,
+      "max": 16,
+      "step": 1,
+      "default": 8,
+      "where": "number of .hx-helix-card in index.html",
+      "featured": false,
+      "group": "Size",
+      "short": "Cards"
+    },
+    {
+      "id": "CARD_W",
+      "label": "Card width cap (px)",
+      "category": "layout",
+      "control": "slider",
+      "min": 80,
+      "max": 240,
+      "step": 1,
+      "default": 156,
+      "where": ".hx-helix-card in home.css",
+      "featured": false,
+      "group": "Size",
+      "short": "Card width"
+    },
+    {
+      "id": "RADIUS_MAX",
+      "label": "Swing radius cap (px)",
+      "category": "layout",
+      "control": "slider",
+      "min": 0,
+      "max": 160,
+      "step": 1,
+      "default": 84,
+      "where": "radius cap in layout()",
+      "featured": false,
+      "group": "Radius",
+      "short": "Swing cap"
+    },
+    {
+      "id": "TRAVEL",
+      "label": "Vertical spread (share of height)",
+      "category": "layout",
+      "control": "slider",
+      "min": 0.3,
+      "max": 1.6,
+      "step": 0.01,
+      "default": 0.94,
+      "where": "travel in layout()",
+      "featured": false,
+      "group": "Spacing",
+      "short": "Vertical spread"
+    },
+    {
+      "id": "WAVE",
+      "label": "Vertical S-curve",
+      "category": "layout",
+      "control": "slider",
+      "min": -1,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.3,
+      "where": "y in layout()",
+      "featured": false,
+      "group": "Spacing",
+      "short": "S-curve",
+      "advanced": true
+    },
+    {
+      "id": "SCALE_MIN",
+      "label": "Scale at the back (front = 1)",
+      "category": "layout",
+      "control": "slider",
+      "min": 0.1,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.56,
+      "where": "scale in layout()",
+      "featured": false,
+      "group": "Depth",
+      "short": "Back scale",
+      "advanced": true
+    },
+    {
+      "id": "RADIUS_FRAC",
+      "label": "Radius cap, share of column width",
+      "category": "layout",
+      "control": "slider",
+      "min": 0,
+      "max": 0.6,
+      "step": 0.01,
+      "default": 0.26,
+      "where": "radius cap in layout()",
+      "advanced": true,
+      "featured": false,
+      "group": "Radius",
+      "short": "Share of width"
+    },
+    {
+      "id": "RADIUS_PAD",
+      "label": "Radius: min gap to edge (px)",
+      "category": "layout",
+      "control": "slider",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "default": 6,
+      "where": "radius cap in layout()",
+      "advanced": true,
+      "featured": false,
+      "group": "Radius",
+      "short": "Edge gap"
+    }
+  ],
+  "groups": {
+    "color": [
+      "Card",
+      "Text",
+      "Glow"
+    ],
+    "interact": [
+      "Pointer",
+      "Touch & keys"
+    ],
+    "surface": [
+      "Opacity",
+      "Glow",
+      "Fades"
+    ],
+    "type": [
+      "Size"
+    ],
+    "motion": [
+      "Loop",
+      "Depth"
+    ],
+    "rate": [
+      "Tempo",
+      "Turn",
+      "Loop time",
+      "Text fade",
+      "Shell dim",
+      "End fade",
+      "Border fill"
+    ],
+    "layout": [
+      "Size",
+      "Spacing",
+      "Radius",
+      "Depth"
+    ]
+  }
+}

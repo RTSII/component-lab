@@ -1,0 +1,3 @@
+/* Local copies (latin subset, SIL OFL) so the lab works offline. */
+@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 700; font-display: block; src: url(chakra-petch-700.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400; font-display: block; src: url(jetbrains-mono-400.woff2) format('woff2'); }

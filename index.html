@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Component Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="lab/fonts/fonts.css">
+  <link rel="stylesheet" href="lab/lab.css">
+</head>
+<body>
+  <!-- Goo filter for the radial palette picker. Only plain blobs go through it. -->
+  <svg class="lab-defs" aria-hidden="true" width="0" height="0">
+    <defs>
+      <filter id="labGoo" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="6" />
+        <feColorMatrix in="blur" result="goo" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -16" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Test stage: fills the whole window. The component re-centres in the space the card leaves. -->
+  <main class="stage" id="stage">
+    <div class="stage-fit" id="stageFit">
+      <div class="stage-scaler" id="stageScaler">
+        <div class="vp-box" id="vpBox"><span class="vp-tag" id="vpTag"></span></div>
+        <div class="lab-frame" id="labFrame"></div>
+      </div>
+    </div>
+    <!-- Floating nested toolbar: a layer over the sandbox (never part of its layout). Closed = one
+         icon; the groups below slide open one at a time (lab.js TOOLBAR_GROUPS is the config). -->
+    <div class="tb glass" id="stageBar" role="toolbar" aria-label="Stage toolbar" data-out="true">
+      <button class="tb-icon" id="tbToggle" type="button" aria-expanded="false" aria-controls="tbGroups" aria-label="Stage toolbar"></button>
+      <div class="tb-groups" id="tbGroups">
+        <div class="tb-group" data-group="component">
+          <div class="tb-inner">
+            <button class="tb-pick" id="tbPick" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Component"><span class="tb-pick-name" id="tbPickName"></span></button>
+            <select id="labPicker" class="lab-select" aria-hidden="true" tabindex="-1" hidden></select>
+          </div>
+        </div>
+        <div class="tb-group" data-group="playback">
+          <div class="tb-inner">
+            <div class="time" id="labTime">
+              <button class="icon-btn" id="labPlay" type="button" aria-label="Pause"></button>
+              <input class="range range-sm" id="labScrub" type="range" min="0" max="1" step="0.001" aria-label="Loop position">
+            </div>
+          </div>
+        </div>
+        <div class="tb-group" data-group="viewport">
+          <div class="tb-inner"><div class="seg" id="viewSeg" role="radiogroup" aria-label="Viewport frame"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tb-menu glass" id="tbMenu" role="listbox" aria-label="Components" hidden></div>
+    <div class="stage-note" id="stageNote"></div>
+  </main>
+
+  <!-- Dock: one shell. Closed = round trigger; open = the control card with its icon rail. -->
+  <div class="dock" id="dock" data-state="closed">
+    <button class="dock-trigger" id="dockTrigger" type="button" aria-label="Open controls" aria-expanded="false" aria-controls="card"></button>
+    <section class="card" id="card" aria-label="Controls">
+      <div class="card-main">
+        <header class="card-head" id="cardHead">
+          <div class="head-row">
+            <div class="head-name"><span class="head-kicker">Component</span><strong id="cmpName"></strong></div>
+            <div class="seg seg-mode" id="modeSeg" role="radiogroup" aria-label="Control set"></div>
+            <button class="icon-btn more-dots is-hidden" id="moreBtn" type="button" aria-label="Section options" aria-haspopup="menu" aria-expanded="false" aria-controls="accPop" title="Sections: collapse + motion"></button>
+            <button class="icon-btn close-btn" id="dockClose" type="button" aria-label="Close controls (Esc)"></button>
+          </div>
+          <div class="acc-pop glass" id="accPop" role="menu" aria-label="Section options" hidden></div>
+          <div class="crumb-row">
+            <button class="icon-btn back-btn" id="backBtn" type="button" aria-label="Back"></button>
+            <h2 class="page-title" id="pageTitle"></h2>
+            <span class="page-meta" id="pageMeta"></span>
+          </div>
+          <div class="quick-row" id="quickRow" hidden></div>
+        </header>
+        <div class="pages" id="pages"></div>
+        <footer class="card-foot" id="cardFoot">
+          <div class="foot-inner" id="footInner">
+            <div class="foot-body">
+              <div class="foot-row" role="toolbar" aria-label="Export">
+                <button class="foot-btn foot-btn-primary" id="copyBtn" type="button" title="Copy changes (default): old → new snippet for an agent already on this file" aria-label="Copy changes"></button>
+                <button class="foot-btn" id="fullBtn" type="button" title="Copy full working file: whole component with your values, for a new chat" aria-label="Copy full working file"></button>
+                <span class="foot-edit">
+                  <button class="foot-btn" id="undoBtn" type="button" title="Nothing to undo" aria-label="Undo" disabled></button>
+                  <button class="foot-btn" id="resetBtn" type="button" title="Nothing to reset" aria-label="Reset all to defaults" disabled></button>
+                </span>
+                <span class="changed" id="changedCount"></span>
+              </div>
+              <div class="foot-log" id="footLog" aria-hidden="true"></div>
+              <span class="sr-only" id="footLive" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+        </footer>
+      </div>
+      <nav class="rail" id="rail" aria-label="Control pages">
+        <div class="rail-tabs" id="railTabs"></div>
+        <div class="rail-sep"></div>
+        <div class="rail-tools" id="railTools"></div>
+      </nav>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="components/registry.js"></script>
+  <script src="lab/motion.js"></script>
+  <script src="lab/scan.js"></script>
+  <script src="lab/lab.js"></script>
+</body>
+</html>

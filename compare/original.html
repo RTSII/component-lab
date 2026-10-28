@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Original v109 helix (comparison only)</title>
+  <!-- Runs the untouched js/home.js v109 (original-home.js) on the same markup and CSS as the lab,
+       frozen at one offset: #o=0.62&f=1600 . Used to check the lab math matches. -->
+  <link rel="stylesheet" href="../lab/fonts/fonts.css">
+  <link rel="stylesheet" href="../components/helix/style.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; } /* same reset as css/style.css */
+    html, body { margin: 0; height: 100%; overflow: hidden; }
+    body { background:
+      radial-gradient(ellipse 90% 45% at 50% -8%, rgba(255, 42, 109, 0.16), transparent 60%),
+      radial-gradient(ellipse 70% 40% at 50% 112%, rgba(5, 217, 232, 0.1), transparent 60%),
+      linear-gradient(180deg, #030014 0%, #05010f 100%); }
+    .lab-frame { position: absolute; left: 0; top: 0; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="lab-frame" data-component="helix" id="frame"></div>
+  <script>
+  (async function () {
+    const h = Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map((kv) => kv.split('=')));
+    const o = h.o || '0.5';
+    const is1366 = (h.f || '1600').startsWith('1366');
+    const f = document.getElementById('frame');
+    f.style.left = (h.x || 0) + 'px';
+    f.style.top = (h.y || 0) + 'px';
+    f.style.width = (is1366 ? 291 : 341) + 'px';
+    f.style.height = (is1366 ? 577 : 614) + 'px';
+    f.style.setProperty('--lab-num-fs', is1366 ? '16.8px' : '19.2px');
+    f.style.setProperty('--lab-card-h', '92px');
+    f.innerHTML = await (await fetch('../components/helix/markup.html')).text();
+    await document.fonts.ready;
+    let src = await (await fetch('original-home.js')).text();
+    // only change: start at the requested offset; no animation frames, so it stays there
+    src = src.replace('let offset = 0.5;', 'let offset = ' + (+o) + ';');
+    window.requestAnimationFrame = () => 0;
+    new Function(src)();
+    document.title = 'ready';
+    if ('probe' in h) { const c = document.querySelector('.hx-helix-card'); const s = getComputedStyle(c); document.body.dataset.probe = [c.offsetWidth, c.offsetHeight, s.width, s.zoom, getComputedStyle(document.body).zoom, getComputedStyle(f).getPropertyValue('--hx-fit'), getComputedStyle(document.body).getPropertyValue('--hx-fit'), devicePixelRatio].join(','); }
+  })();
+  </script>
+</body>
+</html>
