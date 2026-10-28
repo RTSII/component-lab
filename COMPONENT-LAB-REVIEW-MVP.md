@@ -512,6 +512,13 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
   3. **Coordinated Dock ↔ Floating Toolbar Workflow:**
      - Allow the floating toolbar (`#stageBar`) and main dock (`#dock`) to complement each other dynamically (e.g., docking `#stageBar` into the top margin strip or card header when space is tight, or surfacing the most recently tuned control on `#stageBar` when the main dock is closed for full-screen sandbox testing).
 
+#### 6. Future Documentation / UI Section: Base vs. Pro Differences (FAQ / Help) & Streamlined Menu Card
+- **UI Space Optimization (Applied):**
+  - Removed the inline `"PRO ADDS"` feature summary strip (`proStrip()` / `.pro-strip`) and inline `.ctl-sub` wiring text from the control menu card/subcards so menu cards and subcards stay compact and focused strictly on titles, buttons, and interactive components (wiring details remain accessible via hover tooltips on control labels).
+  - Removed the `#changedCount` (`N changed`) text and `#footLog` terminal log box from the bottom of the menu card (`#cardFoot`), centering the 4 footer action buttons (`#copyBtn`, `#fullBtn`, `#undoBtn`, `#resetBtn`).
+- **Future FAQ / Help Section:**
+  - Repurpose the Base vs. Pro feature breakdown (`all N controls` vs. `8 featured`, inner `Advanced` / `More` folds, `Interaction` controls, `★ curate Basic`, `A / B / C` snapshots, `⋮` section collapse & motion variants, custom 6-slot palette, and rail/manifest tools) into a dedicated **FAQ / Base-vs-Pro Guide** section (in docs or a dedicated Help modal/drawer) rather than taking up permanent vertical space inside the control menu card.
+
 ---
 
 ### Next-session pickup notes

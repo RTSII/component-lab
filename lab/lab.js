@@ -69,7 +69,7 @@
   ];
   const CAT_IDS = CATS.map((c) => c.id);
   const ANCHORS = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
-  const VIEWS = [{ id: 'fit', label: 'Fit' }, { id: '1600x770', label: '1600Ã—770', w: 1600, h: 770 }, { id: '1366x768', label: '1366Ã—768', w: 1366, h: 768 }];
+  const VIEWS = [{ id: 'fit', label: 'Fit' }, { id: '1600x770', label: '1600\u00d7770', w: 1600, h: 770 }, { id: '1366x768', label: '1366\u00d7768', w: 1366, h: 768 }];
   const MARGIN = 16;
   const BASIC_CAP = 8;
   const RAIL_W = 46;
@@ -77,9 +77,9 @@
   // Central declarative map for Basic vs. Pro feature gating.
   const PRO_FEATURES = {
     accordion: true,        // Single scrolling panel with mini-cards + Advanced folds
-    starCurate: true,       // â˜… buttons to curate Basic's 8 featured controls
+    starCurate: true,       // ★ buttons to curate Basic's 8 featured controls
     signatureMarks: true,   // Sparkle icon on signature controls + where/hint subtitles
-    sectionMenu: true,      // â‹® menu & Pro section collapse/motion settings (A/B/C/D)
+    sectionMenu: true,      // ⋮ menu & Pro section collapse/motion settings (A/B/C/D)
     userPalette: true,      // Custom 6-slot "My palette" editor
     railCustomize: true,    // Drag-reorder / hide rail categories & action tools
     toolbarAdvanced: true,  // Toolbar start state & flick strength tuning
@@ -147,7 +147,7 @@
     if (v.control === 'switch') return val ? 'on' : 'off';
     if (v.options) { const o = v.options.find((x) => same(x.value, val)); return o ? o.label : String(val); }
     const n = Number(val);
-    return (isNaN(n) ? val : n.toFixed(decimals(v.step))) + (v.unit ? (v.unit === 'Ã—' || v.unit === 'Â°' ? v.unit : ' ' + v.unit) : '');
+    return (isNaN(n) ? val : n.toFixed(decimals(v.step))) + (v.unit ? (v.unit === '\u00d7' || v.unit === '\u00b0' ? v.unit : ' ' + v.unit) : '');
   }
   function coerce(v, raw) {
     if (v.control === 'swatch-role') return S.hex(raw) || v.default;
@@ -221,7 +221,7 @@
     if (v.cssMap) return v.cssMap[String(val)];
     if (typeof val === 'boolean') return val ? '1' : '0';
     if (v.speedScaled && byId.SPEED) return +(val / (curP.SPEED || 1)).toFixed(4) + (v.unit || '');
-    if (v.unit === 'Ã—') return String(val);
+    if (v.unit === '\u00d7') return String(val);
     return val + (v.unit || '');
   }
   function applyVar(v) {
@@ -355,14 +355,14 @@
   function changedVars() { return vars.filter((v) => !same(P[v.id], v.default)); }
   function refreshChanged() {
     const n = changedVars().length;
-    const chBtn = $('changedCount');
-    chBtn.textContent = previewDefaults ? 'previewing defaults' : (n ? n + ' changed' : '0 changed');
-    chBtn.classList.toggle('is-on', !!n);
-    chBtn.title = n ? 'Hold to preview defaults (live A/B compare)' : 'No changes from defaults';
+
+
+
+
     $('copyBtn').disabled = !n;
     $('resetBtn').disabled = !n;
     $('resetBtn').title = n ? 'Reset all ' + n + ' changes to defaults (undoable)' : 'Nothing to reset';
-    Log.idle(n);
+    $('copyBtn').title = n ? 'Copy ' + n + ' change' + (n === 1 ? '' : 's') + ' (old \u2192 new snippet)' : 'No changes from defaults';
     document.querySelectorAll('.ctl[data-id]').forEach((row) => {
       const v = byId[row.dataset.id];
       if (v) row.classList.toggle('is-changed', !same(P[v.id], v.default));
@@ -505,8 +505,8 @@
     renderPage(0);
     refreshChanged();
     writeHash();
-    if (rescanToast) toast('Component files changed â€” controls re-scanned.', 4200);
-    else if (auto) toast('No manifest.json, so the controls were made by auto-scan. Settings â€º Save to disk keeps them.', 5200);
+    if (rescanToast) toast('Component files changed \u2014 controls re-scanned.', 4200);
+    else if (auto) toast('No manifest.json, so the controls were made by auto-scan. Settings \u203a Save to disk keeps them.', 5200);
     if (m.notes && m.notes.length) toast(m.notes.join(' '), 5200);
   }
 
@@ -558,8 +558,8 @@
     scaler.style.height = bh + 'px';
     scaler.style.transform = 'translate(-50%, -50%) scale(' + s.toFixed(4) + ')';
     $('vpBox').classList.toggle('is-on', !!view.w);
-    $('vpTag').textContent = view.w ? view.w + ' Ã— ' + view.h + ' viewport' : '';
-    $('stageNote').textContent = def.title + '  Â·  frame ' + f.w + ' Ã— ' + f.h + (view.w ? '  in ' + view.label : '') + '  Â·  ' + Math.round(s * 100) + '%';
+    $('vpTag').textContent = view.w ? view.w + ' \u00d7 ' + view.h + ' viewport' : '';
+    $('stageNote').textContent = def.title + '  \u00b7  frame ' + f.w + ' \u00d7 ' + f.h + (view.w ? '  in ' + view.label : '') + '  \u00b7  ' + Math.round(s * 100) + '%';
   }
 
   // ---------- time ----------
@@ -846,7 +846,7 @@
   let logH = 0;
   function setFootCompact(on) {
     const foot = $('cardFoot');
-    if (foot.classList.contains('is-compact') === on) return;
+    if (!$('footLog')) return;
     foot.classList.toggle('is-compact', on);
     $('footLog').setAttribute('aria-hidden', 'true');
     if (!on && dockOpen && M.level() === 'full') $('footLog').animate([{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: M.easeOut });
@@ -860,7 +860,7 @@
     if (footCollapsed()) setFootCompact(false);
     else {
       const compactNow = $('cardFoot').classList.contains('is-compact');
-      if (!compactNow && $('footLog').offsetHeight) logH = $('footLog').offsetHeight + 6;
+      if (!compactNow && $('footLog') && $('footLog').offsetHeight) logH = $('footLog').offsetHeight + 6;
       const footFull = $('footInner').scrollHeight + (compactNow ? (logH || 36) : 0);
       setFootCompact(natural > cardMaxH() - $('cardHead').offsetHeight - footFull - 2 + 0.5);
     }
@@ -1043,8 +1043,8 @@
         const k = b.dataset.slot, s = snaps[k];
         b.classList.toggle('is-filled', !!s);
         b.title = s
-          ? 'Slot ' + k + ' saved Â· Click to load Â· Shift+Click to overwrite Â· Alt+Click or Right-click to clear'
-          : 'Slot ' + k + ' empty Â· Click to save current look';
+          ? 'Slot ' + k + ' saved \u00b7 Click to load \u00b7 Shift+Click to overwrite \u00b7 Alt+Click or Right-click to clear'
+          : 'Slot ' + k + ' empty \u00b7 Click to save current look';
       });
     };
     ['A', 'B', 'C'].forEach((k) => {
@@ -1125,7 +1125,7 @@
     function build(focusCat, inner) {
       const wrapEl = el('div', 'acc-list');
       wrapEl.dataset.variant = variant();
-      wrapEl.appendChild(proStrip());
+
       const snapBar = buildSnapBar();
       if (snapBar) wrapEl.appendChild(snapBar);
       const cats = visibleCats().map((c) => {
@@ -1159,7 +1159,7 @@
         if (page) page.addEventListener('scroll', () => spy(page), { passive: true });
       });
       const total = cats.reduce((a, c) => a + c.n, 0);
-      return total + ' controls Â· ' + cats.filter((c) => c.n).length + ' sections';
+      return total + ' controls \u00b7 ' + cats.filter((c) => c.n).length + ' sections';
     }
     function setState(box, on) {
       box.classList.toggle('is-open', on);
@@ -1301,7 +1301,7 @@
       const grid = el('div', 'pop-row pop-variants');
       VARIANTS.forEach((v) => {
         const b = el('button', 'pop-btn pop-var', '<b>' + v.id + '</b><span>' + esc(v.label) + '</span>');
-        b.type = 'button'; b.dataset.variant = v.id; b.title = v.id + ' Â· ' + v.hint;
+        b.type = 'button'; b.dataset.variant = v.id; b.title = v.id + ' \u00b7 ' + v.hint;
         b.setAttribute('role', 'menuitemradio');
         b.addEventListener('click', () => Acc.setVariant(v.id));
         grid.appendChild(b);
@@ -2590,35 +2590,6 @@
         });
       });
     });
-
-    // Hold-to-Compare Default Values on #changedCount (Item 4.1)
-    const chgBtn = $('changedCount');
-    const startCompare = (e) => {
-      if (!def || previewDefaults) return;
-      if (e.type === 'pointerdown' && e.button !== 0) return;
-      previewDefaults = true;
-      chgBtn.classList.add('is-holding');
-      applyAll();
-      refreshChanged();
-    };
-    const stopCompare = () => {
-      if (!previewDefaults) return;
-      previewDefaults = false;
-      chgBtn.classList.remove('is-holding');
-      applyAll();
-      refreshChanged();
-    };
-    chgBtn.addEventListener('pointerdown', startCompare);
-    chgBtn.addEventListener('pointerup', stopCompare);
-    chgBtn.addEventListener('pointerleave', stopCompare);
-    chgBtn.addEventListener('pointercancel', stopCompare);
-    chgBtn.addEventListener('keydown', (e) => {
-      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startCompare(e); }
-    });
-    chgBtn.addEventListener('keyup', (e) => {
-      if (e.key === ' ' || e.key === 'Enter') stopCompare();
-    });
-    chgBtn.addEventListener('blur', stopCompare);
 
     $('backBtn').addEventListener('click', back);
     $('moreBtn').innerHTML = svg('dots');

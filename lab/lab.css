@@ -189,8 +189,8 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .card-foot { display: grid; grid-template-rows: 1fr; border-top: 1px solid var(--lab-line); transition: grid-template-rows 0.32s var(--settle), opacity 0.22s var(--ease-out), border-color 0.3s; flex: none; }
 .card-foot.is-collapsed { grid-template-rows: 0fr; opacity: 0; border-top-color: transparent; pointer-events: none; }
 .foot-inner { min-height: 0; overflow: hidden; }
-.foot-body { display: flex; flex-direction: column; gap: 6px; padding: 9px 12px 10px 14px; }
-.foot-row { display: flex; align-items: center; gap: 6px; }
+.foot-body { display: flex; flex-direction: column; padding: 8px 12px; }
+.foot-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .foot-btn { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--lab-line); background: rgba(255, 255, 255, 0.04); color: var(--lab-muted); display: grid; place-items: center; padding: 0; flex: none; transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.15s var(--ease-out), opacity 0.2s; }
 .foot-btn .ico { width: 17px; height: 17px; }
 .foot-btn:hover:not(:disabled) { color: var(--lab-fg); background: rgba(110, 231, 255, 0.08); border-color: rgba(110, 231, 255, 0.28); }

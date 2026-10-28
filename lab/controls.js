@@ -95,7 +95,8 @@
       const head = el('div', 'ctl-head');
       const lab = el('label', 'ctl-label', (sigOn ? svg('sig', 'sig-ico') : '') + esc(compact && v.short ? v.short : v.label));
       if (sigOn) row.title = 'Signature feature of this component';
-      lab.title = (v.hint ? v.hint + '\n' : '') + v.id + (v.css ? '  ' + v.css : '') + '\nDouble-click to reset';
+      const tipExtra = [v.where, v.hint || v.note].filter(Boolean).join(' \u00b7 ');
+      lab.title = (tipExtra ? tipExtra + '\n' : '') + v.id + (v.css ? '  ' + v.css : '') + '\nDouble-click to reset';
       lab.addEventListener('dblclick', () => setValue(v.id, v.default));
       const out = el('span', 'ctl-val', esc(fmt(v, P[v.id])));
       if (v.control === 'slider' || v.control === 'radial') wireClickToType(v, out);
@@ -160,13 +161,6 @@
         s.value = String(P[v.id]);
         s.addEventListener('change', () => setValue(v.id, s.value));
         row.appendChild(s);
-      }
-
-      if (hasPro('signatureMarks') && (v.source === 'js-const' || v.hint || v.where || v.note)) {
-        const subText = v.source === 'js-const'
-          ? 'js-const \u00b7 ' + (v.note || ('read P.' + v.id + ' in render()'))
-          : [v.where, v.hint || (v.source === 'scan' ? 'lab-enforced (' + (v.interaction || 'scan') + ')' : v.note)].filter(Boolean).join(' \u00b7 ');
-        if (subText) row.appendChild(el('div', 'ctl-sub' + (v.source === 'js-const' ? ' is-const' : ''), esc(subText)));
       }
       return row;
     }
