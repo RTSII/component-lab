@@ -69,7 +69,7 @@
   ];
   const CAT_IDS = CATS.map((c) => c.id);
   const ANCHORS = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
-  const VIEWS = [{ id: 'fit', label: 'Fit' }, { id: '1600x770', label: '1600×770', w: 1600, h: 770 }, { id: '1366x768', label: '1366×768', w: 1366, h: 768 }];
+  const VIEWS = [{ id: 'fit', label: 'Fit' }, { id: '1600x770', label: '1600Ã—770', w: 1600, h: 770 }, { id: '1366x768', label: '1366Ã—768', w: 1366, h: 768 }];
   const MARGIN = 16;
   const BASIC_CAP = 8;
   const RAIL_W = 46;
@@ -77,9 +77,9 @@
   // Central declarative map for Basic vs. Pro feature gating.
   const PRO_FEATURES = {
     accordion: true,        // Single scrolling panel with mini-cards + Advanced folds
-    starCurate: true,       // ★ buttons to curate Basic's 8 featured controls
+    starCurate: true,       // â˜… buttons to curate Basic's 8 featured controls
     signatureMarks: true,   // Sparkle icon on signature controls + where/hint subtitles
-    sectionMenu: true,      // ⋮ menu & Pro section collapse/motion settings (A/B/C/D)
+    sectionMenu: true,      // â‹® menu & Pro section collapse/motion settings (A/B/C/D)
     userPalette: true,      // Custom 6-slot "My palette" editor
     railCustomize: true,    // Drag-reorder / hide rail categories & action tools
     toolbarAdvanced: true,  // Toolbar start state & flick strength tuning
@@ -147,7 +147,7 @@
     if (v.control === 'switch') return val ? 'on' : 'off';
     if (v.options) { const o = v.options.find((x) => same(x.value, val)); return o ? o.label : String(val); }
     const n = Number(val);
-    return (isNaN(n) ? val : n.toFixed(decimals(v.step))) + (v.unit ? (v.unit === '×' || v.unit === '°' ? v.unit : ' ' + v.unit) : '');
+    return (isNaN(n) ? val : n.toFixed(decimals(v.step))) + (v.unit ? (v.unit === 'Ã—' || v.unit === 'Â°' ? v.unit : ' ' + v.unit) : '');
   }
   function coerce(v, raw) {
     if (v.control === 'swatch-role') return S.hex(raw) || v.default;
@@ -221,7 +221,7 @@
     if (v.cssMap) return v.cssMap[String(val)];
     if (typeof val === 'boolean') return val ? '1' : '0';
     if (v.speedScaled && byId.SPEED) return +(val / (curP.SPEED || 1)).toFixed(4) + (v.unit || '');
-    if (v.unit === '×') return String(val);
+    if (v.unit === 'Ã—') return String(val);
     return val + (v.unit || '');
   }
   function applyVar(v) {
@@ -505,8 +505,8 @@
     renderPage(0);
     refreshChanged();
     writeHash();
-    if (rescanToast) toast('Component files changed — controls re-scanned.', 4200);
-    else if (auto) toast('No manifest.json, so the controls were made by auto-scan. Settings › Save to disk keeps them.', 5200);
+    if (rescanToast) toast('Component files changed â€” controls re-scanned.', 4200);
+    else if (auto) toast('No manifest.json, so the controls were made by auto-scan. Settings â€º Save to disk keeps them.', 5200);
     if (m.notes && m.notes.length) toast(m.notes.join(' '), 5200);
   }
 
@@ -558,8 +558,8 @@
     scaler.style.height = bh + 'px';
     scaler.style.transform = 'translate(-50%, -50%) scale(' + s.toFixed(4) + ')';
     $('vpBox').classList.toggle('is-on', !!view.w);
-    $('vpTag').textContent = view.w ? view.w + ' × ' + view.h + ' viewport' : '';
-    $('stageNote').textContent = def.title + '  ·  frame ' + f.w + ' × ' + f.h + (view.w ? '  in ' + view.label : '') + '  ·  ' + Math.round(s * 100) + '%';
+    $('vpTag').textContent = view.w ? view.w + ' Ã— ' + view.h + ' viewport' : '';
+    $('stageNote').textContent = def.title + '  Â·  frame ' + f.w + ' Ã— ' + f.h + (view.w ? '  in ' + view.label : '') + '  Â·  ' + Math.round(s * 100) + '%';
   }
 
   // ---------- time ----------
@@ -1043,8 +1043,8 @@
         const k = b.dataset.slot, s = snaps[k];
         b.classList.toggle('is-filled', !!s);
         b.title = s
-          ? 'Slot ' + k + ' saved · Click to load · Shift+Click to overwrite · Alt+Click or Right-click to clear'
-          : 'Slot ' + k + ' empty · Click to save current look';
+          ? 'Slot ' + k + ' saved Â· Click to load Â· Shift+Click to overwrite Â· Alt+Click or Right-click to clear'
+          : 'Slot ' + k + ' empty Â· Click to save current look';
       });
     };
     ['A', 'B', 'C'].forEach((k) => {
@@ -1159,7 +1159,7 @@
         if (page) page.addEventListener('scroll', () => spy(page), { passive: true });
       });
       const total = cats.reduce((a, c) => a + c.n, 0);
-      return total + ' controls · ' + cats.filter((c) => c.n).length + ' sections';
+      return total + ' controls Â· ' + cats.filter((c) => c.n).length + ' sections';
     }
     function setState(box, on) {
       box.classList.toggle('is-open', on);
@@ -1301,7 +1301,7 @@
       const grid = el('div', 'pop-row pop-variants');
       VARIANTS.forEach((v) => {
         const b = el('button', 'pop-btn pop-var', '<b>' + v.id + '</b><span>' + esc(v.label) + '</span>');
-        b.type = 'button'; b.dataset.variant = v.id; b.title = v.id + ' · ' + v.hint;
+        b.type = 'button'; b.dataset.variant = v.id; b.title = v.id + ' Â· ' + v.hint;
         b.setAttribute('role', 'menuitemradio');
         b.addEventListener('click', () => Acc.setVariant(v.id));
         grid.appendChild(b);
@@ -1397,246 +1397,430 @@
   const { buildPresets, starBtn, ctlRow, dialEl, chip, syncRow, buildRole, Arc, holdButton } = controlsMod;
 
 
-  // ---------- footer log ----------
+  // ---------- footer: terminal log ----------
+  // Last two actions, newest first and brightest. A slider drag updates its own line in place
+  // (from-value kept) instead of adding a line per step.
   const Log = (function () {
-    const entries = [];
-    let lastKey = '';
-    function push(text, key) {
-      if (!text) return;
-      if (key && key === lastKey && entries.length) entries[entries.length - 1] = text;
-      else { entries.push(text); if (entries.length > 3) entries.shift(); }
-      lastKey = key || '';
-      paint(key !== lastKey);
-    }
+    let lines = [];
+    let idleN = 0;
     function paint() {
       const box = $('footLog');
       if (!box) return;
-      if (!entries.length) {
-        box.innerHTML = '<div class="log-empty">Changes you make will show here</div>';
-        return;
-      }
-      box.innerHTML = entries.map((t, i) => '<div class="log-line' + (i === entries.length - 1 ? ' is-latest' : '') + '">' + esc(t) + '</div>').join('');
-      const last = box.lastElementChild;
-      if (last && M.level() === 'full') last.animate([{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: M.easeOut });
+      const show = lines.length ? lines : [{ text: idleN ? idleN + ' changed (restored)' : 'no changes yet', idle: true }];
+      box.innerHTML = show.slice(0, 2).map((l, i) => '<div class="log-line' + (i ? ' is-old' : '') + (l.idle ? ' is-idle' : '') + (l.kind ? ' is-' + l.kind : '') + '"><span class="log-caret">&gt;</span> ' + esc(l.text) + '</div>').join('');
     }
-    function clear() { entries.length = 0; lastKey = ''; paint(); }
-    return { push, clear, list: () => entries.slice() };
+    function add(entry) {
+      lines.unshift(entry);
+      lines = lines.slice(0, 2);
+      paint();
+      const nl = $('footLog') && $('footLog').firstElementChild;
+      if (nl && M.level() === 'full') nl.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: M.easeOut });
+    }
+    return {
+      change(v, from, to) {
+        const head = lines[0];
+        if (head && head.key === v.id) { head.to = to; head.text = v.label.toLowerCase() + ' ' + fmt(v, head.from) + ' \u2192 ' + fmt(v, to); paint(); return; }
+        add({ key: v.id, from, to, text: v.label.toLowerCase() + ' ' + fmt(v, from) + ' \u2192 ' + fmt(v, to) });
+      },
+      push(text, kind) { add({ text, kind }); },
+      idle(n) { idleN = n; if (!lines.length) paint(); },
+      clear() { lines = []; paint(); },
+      get lines() { return lines.map((l) => l.text); }
+    };
   })();
-
-  function announce(msg) { const a = $('live'); a.textContent = ''; setTimeout(() => { a.textContent = msg; }, 20); }
-  function flashOk(b, label) {
-    if (!b) return;
-    const orig = b._origHtml || (b._origHtml = b.innerHTML);
-    b.classList.add('is-ok');
-    b.innerHTML = svg('check') + '<span>' + label + '</span>';
-    clearTimeout(b._t);
-    b._t = setTimeout(() => { b.classList.remove('is-ok'); b.innerHTML = orig; }, 1300);
+  function announce(text) { const a = $('footLive'); if (a) { a.textContent = ''; setTimeout(() => { a.textContent = text; }, 30); } }
+  function flashOk(btn, ok) {
+    if (!btn) return;
+    const ico = btn.querySelector('.ico');
+    clearTimeout(btn._f);
+    btn.classList.remove('is-ok', 'is-bad');
+    btn.classList.add(ok ? 'is-ok' : 'is-bad');
+    if (ok) btn.innerHTML = svg('check');
+    btn._f = setTimeout(() => { btn.classList.remove('is-ok', 'is-bad'); btn.innerHTML = svg(btn.dataset.icon); }, 1200);
+    if (ok && M.level() === 'full') { const c = btn.querySelector('.ico'); if (c) c.animate([{ transform: 'scale(0.6)', opacity: 0.2 }, { transform: 'scale(1)', opacity: 1 }], { duration: 260, easing: M.spring }); }
+    return ico;
   }
 
   // ---------- wire export.js module ----------
   const exportMod = window.Lab.initExport({
-    $, el, svg, M, S, store, STORAGE_KEY,
-    getDef: () => def, getMan: () => man, getRawFiles: () => rawFiles,
-    getVars: () => vars, getById: () => byId, getP: () => P, getUi: () => ui,
-    same, fmt, interactVars, featuredOverrides, userPalette,
-    Log, toast, announce, flashOk, reloadComponent: () => loadComponent(def.id, true)
+    $, el, esc, KEY, store, toast, fetchText,
+    getDef: () => def, getMan: () => man, getVars: () => vars, getP: () => P, getUi: () => ui,
+    getOffset: () => offset, getPlaying: () => playing, getBindStyle: () => bindStyle,
+    changedVars, interactVars, fmt, cssVal, frameKeyFor, wrap,
+    flashOk, announce, Log,
+    reloadAfterImport: () => {
+      Object.assign(ui, store.get('ui', {}));
+      if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
+      M.enabled = ui.motion !== false;
+      document.documentElement.classList.toggle('no-motion', !ui.motion);
+      if (def) loadComponent(def.id, false).then(() => relayout());
+    }
   });
   const { manifestForExport, saveManifest, copyText, interactionText, changesText, copyChanges, workingFile, copyFull, exportLabData, importLabData } = exportMod;
 
-  // ---------- Settings, User Palette, New Component ----------
+  // ---------- settings ----------
+  function section(inner, title) { inner.appendChild(el('div', 'ctl-label sub sec', esc(title))); }
+  const CAT_ORDER = {
+    name: 'rail', items: () => orderedCats(), present: (id) => hasCat(id), min: 1,
+    order: () => (Array.isArray(ui.railOrder) ? ui.railOrder : []), setOrder: (ids) => { ui.railOrder = ids; },
+    hidden: () => railHidden(), setHidden: (h) => { ui.railHidden = h; },
+    hiddenTitle: 'Hidden from the rail (Pro section stays)', minMsg: 'Keep at least one category on the rail.',
+    note: 'Pro sections follow this order. Settings always stays on the rail.'
+  };
+  const TOOL_ORDER = {
+    name: 'rail actions', items: () => orderedTools(), present: () => true, min: 0,
+    order: () => (Array.isArray(ui.toolOrder) ? ui.toolOrder : []), setOrder: (ids) => { ui.toolOrder = ids; },
+    hidden: () => toolHidden(), setHidden: (h) => { ui.toolHidden = h; },
+    hiddenTitle: 'Hidden from the rail', minMsg: '',
+    note: 'Below the categories. Settings is always last and always shown.'
+  };
+  function railOrderEl(spec) {
+    spec = spec || CAT_ORDER;
+    const box = el('div', 'order-box');
+    const listEl = el('div', 'order-list');
+    listEl.setAttribute('role', 'list');
+    const present = (id) => spec.present(id);
+    const commit = (ids, msg) => {
+      spec.setOrder(ids); saveUi();
+      buildRail();
+      paint(msg);
+    };
+    function moveTo(from, to) {
+      const ids = spec.items().map((c) => c.id);
+      if (to < 0 || to >= ids.length || from === to) return;
+      const [x] = ids.splice(from, 1);
+      ids.splice(to, 0, x);
+      commit(ids);
+      Log.push(spec.name + ' order: ' + ids.join(' · '));
+      const b = listEl.querySelector('.order-row[data-cat="' + x + '"] .order-grip');
+      if (b) b.focus({ preventScroll: true });
+    }
+    function paint() {
+      const first = {};
+      listEl.querySelectorAll('.order-row').forEach((r) => { first[r.dataset.cat] = r.getBoundingClientRect().top; });
+      listEl.innerHTML = '';
+      const cats = spec.items();
+      cats.forEach((c, i) => {
+        const hidden = spec.hidden().includes(c.id);
+        const row = el('div', 'order-row' + (present(c.id) ? '' : ' is-absent') + (hidden ? ' is-hidden' : ''));
+        row.dataset.cat = c.id;
+        row.setAttribute('role', 'listitem');
+        const grip = el('button', 'order-grip', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="1.3" class="fill"/><circle cx="15" cy="7" r="1.3" class="fill"/><circle cx="9" cy="12" r="1.3" class="fill"/><circle cx="15" cy="12" r="1.3" class="fill"/><circle cx="9" cy="17" r="1.3" class="fill"/><circle cx="15" cy="17" r="1.3" class="fill"/></svg>');
+        grip.type = 'button';
+        grip.setAttribute('aria-label', 'Move ' + c.label + ' (drag, or Alt+Arrow keys)');
+        grip.title = 'Drag to reorder';
+        const name = el('span', 'order-name', svg(c.icon) + '<span>' + esc(c.label) + '</span>' + (present(c.id) ? '' : '<em>not in this one</em>'));
+        const up = el('button', 'icon-btn order-arrow', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14l5-5 5 5"/></svg>');
+        up.type = 'button'; up.disabled = i === 0; up.setAttribute('aria-label', 'Move ' + c.label + ' up'); up.title = 'Up';
+        const dn = el('button', 'icon-btn order-arrow', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>');
+        dn.type = 'button'; dn.disabled = i === cats.length - 1; dn.setAttribute('aria-label', 'Move ' + c.label + ' down'); dn.title = 'Down';
+        const eye = el('button', 'icon-btn order-eye' + (hidden ? '' : ' is-on'), '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + (hidden ? '<path d="M4 4l16 16"/><path d="M9.9 6.2A9 9 0 0 1 21 12a14 14 0 0 1-2.6 3.3M6.3 7.4A14 14 0 0 0 3 12c1.8 3.6 5 6 9 6a8 8 0 0 0 3.4-.8"/>' : '<path d="M3 12c1.8-3.6 5-6 9-6s7.2 2.4 9 6c-1.8 3.6-5 6-9 6s-7.2-2.4-9-6z"/><circle cx="12" cy="12" r="2.6"/>') + '</svg>');
+        eye.type = 'button';
+        eye.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+        eye.setAttribute('aria-label', (hidden ? 'Show ' : 'Hide ') + c.label + ' on the rail');
+        eye.title = hidden ? spec.hiddenTitle : 'Shown on the rail';
+        up.addEventListener('click', () => moveTo(i, i - 1));
+        dn.addEventListener('click', () => moveTo(i, i + 1));
+        grip.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); moveTo(i, i + (e.key === 'ArrowUp' ? -1 : 1)); }
+        });
+        eye.addEventListener('click', () => {
+          const h = spec.hidden().slice();
+          const k = h.indexOf(c.id);
+          if (k < 0) {
+            if (spec.min && cats.length - h.length <= spec.min) { toast(spec.minMsg); return; }
+            h.push(c.id);
+          } else h.splice(k, 1);
+          spec.setHidden(h); saveUi();
+          buildRail();
+          Log.push((k < 0 ? 'rail hide ' : 'rail show ') + c.label.toLowerCase());
+          paint();
+          const e2 = listEl.querySelector('.order-row[data-cat="' + c.id + '"] .order-eye');
+          if (e2) e2.focus({ preventScroll: true });
+        });
+        grip.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          grip.setPointerCapture(e.pointerId);
+          const rows = [...listEl.children];
+          const i0 = rows.indexOf(row), h = row.offsetHeight + 4, y0 = e.clientY;
+          let target = i0, moved = false;
+          row.classList.add('is-drag');
+          const mv = (ev) => {
+            const dy = ev.clientY - y0;
+            if (Math.abs(dy) > 3) moved = true;
+            target = Math.max(0, Math.min(rows.length - 1, i0 + Math.round(dy / h)));
+            row.style.transform = 'translateY(' + dy + 'px)';
+            rows.forEach((r, j) => {
+              if (r === row) return;
+              const sh = j > i0 && j <= target ? -h : j < i0 && j >= target ? h : 0;
+              r.style.transform = sh ? 'translateY(' + sh + 'px)' : '';
+            });
+          };
+          const upf = () => {
+            grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', upf); grip.removeEventListener('pointercancel', upf);
+            row.classList.remove('is-drag');
+            rows.forEach((r) => { r.style.transform = ''; });
+            if (moved && target !== i0) moveTo(i0, target);
+          };
+          grip.addEventListener('pointermove', mv);
+          grip.addEventListener('pointerup', upf);
+          grip.addEventListener('pointercancel', upf);
+        });
+        row.append(grip, name, up, dn, eye);
+        listEl.appendChild(row);
+      });
+      if (M.level() === 'full') listEl.querySelectorAll('.order-row').forEach((r) => {
+        const t0 = first[r.dataset.cat];
+        if (t0 == null) return;
+        const dy = t0 - r.getBoundingClientRect().top;
+        if (Math.abs(dy) > 1) r.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 360, easing: M.springSoft });
+      });
+      reset.disabled = !spec.order().length && !spec.hidden().length;
+    }
+    const foot = el('div', 'order-foot');
+    const reset = el('button', 'link-btn', 'Reset to default order');
+    reset.type = 'button';
+    reset.addEventListener('click', () => { spec.setOrder([]); spec.setHidden([]); saveUi(); buildRail(); paint(); Log.push(spec.name + ' order reset'); toast('Rail back to the default order.'); });
+    foot.append(el('span', 'note', spec.note), reset);
+    box.append(listEl, foot);
+    paint();
+    return box;
+  }
+  function switchRow(label, get, set, note) {
+    const sw = el('button', 'switch', '<span class="knob"></span>');
+    sw.type = 'button';
+    sw.setAttribute('role', 'switch');
+    sw.setAttribute('aria-label', label);
+    const sync = () => sw.setAttribute('aria-checked', get() ? 'true' : 'false');
+    sync();
+    sw.addEventListener('click', () => { set(!get()); sync(); Log.push(label.toLowerCase() + (get() ? ' on' : ' off')); });
+    const row = el('div', 'ctl ctl-inline');
+    const h = el('div', 'ctl-head');
+    h.append(el('span', 'ctl-label', esc(label)), sw);
+    row.appendChild(h);
+    if (note) row.appendChild(el('p', 'note', note));
+    return row;
+  }
+  function setRow(label, ctl, note) {
+    const row = el('div', 'ctl');
+    const head = el('div', 'ctl-head');
+    head.appendChild(el('span', 'ctl-label', esc(label)));
+    row.appendChild(head);
+    if (ctl) row.appendChild(ctl);
+    if (note) row.appendChild(el('p', 'note', note));
+    return row;
+  }
+  function relayout() {
+    applyDockLayout();
+    layoutStage();
+    requestAnimationFrame(() => { fitPages(null, false); syncRail(true); document.querySelectorAll('.seg').forEach((sg) => syncSeg(sg, null, sg.dataset.value, true)); });
+  }
   function buildSettings(inner) {
-    inner.appendChild(el('div', 'set-sec', 'Card position'));
-    const grid = el('div', 'anchor-grid');
+    section(inner, 'Dock');
+    const pos = el('div', 'seg seg-sm');
+    buildSeg(pos, [{ value: 'right', label: 'Right' }, { value: 'bottom', label: 'Bottom' }], ui.dockPos, (val) => {
+      ui.dockPos = val; saveUi();
+      grid.classList.toggle('is-disabled', val === 'bottom');
+      relayout();
+    }, { equal: true });
+    inner.appendChild(setRow('Position', pos));
+
+    const grid = el('div', 'anchor-grid' + (ui.dockPos === 'bottom' ? ' is-disabled' : ''));
+    grid.setAttribute('role', 'radiogroup');
+    grid.setAttribute('aria-label', 'Anchor');
     ANCHORS.forEach((a) => {
-      const b = el('button', 'anchor-dot' + (ui.anchor === a ? ' is-on' : ''), '');
+      const b = el('button', 'anchor-dot' + (a === ui.anchor ? ' is-on' : ''), '<i></i>');
       b.type = 'button';
-      b.dataset.anchor = a;
-      b.setAttribute('aria-label', a.replace('-', ' '));
+      b.setAttribute('aria-label', 'Anchor ' + a.replace('-', ' '));
       if (a === 'middle-center') {
         b.disabled = true;
         b.title = 'Center anchor disabled (covers component stage)';
       } else {
+        b.title = a.replace('-', ' ');
         b.addEventListener('click', () => {
+          if (ui.dockPos === 'bottom') { toast('Anchor applies to the right dock.'); return; }
           ui.anchor = a; saveUi();
-          grid.querySelectorAll('.anchor-dot').forEach((d) => d.classList.toggle('is-on', d === b));
-          relayout(true);
+          grid.querySelectorAll('.anchor-dot').forEach((x) => x.classList.toggle('is-on', x === b));
+          relayout();
         });
       }
       grid.appendChild(b);
     });
-    const posRow = el('div', 'set-row');
-    posRow.append(el('div', '', '<div class="set-label">Anchor</div><div class="set-sub">Eight outer positions around the component</div>'), grid);
-    inner.appendChild(posRow);
+    const anchorRow = setRow('Anchor', grid, 'The card stays pinned here and grows away from it.');
+    inner.appendChild(anchorRow);
 
-    inner.appendChild(setRow('Open trigger', 'Hover or click on the rail', [
-      { value: 'hover', label: 'Hover' }, { value: 'click', label: 'Click' }
-    ], () => ui.openOn, (v) => { ui.openOn = v; saveUi(); }));
-
-    inner.appendChild(setRow('Motion', 'Spring physics across the lab', [
-      { value: 'full', label: 'Full' }, { value: 'fade', label: 'Subtle' }, { value: 'off', label: 'Off' }
-    ], () => ui.motion, (v) => { ui.motion = v; saveUi(); applyMotionPref(); }));
-
-    inner.appendChild(setRow('Background', 'Stage backdrop behind the component', [
-      { value: 'obsidian', label: 'Dark' }, { value: 'grid', label: 'Grid' }, { value: 'checker', label: 'Check' }, { value: 'paper', label: 'Light' }
-    ], () => ui.stage, (v) => { ui.stage = v; saveUi(); $('stage').dataset.bg = v; }));
+    section(inner, 'Behaviour');
+    const sw = el('button', 'switch', '<span class="knob"></span>');
+    sw.type = 'button';
+    sw.setAttribute('role', 'switch');
+    sw.setAttribute('aria-checked', ui.motion ? 'true' : 'false');
+    sw.setAttribute('aria-label', 'Animations');
+    sw.addEventListener('click', () => {
+      ui.motion = !ui.motion; saveUi();
+      M.enabled = ui.motion;
+      sw.setAttribute('aria-checked', ui.motion ? 'true' : 'false');
+      document.documentElement.classList.toggle('no-motion', !ui.motion);
+      toast(ui.motion ? 'Animations on' + (M.level() === 'fade' ? ' (fades only: your system asks for reduced motion)' : '') : 'Animations off');
+    });
+    const mrow = el('div', 'ctl ctl-inline');
+    const mh = el('div', 'ctl-head');
+    mh.append(el('span', 'ctl-label', 'Animations'), sw);
+    mrow.appendChild(mh);
+    inner.appendChild(mrow);
 
     if (hasPro('userPalette')) {
-      const palBtn = el('button', 'nav-row', '<div><div class="set-label">My palette</div><div class="set-sub">' + userPalette().length + ' saved swatches</div></div>' + svg('chev'));
-      palBtn.type = 'button';
-      palBtn.addEventListener('click', () => push({ type: 'user' }));
-      inner.appendChild(palBtn);
+      const up = userPalette();
+      const src = el('div', 'seg seg-sm');
+      buildSeg(src, [{ value: 'project', label: 'Project' }, { value: 'user', label: 'My palette', disabled: !up, hint: 'Save a palette under My palette first' }], up ? ui.paletteSource : 'project', (val) => { ui.paletteSource = val; saveUi(); toast('Swatches now come from ' + (val === 'user' ? 'My palette' : 'the project CSS')); }, { equal: true });
+      inner.appendChild(setRow('Palette source', src, up ? null : 'Save a palette under My palette to use it here.'));
+
+      const nav = el('button', 'nav-row', svg('user') + '<span>My palette</span><span class="nav-meta">' + (up ? up.length + ' colours' : 'not set') + '</span>' + svg('chev'));
+      nav.type = 'button';
+      nav.addEventListener('click', () => push({ type: 'user' }));
+      inner.appendChild(nav);
     }
 
     if (hasPro('railCustomize')) {
-      inner.appendChild(el('div', 'set-sec', 'Rail order'));
-      inner.appendChild(el('div', 'set-sub set-note', 'Drag or use the arrows to reorder. Eye hides an icon from the rail.'));
-      inner.appendChild(railOrderEl());
-
-      inner.appendChild(el('div', 'set-sec', 'Rail actions'));
-      inner.appendChild(el('div', 'set-sub set-note', 'New component (+) and the Stage toolbar button above the gear.'));
-      inner.appendChild(toolOrderEl());
+      section(inner, 'Rail order');
+      inner.appendChild(railOrderEl(CAT_ORDER));
+      inner.appendChild(el('div', 'ctl-label sub', 'Rail actions'));
+      inner.appendChild(railOrderEl(TOOL_ORDER));
     }
 
-    inner.appendChild(el('div', 'set-sec', 'Stage toolbar'));
-    const tbShowRow = switchRow('Show toolbar icon', 'Top-left button; grab any edge to drag & drop, or flick hard to launch', () => TB.shown, (on) => {
-      if (on) TB.flyHome(); else TB.dismiss();
-    });
+    section(inner, 'Viewport');
+    const vps = el('div', 'seg seg-sm');
+    vps.dataset.set = 'viewport';
+    buildSeg(vps, [VIEWS[1], VIEWS[2], VIEWS[0]].map((x) => ({ value: x.id, label: x.label })), ui.view, (val) => setView(val), { equal: true });
+    inner.appendChild(setRow('Sandbox frame', vps, '1600\u00d7770 is the default: the HP laptop (Chrome on a 1600\u00d7900 screen). 1366\u00d7768 and Fit are extra checks.'));
+
+    section(inner, 'Toolbar');
+    const tbShowRow = switchRow('Show toolbar icon', () => TB.shown, (on) => TB.setOut(on), 'The floating toolbar over the stage. Grab anywhere on its shell to drag & drop it for this session, or throw it hard to launch an arcade exit!');
     tbShowRow.id = 'tbShowSwitchRow';
     inner.appendChild(tbShowRow);
     if (TB.hasCustomPos) {
-      const resetPosBtn = el('button', 'link-btn', 'Reset toolbar position to top-left corner');
+      const resetPosBtn = el('button', 'link-btn', 'Reset toolbar position to default corner');
       resetPosBtn.type = 'button';
       resetPosBtn.addEventListener('click', () => {
         TB.resetPos();
-        toast('Toolbar returned to top-left corner.');
+        toast('Toolbar returned to default corner.');
         renderPage(0);
       });
       inner.appendChild(resetPosBtn);
     }
     if (hasPro('toolbarAdvanced')) {
-      inner.appendChild(setRow('Start state', 'How the stage toolbar opens on load', [
-        { value: 'icon', label: 'Icon' }, { value: '1', label: '1 group' }, { value: 'all', label: 'Full' }, { value: 'remember', label: 'Remember' }
-      ], () => ui.tbInit || 'icon', (v) => { ui.tbInit = v; saveUi(); }));
-      inner.appendChild(switchRow('Outside click closes it', 'Collapse to the icon when clicking the stage', () => !!ui.tbCloseOut, (on) => {
-        ui.tbCloseOut = on; saveUi();
-      }));
-      inner.appendChild(switchRow('Flick physics', 'Short flick opens; hard throw triggers arcade exit', () => ui.tbFlick !== false, (on) => {
-        ui.tbFlick = on; saveUi();
-      }));
-      inner.appendChild(setRow('Flick strength', 'How fast a throw needs to be', [
-        { value: 'gentle', label: 'Gentle' }, { value: 'normal', label: 'Normal' }, { value: 'firm', label: 'Firm' }
-      ], () => ui.tbPower || 'normal', (v) => { ui.tbPower = v; saveUi(); }));
+      inner.appendChild(el('p', 'note tb-gestures', 'Gestures on the toolbar: click opens/closes all groups · Shift+click or \u2190/\u2192 one group · drag & release calmly to drop at a custom spot · short horizontal flick opens/closes · strong throw launches an arcade exit to the rail.'));
+      const tbs = el('div', 'seg seg-sm');
+      tbs.dataset.tb = 'start';
+      buildSeg(tbs, [{ value: 'closed', label: 'Closed' }, { value: 'open', label: 'Open' }, { value: 'remember', label: 'Remember' }], ui.tbStart, (val) => { ui.tbStart = val; saveUi(); Log.push('toolbar start ' + val); }, { equal: true });
+      inner.appendChild(setRow('Start state', tbs, 'How the toolbar opens when the lab loads. Remember reopens the groups you had open.'));
+      inner.appendChild(switchRow('Outside click closes it', () => ui.tbAutoClose, (on) => { ui.tbAutoClose = on; saveUi(); }));
+      inner.appendChild(switchRow('Flick physics', () => ui.flick, (on) => { ui.flick = on; M.flickOn = on; saveUi(); fs.querySelectorAll('.seg-btn').forEach((b) => { b.disabled = !on; }); }, 'Flick the rail toolbar button toward the stage to throw the toolbar out; flick or throw the toolbar to launch it back.'));
+      const fs = el('div', 'seg seg-sm');
+      fs.dataset.tb = 'flick';
+      buildSeg(fs, [{ value: 'light', label: 'Light' }, { value: 'normal', label: 'Normal' }, { value: 'heavy', label: 'Heavy' }], ui.flickStrength, (val) => { ui.flickStrength = val; M.flickStrength = val; saveUi(); Log.push('flick ' + val); }, { equal: true });
+      if (!ui.flick) fs.querySelectorAll('.seg-btn').forEach((b) => { b.disabled = true; });
+      inner.appendChild(setRow('Flick strength', fs, 'Light: a soft flick is enough. Heavy: needs a fast, long flick.'));
     }
 
     if (hasPro('sectionMenu')) {
-      inner.appendChild(el('div', 'set-sec', 'Pro sections'));
-      const colRow = setRow('Collapse state', 'How sections start in Pro (also in the \u22ee menu)',
-        COLLAPSE.map((c) => ({ value: c.id, label: c.label.replace('All ', '') })),
-        () => ui.accCollapse || 'remember', (v) => Acc.setCollapse(v));
-      colRow.querySelector('.seg').dataset.acc = 'collapse';
-      inner.appendChild(colRow);
-      const varRow = setRow('Section motion', 'A Slide · B Spring · C Stagger · D Exclusive',
-        VARIANTS.map((v) => ({ value: v.id, label: v.id })),
-        () => ui.accVariant || 'B', (v) => Acc.setVariant(v));
-      varRow.querySelector('.seg').dataset.acc = 'variant';
-      varRow.querySelectorAll('.seg-btn').forEach((b, i) => { b.dataset.variant = VARIANTS[i].id; b.title = VARIANTS[i].id + ' · ' + VARIANTS[i].hint; });
-      inner.appendChild(varRow);
+      section(inner, 'Pro sections');
+      const col = el('div', 'seg seg-sm');
+      col.dataset.acc = 'collapse';
+      buildSeg(col, COLLAPSE.map((c) => ({ value: c.id, label: c.label })), ui.accCollapse, (val) => Acc.setCollapse(val), { equal: true });
+      inner.appendChild(setRow('Collapse state', col, 'Remember reopens what you had open, per component.'));
+      const vseg = el('div', 'seg seg-sm');
+      vseg.dataset.acc = 'variant';
+      buildSeg(vseg, VARIANTS.map((v) => ({ value: v.id, label: v.id + ' ' + v.label })), ui.accVariant, (val) => Acc.setVariant(val), { equal: true });
+      inner.appendChild(setRow('Section motion', vseg, 'B spring morph is the default. A slide + fade · C stagger rows · D one open, rest as chips. Also in the \u22ee menu.'));
     }
 
     if (hasPro('manifestTools')) {
-      const scanList = (def && def.scan && def.scan.interactions) || [];
-      inner.appendChild(el('div', 'set-sec', 'Interaction scan'));
-      const scanSub = scanList.length
-        ? 'Detected: ' + scanList.map((s) => s.kind + ' (' + s.evidence + ')').join(' · ')
-        : 'No hover, drag, wheel, key, click or touch handlers detected in this component.';
-      const genRow = switchRow('Generate missing controls', scanSub, () => ui.genInteract !== false, (on) => {
-        ui.genInteract = on; saveUi();
-        loadComponent(def.id, true);
-        toast(on ? 'Generated interaction controls enabled.' : 'Showing only manifest-declared controls.');
-      });
-      inner.appendChild(genRow);
-
-      inner.appendChild(el('div', 'set-sec', 'Manifest'));
-      const isTpl = def && def.id === '_template';
-      const manRow = el('div', 'set-row');
-      manRow.appendChild(el('div', '', '<div class="set-label">manifest.json</div><div class="set-sub">' + (isTpl ? 'Protected scaffold template (export only)' : 'Include your \u2605 featured set and current defaults') + '</div>'));
-      const manBtns = el('div', 'btn-pair');
-      const saveB = el('button', 'foot-btn is-primary', svg('save') + '<span>Save to disk</span>');
-      saveB.type = 'button';
-      if (isTpl) {
-        saveB.disabled = true;
-        saveB.title = '_template is read-only; use Export JSON instead';
-      } else {
-        saveB.addEventListener('click', () => saveManifest(saveB));
+      const scan = (man && man.scan) || [];
+      if (scan.length) {
+        section(inner, 'Interaction scan');
+        const ia = interactVars();
+        inner.appendChild(el('p', 'note', 'Found in the code: ' + esc(scan.map((x) => x.label + ' (' + x.evidence + ')').join(', ')) + '. '
+          + (ia.length ? 'Controls: ' + esc(ia.map((v) => v.label).join(', ')) + '.' : 'Not exposed as controls yet; add "interact" vars to manifest.json (README › Interaction).')));
       }
-      const dlB = el('button', 'foot-btn', svg('download') + '<span>Export JSON</span>');
-      dlB.type = 'button';
-      dlB.addEventListener('click', () => {
-        S.download(def.id + '-manifest.json', JSON.stringify(manifestForExport(), null, 2), 'application/json');
-        toast('Downloaded ' + def.id + '-manifest.json');
-      });
-      manBtns.append(saveB, dlB);
-      manRow.appendChild(manBtns);
-      inner.appendChild(manRow);
 
-      const rescanRow = el('div', 'set-row');
-      rescanRow.appendChild(el('div', '', '<div class="set-label">Source scan</div><div class="set-sub">Re-read CSS, JS & HTML without losing current slider values</div>'));
-      const rescanB = el('button', 'foot-btn', svg('reset') + '<span>Re-scan files</span>');
-      rescanB.type = 'button';
-      rescanB.addEventListener('click', () => rescanComponent(rescanB));
-      rescanRow.appendChild(rescanB);
-      inner.appendChild(rescanRow);
+      section(inner, 'Manifest');
+      const btns = el('div', 'btn-row');
+      const save = el('button', 'btn', 'Save to disk');
+      save.type = 'button';
+      if (def && def.id === '_template') {
+        save.disabled = true;
+        save.title = '_template is read-only; use Export JSON instead';
+      } else {
+        save.title = 'Write components/' + def.id + '/manifest.json (stars included)';
+        save.addEventListener('click', saveManifest);
+      }
+      const exp = el('button', 'btn', 'Export JSON');
+      exp.type = 'button';
+      exp.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(manifestForExport(), null, 2) + '\n'], { type: 'application/json' });
+        const a = el('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = def.id + '.manifest.json';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      });
+      const rescan = el('button', 'btn', 'Re-scan files');
+      rescan.type = 'button';
+      rescan.title = 'Re-scan CSS, HTML, and JS source files for this component';
+      rescan.addEventListener('click', () => {
+        if (!def) return;
+        store.del('manifest:' + def.id);
+        loadComponent(def.id, false).then(() => { go({ type: 'settings' }); toast('Re-scanned ' + def.title + ' source files.'); });
+      });
+      btns.append(save, exp, rescan);
+      inner.appendChild(btns);
     }
 
-    inner.appendChild(el('div', 'set-sec', 'Reset & backup'));
-    const bkRow = el('div', 'set-row');
-    bkRow.appendChild(el('div', '', '<div class="set-label">Lab data backup</div><div class="set-sub">Save or restore all values, snapshots, palettes & UI settings</div>'));
-    const bkBtns = el('div', 'btn-pair');
-    const expB = el('button', 'foot-btn', svg('download') + '<span>Export lab data</span>');
-    expB.type = 'button';
-    expB.addEventListener('click', () => exportLabData());
-    const impB = el('button', 'foot-btn', svg('plus') + '<span>Import lab data</span>');
-    impB.type = 'button';
-    impB.addEventListener('click', () => importLabData());
-    bkBtns.append(expB, impB);
-    bkRow.appendChild(bkBtns);
-    inner.appendChild(bkRow);
+    section(inner, 'Backup & Reset');
+    const bkBtns = el('div', 'btn-row');
+    const expBk = el('button', 'btn', 'Export lab data');
+    expBk.type = 'button';
+    expBk.title = 'Download all saved values, stars, snapshots, palettes & UI settings as JSON';
+    expBk.addEventListener('click', exportLabData);
+    const impBk = el('button', 'btn', 'Import lab data');
+    impBk.type = 'button';
+    impBk.title = 'Restore saved lab data from a backup JSON file';
+    impBk.addEventListener('click', importLabData);
+    bkBtns.append(expBk, impBk);
+    inner.appendChild(bkBtns);
 
-    const resetAll = holdButton('Hold to reset all', () => {
-      if (!def) return;
+    inner.appendChild(holdButton('Hold to reset all', 1200, () => {
       store.del('values:' + def.id);
       store.del('featured:' + def.id);
       store.del('manifest:' + def.id);
       store.del('accOpen:' + def.id);
       store.del('snaps:' + def.id);
-      loadComponent(def.id, true);
-      toast('Reset values, snapshots, and featured controls.');
-    });
-    resetAll.classList.add('reset-all');
-    inner.appendChild(resetAll);
+      vars.forEach((v) => { P[v.id] = v.default; });
+      loadComponent(def.id, false).then(() => { go({ type: 'settings' }); toast('Reset: every value, snapshot, star and saved scan for ' + def.title + '.'); });
+    }));
+    inner.appendChild(el('p', 'note', 'Resets every value, snapshot and star for this component.'));
 
     const resetUiBtn = el('button', 'link-btn', 'Reset lab layout & settings');
     resetUiBtn.type = 'button';
     resetUiBtn.addEventListener('click', () => {
       store.del('ui');
-      Object.keys(ui).forEach((k) => delete ui[k]);
       Object.assign(ui, {
-        mode: 'basic', anchor: 'bottom-right', openOn: 'hover', motion: 'full', stage: 'obsidian',
-        view: 'fit', accVariant: 'B', accCollapse: 'remember', genInteract: true,
-        railOrder: CAT_IDS.slice(), railHidden: [], toolOrder: TOOL_IDS.slice(), toolHidden: [],
-        tbOut: true, tbGroups: 0, tbInit: 'icon', tbCloseOut: false, tbFlick: true, tbPower: 'normal'
+        dockPos: 'right', anchor: 'top-right', mode: 'basic', motion: true, paletteSource: 'project',
+        view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
+        tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal',
+        railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
       });
       saveUi();
-      mode = ui.mode;
-      $('stage').dataset.bg = ui.stage;
-      applyMotionPref();
+      M.enabled = true;
+      M.flickOn = true;
+      M.flickStrength = 'normal';
+      document.documentElement.classList.remove('no-motion');
       TB.resetPos();
-      TB.flyHome();
-      syncHeadTools();
-      syncSeg($('modeSeg'), modePill, mode);
-      buildRail();
-      relayout(true);
-      renderPage(0);
+      TB.setOut(true);
+      setMode('basic');
+      relayout();
+      go({ type: 'settings' });
       toast('Reset lab layout and settings to defaults.');
     });
     inner.appendChild(resetUiBtn);
@@ -1650,309 +1834,202 @@
       });
       inner.appendChild(proLink);
     }
-    return '';
+    return def.title;
   }
 
-  function orderListEl(items, getOrd, setOrd, getHid, setHid, minVis) {
-    const box = el('div', 'rail-order');
-    let dragId = null;
-    const curOrder = () => {
-      const o = getOrd().filter((id) => items.some((x) => x.id === id));
-      items.forEach((x) => { if (!o.includes(x.id)) o.push(x.id); });
-      return o;
-    };
-    const commit = (ord, hid) => {
-      if (ord) setOrd(ord);
-      if (hid) setHid(hid);
-      saveUi();
-      buildRail();
-      paint();
-    };
-    function move(id, d) {
-      const o = curOrder(), i = o.indexOf(id), j = i + d;
-      if (i < 0 || j < 0 || j >= o.length) return;
-      o.splice(i, 1); o.splice(j, 0, id);
-      commit(o, null);
-    }
-    function toggleHide(id) {
-      const h = getHid().slice();
-      const i = h.indexOf(id);
-      if (i >= 0) h.splice(i, 1);
-      else {
-        if (items.length - h.length <= minVis) { toast(minVis ? 'Keep at least one category on the rail.' : ''); return; }
-        h.push(id);
-      }
-      commit(null, h);
-    }
-    function paint() {
-      box.innerHTML = '';
-      const o = curOrder(), h = getHid();
-      o.forEach((id, i) => {
-        const c = items.find((x) => x.id === id);
-        if (!c) return;
-        const off = h.includes(id);
-        const row = el('div', 'ro-row' + (off ? ' is-off' : ''));
-        row.draggable = true;
-        row.dataset.id = id;
-        row.innerHTML = '<span class="ro-grip" aria-hidden="true">' + svg('grip') + '</span>'
-          + '<span class="ro-ico">' + svg(c.icon) + '</span>'
-          + '<span class="ro-label">' + esc(c.label) + '</span>';
-        const up = el('button', 'icon-btn ro-arr', svg('up'));
-        up.type = 'button'; up.disabled = i === 0; up.setAttribute('aria-label', 'Move ' + c.label + ' up');
-        up.addEventListener('click', () => move(id, -1));
-        const dn = el('button', 'icon-btn ro-arr', svg('down'));
-        dn.type = 'button'; dn.disabled = i === o.length - 1; dn.setAttribute('aria-label', 'Move ' + c.label + ' down');
-        dn.addEventListener('click', () => move(id, 1));
-        const eye = el('button', 'icon-btn ro-eye' + (off ? '' : ' is-on'), svg(off ? 'eyeOff' : 'eye'));
-        eye.type = 'button'; eye.setAttribute('aria-label', (off ? 'Show ' : 'Hide ') + c.label + ' on rail');
-        eye.title = off ? 'Hidden from rail (click to show)' : 'Visible on rail (click to hide)';
-        eye.addEventListener('click', () => toggleHide(id));
-        row.append(up, dn, eye);
-        row.addEventListener('dragstart', (e) => { dragId = id; row.classList.add('is-drag'); try { e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed = 'move'; } catch (_) {} });
-        row.addEventListener('dragend', () => { dragId = null; row.classList.remove('is-drag'); box.querySelectorAll('.is-over').forEach((n) => n.classList.remove('is-over')); });
-        row.addEventListener('dragover', (e) => { if (!dragId || dragId === id) return; e.preventDefault(); row.classList.add('is-over'); });
-        row.addEventListener('dragleave', () => row.classList.remove('is-over'));
-        row.addEventListener('drop', (e) => {
-          e.preventDefault(); row.classList.remove('is-over');
-          if (!dragId || dragId === id) return;
-          const ord = curOrder(), a = ord.indexOf(dragId), b = ord.indexOf(id);
-          if (a < 0 || b < 0) return;
-          ord.splice(a, 1); ord.splice(b, 0, dragId);
-          commit(ord, null);
-        });
-        box.appendChild(row);
-      });
-    }
-    paint();
-    return box;
-  }
-  function railOrderEl() {
-    const wrapEl = el('div', '');
-    wrapEl.appendChild(orderListEl(CATS, () => orderedCats().map((c) => c.id), (o) => { ui.railOrder = o; }, railHidden, (h) => { ui.railHidden = h; }, 1));
-    const resetB = el('button', 'link-btn', 'Reset rail order');
-    resetB.type = 'button';
-    resetB.addEventListener('click', () => { ui.railOrder = CAT_IDS.slice(); ui.railHidden = []; saveUi(); buildRail(); renderPage(0); });
-    wrapEl.appendChild(resetB);
-    return wrapEl;
-  }
-  function toolOrderEl() {
-    return orderListEl(TOOLS, () => orderedTools().map((t) => t.id), (o) => { ui.toolOrder = o; }, toolHidden, (h) => { ui.toolHidden = h; }, 0);
-  }
-  function switchRow(label, sub, get, set) {
-    const row = el('div', 'set-row');
-    const txt = el('div', '', '<div class="set-label">' + esc(label) + '</div><div class="set-sub">' + esc(sub) + '</div>');
-    const sw = el('button', 'switch' + (get() ? ' is-on' : ''), '<span class="switch-knob"></span>');
-    sw.type = 'button'; sw.setAttribute('role', 'switch'); sw.setAttribute('aria-checked', get() ? 'true' : 'false');
-    sw.addEventListener('click', () => { const n = !get(); sw.classList.toggle('is-on', n); sw.setAttribute('aria-checked', n ? 'true' : 'false'); set(n); });
-    row.append(txt, sw);
-    return row;
-  }
-  function setRow(label, sub, opts, get, set) {
-    const row = el('div', 'set-row');
-    const txt = el('div', '', '<div class="set-label">' + esc(label) + '</div><div class="set-sub">' + esc(sub) + '</div>');
-    const seg = el('div', 'seg seg-sm');
-    buildSeg(seg, opts, get(), set);
-    row.append(txt, seg);
-    return row;
-  }
-
+  // ---------- my palette ----------
   function buildUser(inner) {
-    const list = userPalette();
-    const grid = el('div', 'sw-grid');
-    const paint = () => {
-      grid.innerHTML = '';
-      userPalette().forEach((hex, idx) => {
-        const b = el('button', 'sw-dot', '<span style="--sw:' + hex + '"></span>');
-        b.type = 'button'; b.title = hex + ' (click to remove)';
-        b.addEventListener('click', () => { const cur = userPalette(); cur.splice(idx, 1); saveUserPalette(cur); paint(); });
-        grid.appendChild(b);
-      });
-    };
-    paint();
-    const addRow = el('div', 'hex-row');
-    const inp = el('input', 'hex-in'); inp.type = 'text'; inp.placeholder = '#38bdf8'; inp.maxLength = 7;
-    const addB = el('button', 'mini-btn', svg('plus') + ' Add');
-    addB.type = 'button';
-    addB.addEventListener('click', () => {
-      const h = S.parseColor(inp.value);
-      if (!h) { toast('Enter a 6-digit hex like #38bdf8'); return; }
-      const cur = userPalette();
-      if (!cur.includes(h)) { cur.push(h); saveUserPalette(cur); }
-      inp.value = ''; paint();
+    const cur = userPalette() || [];
+    const slots = [];
+    inner.appendChild(el('p', 'note', 'Four to six colours. The lab works out which is the accent, text and surface.'));
+    const grid = el('div', 'user-grid');
+    for (let i = 0; i < 6; i++) {
+      const c = cur[i] || '';
+      const cell = el('div', 'user-slot' + (c ? '' : ' is-empty'));
+      const col = el('input', 'color-in');
+      col.type = 'color'; col.value = c || '#808080'; col.setAttribute('aria-label', 'Colour ' + (i + 1));
+      const hx = el('input', 'hex-in');
+      hx.type = 'text'; hx.value = c.toUpperCase(); hx.placeholder = '#'; hx.maxLength = 7; hx.spellcheck = false; hx.setAttribute('aria-label', 'Hex ' + (i + 1));
+      col.addEventListener('input', () => { hx.value = col.value.toUpperCase(); cell.classList.remove('is-empty'); });
+      hx.addEventListener('input', () => { const ok = /^#?[0-9a-f]{6}$/i.test(hx.value.trim()); hx.classList.toggle('is-bad', !!hx.value && !ok); if (ok) { col.value = S.hex('#' + hx.value.trim().replace('#', '')); cell.classList.remove('is-empty'); } });
+      cell.append(col, hx);
+      grid.appendChild(cell);
+      slots.push(hx);
+    }
+    inner.appendChild(grid);
+    const pick = el('button', 'link-btn', 'Fill from project palette');
+    pick.type = 'button';
+    pick.addEventListener('click', () => {
+      projectPalette.slice(0, 6).forEach((c, i) => { slots[i].value = c.toUpperCase(); slots[i].dispatchEvent(new Event('input')); slots[i].previousSibling.value = c; });
     });
-    addRow.append(inp, addB);
-    inner.append(el('div', 'set-sub', 'Click a swatch to remove it. These appear under "My palette" on every colour page.'), grid, addRow);
-    return list.length + ' swatches';
+    inner.appendChild(pick);
+    const row = el('div', 'btn-row');
+    const save = el('button', 'btn btn-primary', 'Save palette');
+    save.type = 'button';
+    save.addEventListener('click', () => {
+      const cols = slots.map((s) => s.value.trim()).filter((s) => /^#?[0-9a-f]{6}$/i.test(s)).map((s) => S.hex('#' + s.replace('#', '')));
+      if (cols.length < 4) { toast('Add at least four colours.'); return; }
+      store.set('userPalette', cols);
+      toast('Saved. Choose "My palette" as the palette source in Settings to use it.');
+      back();
+    });
+    const clear = el('button', 'btn', 'Clear');
+    clear.type = 'button';
+    clear.addEventListener('click', () => { store.del('userPalette'); if (ui.paletteSource === 'user') { ui.paletteSource = 'project'; saveUi(); } toast('My palette cleared.'); back(); });
+    row.append(save, clear);
+    inner.appendChild(row);
+    return cur.length ? cur.length + ' saved' : 'Not set';
   }
 
+  // ---------- new component stepper: kind -> palette -> name ----------
+  const STEP_NAMES = ['Kind', 'Palette', 'Name'];
   function startNew() {
-    newDraft = { name: '', id: '', kind: 'widget', look: 'obsidian', motion: 'spring' };
-    go({ type: 'new', step: 1 });
+    newDraft = { kind: 'card', palette: 'project', name: '' };
+    go({ type: 'new', step: 0 });
   }
-  function slug(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 32); }
-
-  const KINDS = [
-    { value: 'button', label: 'Button', sub: 'Trigger or toggle', glyph: '<span class="g-pill"><i class="g-dot"></i><b>Action</b></span>' },
-    { value: 'card',   label: 'Card',   sub: 'Panel or tile',     glyph: '<span class="g-card"><i class="g-bar"></i><i class="g-line"></i><i class="g-line s"></i></span>' },
-    { value: 'widget', label: 'Dial',   sub: 'Meter or readout',  glyph: '<span class="g-dial"><i></i><b>72</b></span>' },
-    { value: 'input',  label: 'Slider', sub: 'Range or field',    glyph: '<span class="g-track"><i class="g-fill"></i><b class="g-thumb"></b></span>' },
-    { value: 'loader', label: 'Pulse',  sub: 'Spinner or state',  glyph: '<span class="g-ring"><i></i><b></b></span>' },
-    { value: 'nav',    label: 'Tabs',   sub: 'Segmented bar',     glyph: '<span class="g-tabs"><i class="on"></i><i></i><i></i></span>' }
-  ];
-  const LOOKS = [
-    { value: 'obsidian', label: 'Obsidian', sub: 'Deep glass · cyan + violet', c: ['#0d1018', '#38bdf8', '#a78bfa'] },
-    { value: 'aurora',   label: 'Aurora',   sub: 'Soft dark · mint + sky',     c: ['#0a1418', '#34d399', '#38bdf8'] },
-    { value: 'ember',    label: 'Ember',    sub: 'Warm dark · amber + rose',   c: ['#16100e', '#fbbf24', '#fb7185'] },
-    { value: 'paper',    label: 'Paper',    sub: 'Crisp light · cobalt + ink', c: ['#f5f6fa', '#2563eb', '#0f172a'] }
-  ];
-  const FEELS = [
-    { value: 'snappy', label: 'Snappy', sub: 'Quick & crisp',    curve: 'M4 22 C 10 4, 18 4, 36 4' },
-    { value: 'spring', label: 'Spring', sub: 'Gentle overshoot', curve: 'M4 22 C 11 1, 17 1, 23 6 C 28 9, 32 4, 36 4' },
-    { value: 'floaty', label: 'Calm',   sub: 'Slow & weightless',curve: 'M4 22 C 16 20, 20 4, 36 4' }
-  ];
-
-  function tileGrid(group, items, cur, pick, render) {
-    const g = el('div', 'tile-grid tile-' + group);
-    g.dataset.group = group;
-    g.dataset.value = cur;
-    g.appendChild(el('span', 'tile-pill'));
-    items.forEach((it) => {
-      const b = el('button', 'tile' + (it.value === cur ? ' is-on' : ''), render(it));
-      b.type = 'button';
-      b.dataset.value = it.value;
-      b.setAttribute('aria-pressed', it.value === cur ? 'true' : 'false');
-      b.addEventListener('click', () => {
-        pick(it.value);
-        g.dataset.value = it.value;
-        g.querySelectorAll('.tile').forEach((t) => {
-          const on = t.dataset.value === it.value;
-          t.classList.toggle('is-on', on);
-          t.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
-        syncTiles(g.closest('.page') || document, false);
+  function kindList() {
+    const k = (kindsInfo && kindsInfo.kinds) || { card: { label: 'Card', desc: 'Title, text, action' } };
+    return Object.entries(k).map(([id, x]) => ({ id, label: x.label || id, desc: x.desc || '', featured: x.featured || [] }));
+  }
+  const KIND_GLYPH = {
+    card: '<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 10h8M8 14h5"/>',
+    nav: '<rect x="3" y="8" width="18" height="8" rx="4"/><path d="M7 12h3M14 12h3"/>',
+    hero: '<path d="M5 8h14M5 12h10M5 16h6"/>',
+    'animated-background': '<path d="M3 15c3 0 3-6 6-6s3 6 6 6 3-6 6-6"/><path d="M3 19c3 0 3-4 6-4s3 4 6 4 3-4 6-4" opacity=".5"/>',
+    list: '<path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/>',
+    button: '<rect x="4" y="8" width="16" height="8" rx="4"/><path d="M9 12h6"/>'
+  };
+  function paletteOptions() {
+    const out = [{ id: 'project', name: 'Project palette', colors: S.rolesFrom(projectPalette.slice(0, 8)) || null, dots: projectPalette.slice(0, 5) }];
+    presets.forEach((p) => out.push({ id: p.id, name: p.name, colors: p.colors, dots: [p.colors.accent, p.colors.text, p.colors.surface, p.colors.muted] }));
+    const up = userPalette();
+    out.push({ id: 'user', name: 'My palette', colors: up ? S.rolesFrom(up) : null, dots: up || [], disabled: !up });
+    return out;
+  }
+  function slugify(s) { return String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); }
+  function buildNew(spec, inner) {
+    const step = spec.step || 0;
+    const bars = el('div', 'steps');
+    STEP_NAMES.forEach((n, i) => bars.appendChild(el('div', 'step' + (i < step ? ' is-done' : i === step ? ' is-on' : ''), '<i></i><span>' + (i + 1) + ' · ' + n + '</span>')));
+    inner.appendChild(bars);
+    const body = el('div', 'step-body');
+    inner.appendChild(body);
+    if (step === 0) {
+      body.appendChild(el('p', 'note', 'What are you building? This picks the starter markup and which controls are featured in Basic.'));
+      const tiles = el('div', 'tiles');
+      tiles.setAttribute('role', 'radiogroup');
+      tiles.appendChild(el('span', 'tile-ind'));
+      kindList().forEach((k) => {
+        const t = el('button', 'tile' + (k.id === newDraft.kind ? ' is-on' : ''), '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + (KIND_GLYPH[k.id] || KIND_GLYPH.card) + '</svg><strong>' + esc(k.label) + '</strong><span>' + esc(k.desc) + '</span>');
+        t.type = 'button';
+        t.dataset.kind = k.id;
+        t.setAttribute('role', 'radio');
+        t.setAttribute('aria-checked', k.id === newDraft.kind ? 'true' : 'false');
+        t.addEventListener('click', () => { newDraft.kind = k.id; tiles.querySelectorAll('.tile').forEach((x) => { x.classList.toggle('is-on', x === t); x.setAttribute('aria-checked', x === t ? 'true' : 'false'); }); syncTiles(inner.parentNode); });
+        tiles.appendChild(t);
       });
-      g.appendChild(b);
-    });
-    return g;
+      body.appendChild(tiles);
+    } else if (step === 1) {
+      body.appendChild(el('p', 'note', 'Starting colours. Found in the project CSS; change them any time.'));
+      const list = el('div', 'pal-list');
+      paletteOptions().forEach((p) => {
+        const b = el('button', 'pal-opt' + (p.id === newDraft.palette ? ' is-on' : '') + (p.disabled ? ' is-disabled' : ''), '<span class="preset-dots">' + p.dots.slice(0, 5).map((c) => '<i style="background:' + c + '"></i>').join('') + '</span><span class="pal-name">' + esc(p.name) + '</span>' + (p.disabled ? '<span class="nav-meta">set in Settings</span>' : svg('check', 'pal-check')));
+        b.type = 'button';
+        if (p.disabled) { b.disabled = true; b.title = 'Save a palette under Settings › My palette first'; }
+        b.addEventListener('click', () => { newDraft.palette = p.id; list.querySelectorAll('.pal-opt').forEach((x) => x.classList.toggle('is-on', x === b)); });
+        list.appendChild(b);
+      });
+      body.appendChild(list);
+    } else {
+      const k = kindList().find((x) => x.id === newDraft.kind) || kindList()[0];
+      const f = el('label', 'field');
+      f.innerHTML = '<span class="ctl-label">Name</span>';
+      const inp = el('input', 'field-in');
+      inp.type = 'text'; inp.value = newDraft.name; inp.placeholder = 'e.g. quiz-score-card'; inp.spellcheck = false; inp.maxLength = 40;
+      const hint = el('span', 'field-hint');
+      const upd = () => { newDraft.name = inp.value; const s = slugify(inp.value); hint.textContent = s ? 'components/' + s + '/' : 'Lowercase letters, numbers and dashes.'; hint.classList.toggle('is-bad', !!inp.value && (!s || (window.LAB_REGISTRY || []).includes(s))); };
+      inp.addEventListener('input', upd);
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') createNew(); });
+      upd();
+      f.append(inp, hint);
+      body.appendChild(f);
+      const sum = el('div', 'summary');
+      sum.innerHTML = '<div><span>Kind</span><strong>' + esc(k.label) + '</strong></div><div><span>Palette</span><strong>' + esc((paletteOptions().find((p) => p.id === newDraft.palette) || {}).name || 'Project') + '</strong></div><div><span>Basic</span><strong>' + k.featured.length + ' featured controls</strong></div>';
+      body.appendChild(sum);
+      setTimeout(() => inp.focus({ preventScroll: true }), 60);
+    }
+    const foot = el('div', 'step-foot');
+    const backB = el('button', 'btn', step === 0 ? 'Cancel' : 'Back');
+    backB.type = 'button';
+    backB.addEventListener('click', () => { if (step === 0) go({ type: 'cat', cat: visibleCats()[0].id }); else replaceTop({ type: 'new', step: step - 1 }, -1); });
+    const next = el('button', 'btn btn-primary', step === 2 ? 'Create' : 'Continue');
+    next.type = 'button';
+    next.addEventListener('click', () => { if (step < 2) replaceTop({ type: 'new', step: step + 1 }, 1); else createNew(); });
+    foot.append(backB, next);
+    inner.appendChild(foot);
+    return 'Step ' + (step + 1) + ' of 3';
   }
   function syncTiles(scope, instant) {
-    scope.querySelectorAll('.tile-grid').forEach((g) => {
-      const pill = g.querySelector('.tile-pill');
-      const on = g.querySelector('.tile.is-on');
-      if (!pill || !on) return;
-      if (!g._pill) g._pill = new M.TilePill(pill);
-      g._pill.moveTo(on, instant);
-    });
+    const tiles = scope && scope.querySelector('.tiles');
+    if (!tiles) return;
+    const on = tiles.querySelector('.tile.is-on');
+    const ind = tiles.querySelector('.tile-ind');
+    if (!on || !ind) return;
+    if (instant) ind.style.opacity = '0';
+    M.glide(ind, on.offsetLeft, on.offsetTop, on.offsetWidth, on.offsetHeight);
   }
-
-  function buildNew(spec, inner) {
-    const step = spec.step || 1;
-    const dots = el('div', 'step-dots');
-    for (let i = 1; i <= 3; i++) dots.appendChild(el('span', 'step-dot' + (i === step ? ' is-on' : i < step ? ' is-done' : '')));
-    inner.appendChild(dots);
-
-    if (step === 1) {
-      const wrap = el('div', 'new-step');
-      const lab = el('label', 'new-label', 'Component name');
-      const inp = el('input', 'new-in');
-      inp.type = 'text'; inp.placeholder = 'Magnetic Button'; inp.value = newDraft.name;
-      const slugEl = el('div', 'new-slug', 'components/<b>' + (newDraft.id || 'magnetic-button') + '</b>/');
-      inp.addEventListener('input', () => {
-        newDraft.name = inp.value;
-        newDraft.id = slug(inp.value);
-        slugEl.innerHTML = 'components/<b>' + esc(newDraft.id || 'my-component') + '</b>/';
-      });
-      wrap.append(lab, inp, slugEl, el('div', 'new-label', 'Starting shape'));
-      wrap.appendChild(tileGrid('kind', KINDS, newDraft.kind, (v) => { newDraft.kind = v; }, (it) =>
-        '<span class="tile-glyph">' + it.glyph + '</span><span class="tile-t">' + esc(it.label) + '</span><span class="tile-s">' + esc(it.sub) + '</span>'));
-      const next = el('button', 'foot-btn is-primary new-next', '<span>Next: Palette & feel</span>' + svg('chev'));
-      next.type = 'button';
-      next.addEventListener('click', () => {
-        if (!newDraft.id) { newDraft.name = 'Magnetic Button'; newDraft.id = 'magnetic-button'; }
-        replaceTop({ type: 'new', step: 2 }, 1);
-      });
-      wrap.appendChild(next);
-      inner.appendChild(wrap);
-      setTimeout(() => inp.focus(), 60);
-    } else if (step === 2) {
-      const wrap = el('div', 'new-step');
-      wrap.appendChild(el('div', 'new-label', 'Palette'));
-      wrap.appendChild(tileGrid('look', LOOKS, newDraft.look, (v) => { newDraft.look = v; }, (it) =>
-        '<span class="look-sw" style="--c0:' + it.c[0] + ';--c1:' + it.c[1] + ';--c2:' + it.c[2] + '">'
-        + '<i class="sw-bg"></i><i class="sw-a"></i><i class="sw-b"></i></span>'
-        + '<span class="tile-txt"><span class="tile-t">' + esc(it.label) + '</span><span class="tile-s">' + esc(it.sub) + '</span></span>'));
-      wrap.appendChild(el('div', 'new-label', 'Motion feel'));
-      wrap.appendChild(tileGrid('feel', FEELS, newDraft.motion, (v) => { newDraft.motion = v; }, (it) =>
-        '<svg class="feel-svg" viewBox="0 0 40 26" aria-hidden="true"><path d="' + it.curve + '"/></svg>'
-        + '<span class="tile-t">' + esc(it.label) + '</span><span class="tile-s">' + esc(it.sub) + '</span>'));
-      const row = el('div', 'new-nav');
-      const b = el('button', 'foot-btn', 'Back'); b.type = 'button'; b.addEventListener('click', () => replaceTop({ type: 'new', step: 1 }, -1));
-      const n = el('button', 'foot-btn is-primary', svg('spark') + '<span>Create component</span>'); n.type = 'button';
-      n.addEventListener('click', () => createNew(n));
-      row.append(b, n);
-      wrap.appendChild(row);
-      inner.appendChild(wrap);
-    } else if (step === 3) {
-      const id = newDraft.id || 'my-component';
-      const cmd = 'python new-component.py ' + id + ' --name "' + (newDraft.name || id) + '" --kind ' + newDraft.kind + ' --look ' + newDraft.look + ' --motion ' + newDraft.motion;
-      const wrap = el('div', 'new-step');
-      wrap.append(
-        el('div', 'new-label', 'Ready to scaffold'),
-        el('div', 'set-sub', 'Run this in the component-lab folder (or run serve.py to create components in one click):'),
-        el('pre', 'cmd-box', esc(cmd))
-      );
-      const copyB = el('button', 'foot-btn is-primary new-next', svg('copy') + '<span>Copy command</span>');
-      copyB.type = 'button';
-      copyB.addEventListener('click', () => copyText(cmd, 'Copied command. Run it, then refresh.', copyB, 'Copied'));
-      const backB = el('button', 'foot-btn new-next', 'Back'); backB.type = 'button'; backB.addEventListener('click', () => replaceTop({ type: 'new', step: 2 }, -1));
-      wrap.append(copyB, backB);
-      inner.appendChild(wrap);
-    }
-    return 'Step ' + step + ' of 3';
-  }
-  async function createNew(btn) {
-    btn.disabled = true;
+  async function createNew() {
+    const name = slugify(newDraft.name);
+    if (!name) { toast('Give it a name first.'); return; }
+    if ((window.LAB_REGISTRY || []).includes(name)) { toast('components/' + name + ' already exists.'); return; }
+    const p = paletteOptions().find((x) => x.id === newDraft.palette);
     try {
-      const r = await fetch('api/new-component', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newDraft)
-      });
-      if (!r.ok) {
-        let msg = '';
-        try { msg = (await r.json()).error || ''; } catch (_) {}
-        if (r.status === 409 || /exists/i.test(msg)) { toast('components/' + newDraft.id + ' already exists — pick another name.'); btn.disabled = false; replaceTop({ type: 'new', step: 1 }, -1); return; }
-        throw new Error(msg || r.status);
-      }
-      const j = await r.json();
-      if (!j || !j.ok) throw new Error((j && j.error) || 'api');
-      await loadRegistry();
-      navStack = [{ type: 'cat', cat: 'color' }];
-      await loadComponent(j.id);
-      toast('Created components/' + j.id + '/ — ready to tune.');
-    } catch (_) {
-      btn.disabled = false;
-      replaceTop({ type: 'new', step: 3 }, 1);
-      toast('Server is static — copy the command below, or run: python serve.py');
+      const r = await fetch('api/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, kind: newDraft.kind, palette: p && p.colors ? p.colors : null, title: newDraft.name.trim() }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || 'HTTP ' + r.status);
+    } catch (e) {
+      toast('Could not create (' + e.message + '). Needs serve.py; or run: python new-component.py ' + name + ' --kind ' + newDraft.kind, 7000);
+      return;
     }
+    await loadScript('components/registry.js' + bust()).catch(() => {});
+    buildPicker();
+    store.del('values:' + name);
+    await loadComponent(name, false);
+    toast('Created components/' + name + '/ and loaded it.');
   }
 
-  // ---------- Stage & Floating Nested Toolbar (TB Overhaul: Enhancement #7) ----------
-  const TB = (function () {
-    const N = 3;
-    let open = 0, out = true, menuOpen = false, menuAnchor = null, railBtn = null;
-    let customPos = null; // Session-only custom drop position: { x, y, flip } (see Future Audit Log #3 for ui.tbPos persistence)
-    const bar = () => $('stageBar');
-    const toggleBtn = () => $('tbToggle');
-    const groups = () => [...bar().querySelectorAll('.tb-g')];
-    const growDir = () => (customPos && customPos.flip ? -1 : 1);
+  // ---------- floating nested toolbar (TB Overhaul: Enhancement #7) ----------
+  const TOOLBAR_GROUPS = [
+    { id: 'component', label: 'Component', primary: true },
+    { id: 'playback', label: 'Playback', when: () => !!(def && def.animated) }
+  ];
+  const TB_OPEN_ORDER = 'forward';
+  const TB_CLOSE_ORDER = 'forward';
+  const TB_STAGGER = 110;   // ms between groups
+  const RAIL_TOOLS = [{ id: 'new', label: 'New component', icon: 'plus' }, { id: 'toolbar', label: 'Stage toolbar', icon: 'toolbar' }];
+  function orderedTools() {
+    const ord = Array.isArray(ui.toolOrder) ? ui.toolOrder : [];
+    const idx = (id) => { const i = ord.indexOf(id); return i < 0 ? 100 + RAIL_TOOLS.findIndex((t) => t.id === id) : i; };
+    return RAIL_TOOLS.slice().sort((a, b) => idx(a.id) - idx(b.id));
+  }
+  const toolHidden = () => (Array.isArray(ui.toolHidden) ? ui.toolHidden : []);
 
-    function save() {
-      ui.tbOut = out;
-      if (ui.tbInit === 'remember') ui.tbGroups = open;
-      saveUi();
-    }
-    function applyCustomCoords() {
+  const TB = (function () {
+    const open = new Set();
+    let railBtn = null, settleT = 0, stepDir = 1;
+    let shown = ui.tbOut !== false;
+    // Session-only custom drop position: { x, y, flip } (see Future Audit Log #3 for ui.tbPos persistence)
+    let customPos = null;
+    const bar = () => $('stageBar');
+    const icon = () => $('tbToggle');
+    const gEl = (id) => bar().querySelector('.tb-group[data-group="' + id + '"]');
+    const avail = () => TOOLBAR_GROUPS.filter((g) => gEl(g.id) && (!g.when || g.when()));
+    const inOrder = (o) => (o === 'reverse' ? avail().reverse() : avail());
+    const isOpen = () => avail().some((g) => open.has(g.id));
+    const allOpen = () => avail().every((g) => open.has(g.id));
+    const growDir = () => (getComputedStyle(bar()).flexDirection === 'row-reverse' ? -1 : 1);
+
+    function applyCustomPos() {
       const b = bar();
       if (!b) return;
       if (customPos) {
@@ -1971,8 +2048,8 @@
     }
     function resetPos() {
       customPos = null;
-      applyCustomCoords();
-      Log.push('toolbar reset to top-left');
+      applyCustomPos();
+      Log.push('toolbar reset to default corner');
     }
     function unhideRailToolbar() {
       if (Array.isArray(ui.toolHidden) && ui.toolHidden.includes('toolbar')) {
@@ -1985,60 +2062,121 @@
       const row = $('tbShowSwitchRow');
       if (!row) return;
       const sw = row.querySelector('.switch');
-      if (sw) {
-        sw.classList.toggle('is-on', out);
-        sw.setAttribute('aria-checked', out ? 'true' : 'false');
-      }
+      if (sw) sw.setAttribute('aria-checked', shown ? 'true' : 'false');
     }
-    function paint(animate) {
-      const b = bar();
-      b.dataset.open = String(open);
-      b.classList.toggle('is-out', out);
-      b.inert = !out;
-      toggleBtn().setAttribute('aria-expanded', open > 0 ? 'true' : 'false');
-      toggleBtn().title = open > 0
-        ? 'Stage toolbar (click to collapse · drag to move · flick to throw)'
-        : 'Stage toolbar (click to open · Shift+click for 1 group · drag to move)';
-      groups().forEach((g, i) => {
-        const on = out && i < open;
-        const wasOn = g.classList.contains('is-on');
-        g.classList.toggle('is-on', on);
-        g.inert = !on;
-        if (animate && on && !wasOn && M.level() === 'full') {
-          const inner = g.querySelector('.tb-gi');
-          const d = growDir();
-          inner.animate(
-            [{ opacity: 0, transform: 'translateX(' + (-8 * d) + 'px) scale(0.92)' }, { opacity: 1, transform: 'none' }],
-            { duration: 360, delay: i * 55, easing: M.springSoft, fill: 'backwards' }
-          );
-        }
+
+    function paint(changed, opening) {
+      const lv = M.level();
+      changed.forEach((g, i) => {
+        const e = gEl(g.id);
+        e.style.setProperty('--tb-delay', lv === 'full' ? i * TB_STAGGER + 'ms' : '0ms');
+        e.style.setProperty('--tb-dur', lv === 'full' ? (opening ? '0.46s' : '0.3s') : lv === 'fade' ? '0.12s' : '0.01ms');
+        e.style.setProperty('--tb-ease', opening ? 'var(--spring-soft)' : 'var(--settle)');
+        e.classList.add('is-moving');
       });
-      if (open < 1) menuHide();
-      if (open >= 3) setTimeout(() => syncSeg($('viewSeg'), viewPill, ui.view, true), M.level() === 'full' ? 280 : 0);
-      if (railBtn) {
-        railBtn.classList.toggle('is-summoned', out);
-        railBtn.title = out ? 'Stage toolbar is on the stage (click to collapse it to here)' : 'Stage toolbar (click or flick right to send to stage)';
-      }
+      TOOLBAR_GROUPS.forEach((g) => {
+        const e = gEl(g.id);
+        if (!e) return;
+        const on = open.has(g.id);
+        e.classList.toggle('is-open', on);
+        e.inert = !on;
+        e.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+      if (!open.has('component') && menuAnchor === $('tbPick')) menuClose();
+      const any = isOpen();
+      icon().setAttribute('aria-expanded', any ? 'true' : 'false');
+      icon().title = any
+        ? 'Close toolbar (Esc) · drag to move · flick to launch'
+        : 'Open toolbar · Shift+click or \u2192 opens one group · drag to move';
+      syncRailBtn();
       syncSettingsSwitch();
+      ui.tbLast = [...open];
+      saveUi();
+      clearTimeout(settleT);
+      settleT = setTimeout(() => {
+        bar().querySelectorAll('.tb-group.is-moving').forEach((e) => e.classList.remove('is-moving'));
+      }, M.level() === 'full' ? changed.length * TB_STAGGER + 520 : 160);
+      requestAnimationFrame(sizeUnit);
+      if (open.has('viewport')) requestAnimationFrame(() => syncSeg($('viewSeg'), viewPill, ui.view, true));
     }
-    function setOpen(n, animate) {
-      const next = Math.max(0, Math.min(N, n));
-      if (next === open && out) return;
-      open = next;
-      paint(animate !== false);
-      save();
+    function openN(n, quiet) {
+      if (!shown) return 0;
+      const todo = inOrder(TB_OPEN_ORDER).filter((g) => !open.has(g.id)).slice(0, n);
+      todo.forEach((g) => open.add(g.id));
+      if (todo.length) { paint(todo, true); if (!quiet) Log.push('toolbar open ' + todo.map((g) => g.id).join(' \u2192 ')); }
+      return todo.length;
     }
-    function toggle(stepOnly) {
-      if (!out) { flyHome(stepOnly ? 1 : N); return; }
-      if (stepOnly) setOpen(open < N ? open + 1 : 0, true);
-      else setOpen(open > 0 ? 0 : N, true);
+    function closeN(n, quiet) {
+      const todo = inOrder(TB_CLOSE_ORDER).filter((g) => open.has(g.id)).slice(0, n);
+      todo.forEach((g) => open.delete(g.id));
+      if (!isOpen()) open.clear();
+      if (todo.length) { paint(todo, false); if (!quiet) Log.push('toolbar close ' + todo.map((g) => g.id).join(' \u2192 ')); }
+      return todo.length;
     }
-    function start() {
-      out = ui.tbOut !== false;
-      const init = ui.tbInit || 'icon';
-      open = init === 'all' ? N : init === '1' ? 1 : init === 'remember' ? (ui.tbGroups || 0) : 0;
-      applyCustomCoords();
-      paint(false);
+    const toggle = () => (isOpen() ? closeN(Infinity) : openN(Infinity));
+    function step() {
+      if (allOpen()) stepDir = -1; else if (!isOpen()) stepDir = 1;
+      return stepDir > 0 ? openN(1) : closeN(1);
+    }
+    function syncRailBtn() {
+      if (!railBtn) return;
+      const on = shown && isOpen();
+      railBtn.classList.toggle('is-on', on);
+      railBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    function homeRect() {
+      const r = railBtn && railBtn.isConnected && dockOpen ? railBtn.getBoundingClientRect() : $('dockTrigger').getBoundingClientRect();
+      return r.width ? r : null;
+    }
+    function flyOut(from, power, v) {
+      unhideRailToolbar();
+      const n = power >= 2 ? Infinity : 1;
+      if (shown) { openN(n); return; }
+      open.clear();
+      applyCustomPos();
+      paint([], true);
+      shown = true;
+      bar().dataset.out = 'true';
+      syncSettingsSwitch();
+      Log.push('toolbar out' + (power >= 2 ? ' (strong flick)' : power ? ' (flick)' : ''));
+      const lv = M.level(), to = icon().getBoundingClientRect();
+      if (lv !== 'full' || !from) {
+        if (lv === 'fade') bar().animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 });
+        openN(n, true);
+        return;
+      }
+      const dx = from.left + from.width / 2 - (to.left + to.width / 2), dy = from.top + from.height / 2 - (to.top + to.height / 2);
+      const dist = Math.hypot(dx, dy), sp = Math.max(1.4, Math.abs(v || 0) * 2.2);
+      const dur = Math.round(Math.max(420, Math.min(820, dist / sp)));
+      bar().animate([
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(0.72)', opacity: 0.35 },
+        { transform: 'translate(' + dx * 0.18 + 'px,' + dy * 0.18 + 'px) scale(0.96)', opacity: 1, offset: 0.55 },
+        { transform: 'none', opacity: 1 }
+      ], { duration: dur, easing: M.springSoft });
+      bar().dataset.flying = String(dur);
+      setTimeout(() => { openN(n, true); delete bar().dataset.flying; }, Math.round(dur * 0.62));
+    }
+    function flyHome() {
+      if (!shown) return;
+      unhideRailToolbar();
+      const had = isOpen();
+      closeN(Infinity, true);
+      Log.push('toolbar back to rail');
+      const lv = M.level();
+      const wait = lv === 'full' && had ? avail().length * TB_STAGGER + 240 : 0;
+      setTimeout(() => {
+        const h = homeRect(), from = icon().getBoundingClientRect();
+        const done = () => { shown = false; bar().dataset.out = 'false'; syncRailBtn(); syncSettingsSwitch(); };
+        if (lv !== 'full' || !h) { done(); return; }
+        const dx = h.left + h.width / 2 - (from.left + from.width / 2), dy = h.top + h.height / 2 - (from.top + from.height / 2);
+        bar().animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(0.6)', opacity: 0 }],
+          { duration: 440, easing: 'cubic-bezier(0.5, 0, 0.75, 0.3)', fill: 'forwards' }).finished.then(() => { done(); bar().getAnimations().forEach((a) => a.cancel()); }, done);
+      }, wait);
+    }
+    function setOut(on) {
+      ui.tbOut = on; saveUi();
+      if (on && !shown) flyOut(homeRect(), 0, 0);
+      if (!on && shown) { unhideRailToolbar(); closeN(Infinity, true); shown = false; bar().dataset.out = 'false'; syncRailBtn(); syncSettingsSwitch(); }
     }
 
     // 5 Video-Game Physics Exit Trajectories when throwing/flicking the toolbar off-screen!
@@ -2046,7 +2184,6 @@
     let lastTrick = '';
     function pickTrick(vx, vy) {
       const pool = TRICKS.filter((t) => t !== lastTrick);
-      // Bias slightly by throw angle while keeping arcade variety
       if (Math.abs(vx) > Math.abs(vy) * 1.8 && pool.includes('warp') && Math.random() < 0.45) return (lastTrick = 'warp');
       if (vy < -0.55 && pool.includes('arc') && Math.random() < 0.45) return (lastTrick = 'arc');
       const choice = pool[Math.floor(Math.random() * pool.length)] || 'arc';
@@ -2055,29 +2192,52 @@
     }
 
     function dismiss(vx, vy) {
-      if (!out) return;
-      menuHide();
-      if (open > 0) { open = 0; paint(false); }
+      if (!shown) return;
+      unhideRailToolbar();
       const b = bar();
       b.classList.remove('is-held');
-      const from = b.getBoundingClientRect();
-      // Ensure rail toolbar button is visible so user is never locked out (Item 2.5)
-      unhideRailToolbar();
-      const rb = railBtn && railBtn.getBoundingClientRect();
-      const tx = (rb && rb.width ? rb.left + rb.width / 2 - from.width / 2 : 12) - from.left;
-      const ty = (rb && rb.height ? rb.top + rb.height / 2 - from.height / 2 : innerHeight - 80) - from.top;
-      out = false;
-      save();
+      const had = isOpen();
+      closeN(Infinity, true);
+      const lv = M.level();
+      const pvx = vx || -0.9;
+      const pvy = vy || -0.4;
+      const trick = pickTrick(pvx, pvy);
+      const trickNames = {
+        arc: 'gravity lob!',
+        ricochet: 'wall ricochet!',
+        curve: 'boomerang curve!',
+        warp: 'slingshot warp!',
+        spiral: 'corkscrew spiral!'
+      };
+      Log.push('toolbar trick \u00b7 ' + (trickNames[trick] || 'dismissed'));
 
-      if (M.level() === 'full') {
-        const hasThrow = vx != null || vy != null;
-        const pvx = vx || -0.9;
-        const pvy = vy || 0.4;
-        const trick = hasThrow ? pickTrick(pvx, pvy) : 'direct';
+      const wait = lv === 'full' && had ? avail().length * TB_STAGGER + 180 : 0;
+      setTimeout(() => {
+        const done = () => {
+          shown = false;
+          b.dataset.out = 'false';
+          b.getAnimations().forEach((a) => a.cancel());
+          syncRailBtn();
+          syncSettingsSwitch();
+          if (railBtn && railBtn.offsetWidth && lv === 'full') {
+            railBtn.animate(
+              [{ transform: 'scale(1)' }, { transform: 'scale(1.34) rotate(-8deg)' }, { transform: 'scale(0.93)' }, { transform: 'scale(1)' }],
+              { duration: 420, easing: M.spring }
+            );
+          }
+        };
+        if (lv !== 'full') {
+          if (lv === 'fade') b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, fill: 'forwards' }).finished.then(done, done);
+          else done();
+          return;
+        }
+        const from = icon().getBoundingClientRect();
+        const h = homeRect();
+        const tx = h ? (h.left + h.width / 2 - (from.left + from.width / 2)) : pvx * 360;
+        const ty = h ? (h.top + h.height / 2 - (from.top + from.height / 2)) : pvy * 360;
         let kf, dur, ease;
 
         if (trick === 'arc') {
-          // 1. Gravity Lob: launches high on throw vector with backspin, peaks, then plummets into rail slot
           const peakX = Math.max(-from.left + 16, Math.min(innerWidth - from.left - 48, pvx * 165));
           const peakY = Math.min(-45, -Math.abs(pvy) * 140 - 55);
           kf = [
@@ -2088,9 +2248,7 @@
           ];
           dur = 580;
           ease = 'cubic-bezier(0.22, 0.68, 0.36, 1)';
-          Log.push('toolbar trick · gravity lob!');
         } else if (trick === 'ricochet') {
-          // 2. Wall Ricochet: banks off nearest viewport wall with squash-and-stretch before zipping into rail
           const hitRight = pvx > 0.15;
           const wallX = hitRight ? (innerWidth - from.right - 6) : (-from.left + 6);
           const wallY = Math.max(-from.top + 14, Math.min(innerHeight - from.bottom - 14, pvy * 180));
@@ -2102,9 +2260,7 @@
           ];
           dur = 560;
           ease = M.easeOut;
-          Log.push('toolbar trick · wall ricochet!');
         } else if (trick === 'curve') {
-          // 3. Boomerang Curveball: sweeps out in a wide S-curve with banking tilt before curving home
           const sweepX = Math.max(-from.left + 24, Math.min(innerWidth - from.left - 56, pvx * 220 + (pvx >= 0 ? 90 : -90)));
           const sweepY = Math.max(-from.top + 24, Math.min(innerHeight - from.bottom - 24, pvy * 150 - 40));
           kf = [
@@ -2115,9 +2271,7 @@
           ];
           dur = 590;
           ease = M.springSoft;
-          Log.push('toolbar trick · boomerang curve!');
         } else if (trick === 'warp') {
-          // 4. Slingshot Warp: pulls back slightly, stretches along velocity vector, then hyperspace-streaks to rail
           const pullX = -pvx * 22, pullY = -pvy * 22;
           const dashX = pvx * 130, dashY = pvy * 130;
           kf = [
@@ -2128,9 +2282,7 @@
           ];
           dur = 470;
           ease = M.easeOut;
-          Log.push('toolbar trick · slingshot warp!');
-        } else if (trick === 'spiral') {
-          // 5. Corkscrew Spiral: 720-degree barrel roll along flight vector into the rail
+        } else {
           const midX = tx * 0.48 + pvx * 85;
           const midY = ty * 0.48 + pvy * 85;
           kf = [
@@ -2141,214 +2293,156 @@
           ];
           dur = 610;
           ease = 'cubic-bezier(0.2, 0.75, 0.35, 1)';
-          Log.push('toolbar trick · corkscrew spiral!');
-        } else {
-          // Calm dismiss (from Settings switch or rail click)
-          const kx = pvx * 55, ky = pvy * 55;
-          kf = [
-            { transform: 'translate(0,0) scale(1)', opacity: 1 },
-            { transform: 'translate(' + kx.toFixed(1) + 'px,' + ky.toFixed(1) + 'px) scale(0.92)', opacity: 0.95, offset: 0.22 },
-            { transform: 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(0.35)', opacity: 0 }
-          ];
-          dur = 440;
-          ease = M.easeOut;
-          Log.push('toolbar -> rail');
         }
-
-        const anim = b.animate(kf, { duration: dur, easing: ease });
-        anim.finished.catch(() => {}).then(() => {
-          paint(false);
-          if (railBtn && railBtn.offsetWidth) {
-            railBtn.animate(
-              [{ transform: 'scale(1)' }, { transform: 'scale(1.34) rotate(-8deg)' }, { transform: 'scale(0.93)' }, { transform: 'scale(1)' }],
-              { duration: 420, easing: M.spring }
-            );
-          }
-        });
-      } else {
-        paint(false);
-        Log.push('toolbar -> rail');
-      }
+        b.animate(kf, { duration: dur, easing: ease, fill: 'forwards' }).finished.then(done, done);
+      }, wait);
     }
 
-    function flyHome(openCount, vx) {
-      unhideRailToolbar();
-      const b = bar();
-      const rb = railBtn && railBtn.getBoundingClientRect();
-      out = true;
-      open = openCount != null ? openCount : 0;
-      applyCustomCoords();
-      paint(false);
-      save();
-      if (M.level() === 'full' && rb && rb.width) {
-        const to = b.getBoundingClientRect();
-        const fx = rb.left - to.left, fy = rb.top - to.top;
-        const arcY = Math.min(fy * 0.4, -36) - Math.min(80, Math.abs(vx || 0) * 35);
-        b.animate([
-          { transform: 'translate(' + fx + 'px,' + fy + 'px) scale(0.4) rotate(-18deg)', opacity: 0.2 },
-          { transform: 'translate(' + (fx * 0.35).toFixed(1) + 'px,' + arcY.toFixed(1) + 'px) scale(1.06) rotate(4deg)', opacity: 1, offset: 0.6 },
-          { transform: 'none', opacity: 1 }
-        ], { duration: 520, easing: M.spring });
-      }
-      Log.push('toolbar -> stage');
-    }
-
-    function railClick() {
-      if (!out) flyHome(0);
-      else if (open === 0) setOpen(N, true);
-      else dismiss();
-    }
-    function railButton(btn) {
-      railBtn = btn;
-      paint(false);
-      M.Flick(btn, {
-        get enabled() { return ui.tbFlick !== false; },
-        get sensitivity() { return ui.tbPower || 'normal'; },
-        onTap() { railClick(); },
-        onDrag(dx, dy) {
-          if (M.level() !== 'full') return;
-          btn.style.transform = 'translate(' + (dx * 0.28).toFixed(1) + 'px,' + (dy * 0.22).toFixed(1) + 'px)';
-        },
-        onEnd({ power, vx, vy }) {
-          btn.style.transform = '';
-          if (power === 0) return;
-          if (!out && (vx > 0.2 || vy < -0.25)) flyHome(power >= 2 ? N : 1, vx);
-          else if (out) dismiss(vx, vy);
+    function railClick() { if (!shown) flyOut(railBtn ? railBtn.getBoundingClientRect() : null, 2, 0); else toggle(); }
+    function railButton(b) {
+      railBtn = b;
+      syncRailBtn();
+      const LIM = 22;
+      M.Flick(b, {
+        onMove(d, full) { if (full) b.style.transform = 'translateX(' + M.rubber(d, LIM).toFixed(1) + 'px)'; },
+        onRelease({ d, v, dir, power }) {
+          M.snapBack(b, M.rubber(d, LIM));
+          if (!power) return;
+          const r = b.getBoundingClientRect(), st = $('stageFit').getBoundingClientRect();
+          const toStage = Math.sign(st.left + st.width / 2 - (r.left + r.width / 2)) || -1;
+          if (dir === toStage) flyOut(r, power, v);
+          else if (shown) { if (power >= 2 || !isOpen()) flyHome(); else closeN(1); }
         }
       });
     }
 
-    // Component picker menu: can anchor to #tbPick (stage toolbar) or #cmpName (dock header)
-    function menuBuild() {
-      const m = $('tbMenu');
-      m.innerHTML = '';
-      reg.forEach((id) => {
-        const on = def && def.id === id;
-        const it = el('button', 'tb-item' + (on ? ' is-on' : ''), '<span>' + esc(id) + '</span>' + svg('check'));
-        it.type = 'button'; it.setAttribute('role', 'menuitemradio'); it.setAttribute('aria-checked', on ? 'true' : 'false');
-        it.addEventListener('click', () => { menuHide(); if (!def || def.id !== id) loadComponent(id); });
-        m.appendChild(it);
-      });
-      const sep = el('div', 'tb-sep');
-      const add = el('button', 'tb-item', '<span>+ New component\u2026</span><span></span>');
-      add.type = 'button';
-      add.addEventListener('click', () => { menuHide(); openDock('click'); startNew(); });
-      m.append(sep, add);
-    }
-    function syncMenuHighlight() {
-      const m = $('tbMenu');
-      if (!m || m.hidden) return;
-      m.querySelectorAll('.tb-item').forEach((it) => {
-        const label = it.querySelector('span');
-        if (!label || label.textContent.startsWith('+')) return;
-        const on = def && def.id === label.textContent;
-        it.classList.toggle('is-on', !!on);
-        it.setAttribute('aria-checked', on ? 'true' : 'false');
-      });
-    }
+    // ---- component menu: a floating layer on <main>, can anchor to #tbPick or #cmpName ----
+    const menu = () => $('tbMenu');
+    let menuOpen = false, menuAnchor = null;
     function menuShow(anchorEl) {
       const target = anchorEl || $('tbPick');
-      if (menuOpen && menuAnchor === target) { menuHide(); return; }
+      if (menuOpen && menuAnchor === target) { menuClose(true); return; }
+      const m = menu();
+      m.innerHTML = '';
+      (window.LAB_REGISTRY || []).forEach((id) => {
+        const o = el('button', 'tb-opt', esc(pickLabel(id)));
+        o.type = 'button';
+        o.dataset.id = id;
+        o.setAttribute('role', 'option');
+        o.setAttribute('aria-selected', def && def.id === id ? 'true' : 'false');
+        o.addEventListener('click', () => { menuClose(true); if (!def || id !== def.id) { $('labPicker').value = id; loadComponent(id, false); } });
+        m.appendChild(o);
+      });
+      m.hidden = false;
+      const r = target.getBoundingClientRect(), w = Math.max(r.width, m.offsetWidth);
+      const flip = target === $('cmpName') ? (r.left + w > innerWidth - 12) : (growDir() < 0);
+      m.style.minWidth = Math.max(140, r.width) + 'px';
+      m.style.top = Math.round(r.bottom + 6) + 'px';
+      m.style.left = Math.max(12, Math.min(innerWidth - w - 12, Math.round(flip ? r.right - w : r.left))) + 'px';
+      m.style.transformOrigin = flip ? 'top right' : 'top left';
       menuOpen = true;
       menuAnchor = target;
-      menuBuild();
-      const m = $('tbMenu'), r = target.getBoundingClientRect();
-      const left = Math.max(12, Math.min(innerWidth - 220, Math.round(r.left)));
-      m.style.left = left + 'px';
-      m.style.top = Math.round(r.bottom + 6) + 'px';
-      m.hidden = false;
       $('tbPick').setAttribute('aria-expanded', target === $('tbPick') ? 'true' : 'false');
       if ($('cmpName')) $('cmpName').setAttribute('aria-expanded', target === $('cmpName') ? 'true' : 'false');
-      if (M.level() === 'full') m.animate([{ opacity: 0, transform: 'translateY(-4px) scale(0.95)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: M.spring });
+      const lv = M.level();
+      if (lv === 'full') m.animate([{ opacity: 0, transform: 'translateY(-6px) scale(0.96)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: M.springSoft });
+      else if (lv === 'fade') m.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120 });
+      const cur = m.querySelector('[aria-selected="true"]') || m.firstChild;
+      if (cur) cur.focus({ preventScroll: true });
     }
-    function menuHide() {
+    function menuClose(focusPick) {
       if (!menuOpen) return;
+      const prevAnchor = menuAnchor || $('tbPick');
       menuOpen = false;
       menuAnchor = null;
-      $('tbMenu').hidden = true;
+      menu().hidden = true;
       $('tbPick').setAttribute('aria-expanded', 'false');
       if ($('cmpName')) $('cmpName').setAttribute('aria-expanded', 'false');
+      if (focusPick && prevAnchor) prevAnchor.focus({ preventScroll: true });
     }
-    function outsideDown(t) {
-      if (menuOpen && !$('tbMenu').contains(t) && !$('tbPick').contains(t) && (!$('cmpName') || !$('cmpName').contains(t))) menuHide();
-      if (ui.tbCloseOut && out && open > 0 && !bar().contains(t) && (!railBtn || !railBtn.contains(t))) setOpen(0, true);
+    function sizeUnit() {
+      const pick = $('tbPick');
+      if (pick && pick.offsetWidth) bar().style.setProperty('--tb-unit', pick.offsetWidth + 'px');
     }
+    function init() {
+      const host = $('tbGroups');
+      TOOLBAR_GROUPS.forEach((g) => { const e = gEl(g.id); if (e) host.appendChild(e); });
+      host.querySelectorAll('.tb-group').forEach((e) => { if (!TOOLBAR_GROUPS.some((g) => g.id === e.dataset.group)) e.hidden = true; });
+      icon().innerHTML = svg('toolbar');
+      icon().addEventListener('click', (e) => { if (e.shiftKey) step(); else toggle(); });
+      icon().addEventListener('keydown', (e) => {
+        const g = growDir();
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          ((e.key === 'ArrowRight') === (g > 0)) ? openN(1) : closeN(1);
+        }
+      });
 
-    // Bind whole-card tactile hold, 1:1 free-roam drag-and-drop, and flick gesture on #stageBar
-    function wire() {
+      // Whole-card tactile hold, 1:1 free-roam drag-and-drop, and flick gesture on #stageBar
       const b = bar();
-      let startLeft = 14, startTop = 14, dragging = false;
-
-      // Ignore pointerdown inside interactive child controls so scrubbing/clicking them works normally
+      let startLeft = 16, startTop = 16;
       const isChildControl = (target) => {
         if (!target || !target.closest) return false;
         return !!target.closest('#tbPick, #labPlay, #labScrub, #viewSeg');
       };
-
-      b.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 || isChildControl(e.target)) return;
-        const rect = b.getBoundingClientRect();
-        startLeft = rect.left;
-        startTop = rect.top;
-        dragging = false;
-        b.classList.add('is-held');
-      });
-
       const clearHeld = () => b.classList.remove('is-held');
       window.addEventListener('pointerup', clearHeld, { passive: true });
       window.addEventListener('pointercancel', clearHeld, { passive: true });
 
       M.Flick(b, {
-        get enabled() { return true; },
-        get sensitivity() { return ui.tbPower || 'normal'; },
+        axis: 'xy',
+        alwaysDrag: true,
         ignore(e) { return isChildControl(e.target); },
-        onTap(e) {
+        onDown() {
+          const rect = b.getBoundingClientRect();
+          startLeft = rect.left;
+          startTop = rect.top;
+          b.classList.add('is-held');
+        },
+        onTap(e, cancelled) {
           b.classList.remove('is-held');
           b.style.transform = '';
-          // Tap on #tbToggle or collapsed shell toggles open/close
-          if (open === 0 || (e.target && e.target.closest && e.target.closest('#tbToggle'))) {
-            toggle(e.shiftKey);
+          if (cancelled) return;
+          // Clicking the outer shell/border (outside #tbToggle, which has its own click listener) toggles open/close
+          if (e && e.target && !e.target.closest('#tbToggle') && !isChildControl(e.target)) {
+            if (e.shiftKey) step();
+            else toggle();
           }
         },
-        onDrag(dx, dy, vx) {
-          dragging = true;
+        onMove(dx, full, dy, vxNow) {
           const nx = Math.max(8, Math.min(innerWidth - 48, startLeft + dx));
           const ny = Math.max(8, Math.min(innerHeight - 48, startTop + dy));
           b.style.left = Math.round(nx) + 'px';
           b.style.top = Math.round(ny) + 'px';
           b.style.right = 'auto';
           b.dataset.customPos = 'true';
-          if (M.level() === 'full') {
-            const tilt = Math.max(-9, Math.min(9, (vx || 0) * 4));
+          if (full) {
+            const tilt = Math.max(-9, Math.min(9, (vxNow || 0) * 4));
             b.style.transform = 'scale(1.06) rotate(' + tilt.toFixed(2) + 'deg)';
           }
         },
-        onEnd({ dx, dy, vx, vy, power, axis, dir }) {
+        onRelease({ dir, power, axis, dx, dy, vx, vy }) {
           b.classList.remove('is-held');
           b.style.transform = '';
-          if (!dragging) return;
-          dragging = false;
-
           const dist = Math.hypot(dx, dy);
-          const flickOn = ui.tbFlick !== false;
-          const gd = growDir();
+          const g = growDir();
 
           // 1. Short horizontal flick near origin: quick expand/collapse gesture!
-          if (flickOn && dist < 75 && power >= 1 && axis === 'x') {
-            applyCustomCoords();
-            if (dir === gd) {
-              setOpen(power >= 2 ? N : Math.min(N, open + 1), true);
+          if (M.flickOn && dist < 75 && power >= 1 && axis === 'x') {
+            applyCustomPos();
+            if (dir === g) {
+              openN(power >= 2 ? Infinity : 1);
               return;
             }
-            if (dir === -gd && open > 0 && power === 1) {
-              setOpen(open - 1, true);
+            if (dir === -g && power === 1 && isOpen()) {
+              closeN(1);
               return;
             }
           }
 
           // 2. Strong throw in any direction: arcade physics exit trajectory to the rail!
-          if (flickOn && power >= 2) {
-            dismiss(vx, vy);
+          if (M.flickOn && power >= 2) {
+            dismiss(vx || dx / 200, vy || dy / 200);
             return;
           }
 
@@ -2358,7 +2452,7 @@
           const clampedY = Math.max(12, Math.min(innerHeight - rect.height - 12, startTop + dy));
           const flip = clampedX > innerWidth * 0.55;
           customPos = { x: clampedX, y: clampedY, flip };
-          applyCustomCoords();
+          applyCustomPos();
           if (M.level() === 'full') {
             b.animate(
               [{ transform: 'scale(1.06)' }, { transform: 'scale(0.97)' }, { transform: 'scale(1)' }],
@@ -2370,233 +2464,132 @@
       });
 
       $('tbPick').addEventListener('click', () => menuShow($('tbPick')));
+      $('tbPick').addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' && !menuOpen) { e.preventDefault(); menuShow($('tbPick')); } });
+      if ($('cmpName')) {
+        $('cmpName').addEventListener('click', (e) => { e.stopPropagation(); menuShow($('cmpName')); });
+      }
+      menu().addEventListener('keydown', (e) => {
+        const opts = [...menu().querySelectorAll('.tb-opt')], i = opts.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = opts[(i + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length]; if (n) n.focus(); }
+        if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); (e.key === 'Home' ? opts[0] : opts[opts.length - 1]).focus(); }
+        if (e.key === 'Tab') menuClose(false);
+      });
+      M.flickOn = ui.flick !== false;
+      M.flickStrength = ui.flickStrength || 'normal';
+      bar().dataset.out = shown ? 'true' : 'false';
+      applyCustomPos();
+      paint([], true);
     }
-
+    function start() {
+      const lv = M.enabled;
+      M.enabled = false;   // first paint: no stagger
+      if (shown) {
+        if (ui.tbStart === 'open') openN(Infinity, true);
+        else if (ui.tbStart === 'remember') { const last = Array.isArray(ui.tbLast) ? ui.tbLast : []; avail().forEach((g) => { if (last.includes(g.id)) open.add(g.id); }); paint([], true); }
+        else paint([], true);
+      }
+      M.enabled = lv;
+    }
+    function refresh() {
+      requestAnimationFrame(sizeUnit);
+      if (ui.tbOut !== false && !shown) { shown = true; bar().dataset.out = 'true'; bar().getAnimations().forEach((a) => a.cancel()); }
+      if (shown) paint([], true);
+    }
     return {
-      start, wire, toggle, setOpen, dismiss, flyHome, railButton, railClick,
-      outsideDown, menuHide, menuShow, syncMenuHighlight, resetPos,
-      menuToggle(anchorEl) { if (menuOpen && menuAnchor === (anchorEl || $('tbPick'))) menuHide(); else menuShow(anchorEl); },
-      get isMenuOpen() { return menuOpen; },
-      get shown() { return out; },
-      get hasCustomPos() { return !!customPos; }
+      init, start, refresh, toggle, step, openN, closeN, flyOut, flyHome, dismiss, setOut, railClick,
+      resetPos,
+      get shown() { return shown; },
+      get hasCustomPos() { return !!customPos; },
+      railButton, menuShow, menuClose,
+      get isOpen() { return isOpen(); }, get openIds() { return avail().filter((g) => open.has(g.id)).map((g) => g.id); },
+      get menuOpen() { return menuOpen; },
+      outside(t) {
+        if (menuOpen && !menu().contains(t) && !t.closest('#tbPick') && !t.closest('#cmpName')) menuClose(false);
+        if (ui.tbAutoClose && isOpen() && !bar().contains(t) && !menu().contains(t) && !dock.contains(t)) closeN(Infinity);
+      },
+      esc() {
+        if (menuOpen) { menuClose(true); return true; }
+        if (isOpen() && bar().contains(document.activeElement)) { closeN(Infinity); icon().focus({ preventScroll: true }); return true; }
+        return false;
+      },
+      close() { if (isOpen()) closeN(Infinity); }
     };
   })();
 
-  function freeRect() {
-    const pad = 16;
-    const w = window.innerWidth, h = window.innerHeight;
-    let l = pad, t = pad, r = w - pad, b = h - pad;
-    if (dockOpen) {
-      const d = dock.getBoundingClientRect();
-      if (ui.anchor.endsWith('right')) r = Math.min(r, d.left - pad);
-      else if (ui.anchor.endsWith('left')) l = Math.max(l, d.right + pad);
-      else if (ui.anchor.startsWith('bottom')) b = Math.min(b, d.top - pad);
-      else if (ui.anchor.startsWith('top')) t = Math.max(t, d.bottom + pad);
-    }
-    return { x: l, y: t, w: Math.max(160, r - l), h: Math.max(120, b - t) };
+  function setView(val) {
+    if (!VIEWS.some((x) => x.id === val)) return;
+    ui.view = val; saveUi(); applyFrameVars(); layoutStage();
+    syncSeg($('viewSeg'), viewPill, val, true);
+    document.querySelectorAll('[data-set="viewport"]').forEach((h) => syncSeg(h, null, val));
+    Log.push('viewport ' + ((VIEWS.find((x) => x.id === val) || {}).label || val));
   }
-  function fitStage(animate) {
-    if (!def) return;
-    const nat = def.size || { width: 420, height: 300 };
-    const box = freeRect();
-    const fit = $('stageFit');
-    fit.style.left = box.x + 'px';
-    fit.style.top = box.y + 'px';
-    fit.style.width = box.w + 'px';
-    fit.style.height = box.h + 'px';
-    frameEl.style.width = nat.width + 'px';
-    frameEl.style.height = nat.height + 'px';
-    const fitScale = Math.min(1, (box.w - 24) / nat.width, (box.h - 24) / nat.height);
-    const scale = ui.view === '1x' ? 1 : +fitScale.toFixed(3);
-    const s = $('stageScaler');
-    if (animate && M.level() === 'full') s.animate([{ transform: s.style.transform || 'scale(1)' }, { transform: 'scale(' + scale + ')' }], { duration: 360, easing: M.springSoft });
-    s.style.transform = 'scale(' + scale + ')';
-    fit.classList.toggle('is-scroll', ui.view === '1x' && (nat.width > box.w || nat.height > box.h));
-  }
-
-  // ---------- Dock positioning ----------
-  function cardMaxH() { return Math.min(580, window.innerHeight - 28); }
-  function placeDock() {
-    const a = ANCHORS.includes(ui.anchor) && ui.anchor !== 'middle-center' ? ui.anchor : 'bottom-right';
-    const [v, h] = a.split('-');
-    dock.dataset.v = v;
-    dock.dataset.h = h;
-    dock.style.top = v === 'top' ? '14px' : v === 'middle' ? '50%' : '';
-    dock.style.bottom = v === 'bottom' ? '14px' : '';
-    dock.style.left = h === 'left' ? '14px' : h === 'center' ? '50%' : '';
-    dock.style.right = h === 'right' ? '14px' : '';
-    const tx = h === 'center' ? '-50%' : '0';
-    const ty = v === 'middle' ? '-50%' : '0';
-    dock.style.transform = tx === '0' && ty === '0' ? '' : 'translate(' + tx + ',' + ty + ')';
-    const ox = h === 'left' ? '0%' : h === 'right' ? '100%' : '50%';
-    const oy = v === 'top' ? '0%' : v === 'bottom' ? '100%' : '50%';
-    card.style.transformOrigin = ox + ' ' + oy;
-  }
-  function relayout(animate) {
-    const before = animate ? dock.getBoundingClientRect() : null;
-    placeDock();
-    fitStage(animate);
-    fitPages(null, false);
-    if (before && M.level() === 'full') {
-      const after = dock.getBoundingClientRect();
-      const dx = before.left - after.left, dy = before.top - after.top;
-      if (Math.abs(dx) + Math.abs(dy) > 2) dock.animate([{ transform: (dock.style.transform || '') + ' translate(' + dx + 'px,' + dy + 'px)' }, { transform: dock.style.transform || 'none' }], { duration: 420, easing: M.spring });
-    }
-  }
-  function openDock(how) {
-    clearTimeout(hoverTimer);
-    if (how === 'click') pinned = true;
-    if (dockOpen) return;
-    dockOpen = true;
-    dock.classList.add('is-open');
-    card.inert = false;
-    fitPages(null, false);
-    syncRail(true);
-    requestAnimationFrame(() => card.querySelectorAll('.seg').forEach((s) => syncSeg(s, null, s.dataset.value, true)));
-    M.cardOpen(card, card.style.transformOrigin);
-    fitStage(true);
-  }
-  function closeDock() {
-    clearTimeout(hoverTimer);
-    if (!dockOpen) return;
-    dockOpen = false;
-    pinned = false;
-    Arc.close(true);
-    Pop.hide();
-    dock.classList.remove('is-open');
-    card.inert = true;
-    fitStage(true);
-  }
-
-  function applyMotionPref() {
-    const m = ui.motion || 'full';
-    document.documentElement.dataset.motion = m === 'full' ? (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'fade' : 'full') : m;
-  }
-
-  // ---------- Segmented pills ----------
-  function buildSeg(seg, opts, cur, onChange) {
-    seg.innerHTML = '<span class="seg-pill"></span>';
-    seg.dataset.value = cur;
-    const pill = new M.VelocityPill(seg.querySelector('.seg-pill'), 'x');
-    seg._pill = pill;
-    opts.forEach((o) => {
-      const b = el('button', 'seg-btn', esc(o.label));
-      b.type = 'button';
-      b.dataset.val = o.value;
-      b.setAttribute('aria-pressed', same(o.value, cur) ? 'true' : 'false');
-      b.addEventListener('click', () => {
-        onChange(o.value);
-        syncSeg(seg, pill, o.value);
-      });
-      seg.appendChild(b);
+  const pickLabel = (id) => (id === '_template' ? 'Blank template' : id);
+  function buildPicker() {
+    const sel = $('labPicker');
+    sel.innerHTML = '';
+    (window.LAB_REGISTRY || []).forEach((id) => {
+      const o = el('option', null, id === '_template' ? 'Blank template' : esc(id));
+      o.value = id;
+      sel.appendChild(o);
     });
-    requestAnimationFrame(() => syncSeg(seg, pill, cur, true));
-    return pill;
-  }
-  function syncSeg(seg, pill, val, instant) {
-    if (!seg) return;
-    const p = pill || seg._pill;
-    seg.dataset.value = val;
-    let hit = null;
-    seg.querySelectorAll('.seg-btn').forEach((b) => {
-      const on = String(b.dataset.val) === String(val);
-      b.classList.toggle('is-on', on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      if (on) hit = b;
-    });
-    if (p && hit) p.moveTo(hit, instant || !seg.offsetWidth);
-  }
-
-  let toastTimer = 0;
-  function toast(msg) {
-    const t = $('toast');
-    t.textContent = msg;
-    t.classList.add('is-on');
-    announce(msg);
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('is-on'), 2200);
-  }
-
-  // ---------- Re-scan component source files live ----------
-  async function rescanComponent(btn) {
-    if (!def) return;
-    const savedValues = Object.assign({}, P);
-    await loadComponent(def.id, true);
-    Object.keys(savedValues).forEach((k) => {
-      if (byId[k]) {
-        P[k] = clamp(byId[k], savedValues[k]);
-        applyVar(byId[k], P[k]);
-      }
-    });
-    saveValues();
-    refreshChanged();
-    renderPage(0);
-    if (btn) flashOk(btn, 'Scanned');
-    toast('Re-scanned ' + def.id + ' source files.');
-  }
-
-  // ---------- Stage timeline ----------
-  function tick(now) {
-    const dt = Math.min(0.05, (now - lastTick) / 1000);
-    lastTick = now;
-    if (playing && !keyPaused) {
-      const rateVar = vars.find((v) => v.master && v.category === 'rate') || byId.SPEED || byId.TEMPO;
-      const rate = rateVar ? Number(P[rateVar.id]) || 1 : 1;
-      labT = (labT + dt * 0.25 * rate) % 1;
-      const sc = $('labScrub');
-      if (sc && document.activeElement !== sc) sc.value = labT.toFixed(3);
-      if (instance && typeof instance.tick === 'function') {
-        try { instance.tick(labT, dt * rate, P); } catch (_) {}
-      }
-    }
-    requestAnimationFrame(tick);
+    if (def) sel.value = def.id;
   }
 
   // ---------- Self-test (?selftest=1) ----------
   async function runSelfTest() {
+    const reg = window.LAB_REGISTRY || [];
     const startId = def ? def.id : reg[0];
     const results = [];
     for (const id of reg) {
       try {
-        await loadComponent(id, true);
+        await loadComponent(id, false);
         const okVars = vars.length > 0;
         const sample = vars.find((v) => v.control === 'slider' || v.control === 'radial') || vars[0];
         if (sample) {
           const orig = P[sample.id];
-          setValue(sample.id, sample.max != null ? sample.max : orig, { silent: true });
-          setValue(sample.id, orig, { silent: true });
+          setValue(sample.id, sample.max != null ? sample.max : orig, { quiet: true, noHistory: true });
+          setValue(sample.id, orig, { quiet: true, noHistory: true });
         }
-        const html = workingFile();
+        const html = await workingFile();
         const okHtml = typeof html === 'string' && html.includes('<!doctype html>');
         results.push({ id, ok: okVars && okHtml, n: vars.length });
       } catch (err) {
         results.push({ id, ok: false, err: String(err) });
       }
     }
-    if (startId && reg.includes(startId)) await loadComponent(startId, true);
+    if (startId && reg.includes(startId)) await loadComponent(startId, false);
     const passed = results.filter((r) => r.ok).length;
-    const summary = 'Self-test: ' + passed + '/' + results.length + ' components passed (' + results.map((r) => r.id + ':' + (r.ok ? r.n + 'v' : 'FAIL')).join(', ') + ')';
+    const summary = 'Self-test: ' + passed + '/' + results.length + ' passed (' + results.map((r) => r.id + ':' + (r.ok ? r.n + 'v' : 'FAIL')).join(', ') + ')';
     Log.push(summary);
-    toast(summary);
+    toast(summary, 5000);
     console.info('[Component Lab Self-Test]', results);
   }
 
-  // ---------- Wire static chrome ----------
   function buildChrome() {
+    buildPicker();
+    $('labPicker').addEventListener('change', (e) => loadComponent(e.target.value, false));
+    TB.init();
+    $('viewSeg').classList.add('seg-xs');
+    $('viewSeg').querySelectorAll('.seg-btn').forEach((b) => { const v = VIEWS.find((x) => x.id === b.dataset.value); if (v) { b.title = v.w ? v.w + ' \u00d7 ' + v.h + ' viewport' : 'Fit the frame to the free space'; b.setAttribute('aria-label', b.title); } });
+    viewPill = buildSeg($('viewSeg'), VIEWS.map((x) => ({ value: x.id, label: x.w ? String(x.w) : x.label })), ui.view, (val) => setView(val));
+    modePill = buildSeg($('modeSeg'), [{ value: 'basic', label: 'Basic' }, { value: 'pro', label: 'Pro' }], mode, (val) => setMode(val), { equal: true });
+    $('dockTrigger').innerHTML = svg('sliders');
+    $('dockClose').innerHTML = svg('close');
     $('backBtn').innerHTML = svg('back');
-    $('backBtn').addEventListener('click', back);
-    $('moreBtn').innerHTML = svg('dots');
-    $('moreBtn').addEventListener('click', () => Pop.toggle());
-    $('closeBtn').innerHTML = svg('close');
-    $('closeBtn').addEventListener('click', closeDock);
-    $('tbToggle').innerHTML = svg('sliders');
-    $('tbChev').innerHTML = svg('chev');
-    $('cmpChev').innerHTML = svg('chev');
-    $('labPlay').innerHTML = svg('pause');
-    $('stage').dataset.bg = ui.stage || 'obsidian';
-
-    // Header component title button opens component picker menu (#tbMenu)
-    $('cmpName').addEventListener('click', () => TB.menuToggle($('cmpName')));
+    [['copyBtn', 'diff', copyChanges], ['fullBtn', 'code', copyFull], ['undoBtn', 'undo', () => Hist.undo()], ['resetBtn', 'reset', resetAll]].forEach(([id, icon, fn]) => {
+      const b = $(id);
+      b.dataset.icon = icon;
+      b.innerHTML = svg(icon);
+      b.addEventListener('click', () => {
+        fn();
+        requestAnimationFrame(() => {
+          const a = document.activeElement;
+          if (!b.disabled || (a && a !== document.body && a !== b)) return;
+          const next = ['undoBtn', 'resetBtn', 'fullBtn'].map($).find((x) => x && !x.disabled);
+          if (next) next.focus({ preventScroll: true });
+        });
+      });
+    });
 
     // Hold-to-Compare Default Values on #changedCount (Item 4.1)
     const chgBtn = $('changedCount');
@@ -2620,135 +2613,136 @@
     chgBtn.addEventListener('pointerleave', stopCompare);
     chgBtn.addEventListener('pointercancel', stopCompare);
     chgBtn.addEventListener('keydown', (e) => {
-      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
-        e.preventDefault();
-        startCompare(e);
-      }
+      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startCompare(e); }
     });
     chgBtn.addEventListener('keyup', (e) => {
       if (e.key === ' ' || e.key === 'Enter') stopCompare();
     });
     chgBtn.addEventListener('blur', stopCompare);
 
-    modePill = buildSeg($('modeSeg'), [{ value: 'basic', label: 'Basic' }, { value: 'pro', label: 'Pro' }], mode, setMode);
-    viewPill = buildSeg($('viewSeg'), [{ value: 'fit', label: 'Fit' }, { value: '1x', label: '1\u00d7' }], ui.view || 'fit', (v) => { ui.view = v; saveUi(); fitStage(true); });
-
-    const resetHold = holdButton('Hold to reset', resetComponent);
-    $('footResetSlot').appendChild(resetHold);
-    const copyChg = el('button', 'foot-btn', svg('copy') + '<span>Copy changes</span>');
-    copyChg.type = 'button'; copyChg.id = 'copyChangesBtn'; copyChg.title = 'Copy only what you changed (compact summary for AI or notes)';
-    copyChg.addEventListener('click', () => copyChanges(copyChg));
-    const copyAll = el('button', 'foot-btn is-primary', svg('spark') + '<span>Copy working file</span>');
-    copyAll.type = 'button'; copyAll.id = 'copyFullBtn'; copyAll.title = 'Copy a complete standalone HTML file with your values baked in (Shift+click downloads it)';
-    copyAll.addEventListener('click', (e) => copyFull(copyAll, e.shiftKey));
-    $('footActions').append(copyChg, copyAll);
-
-    $('labPlay').addEventListener('click', () => {
-      playing = !playing;
-      $('labPlay').innerHTML = svg(playing ? 'pause' : 'play');
-      $('labPlay').setAttribute('aria-label', playing ? 'Pause timeline' : 'Play timeline');
-    });
-    $('labScrub').addEventListener('input', (e) => {
-      labT = parseFloat(e.target.value) || 0;
-      if (instance && typeof instance.tick === 'function') instance.tick(labT, 0, P);
-    });
+    $('backBtn').addEventListener('click', back);
+    $('moreBtn').innerHTML = svg('dots');
+    $('moreBtn').addEventListener('click', (e) => { e.stopPropagation(); Pop.toggle(); });
+    $('dockClose').addEventListener('click', closeDock);
+    $('labPlay').addEventListener('click', () => { playing = !playing; syncTime(); writeHash(); });
+    $('labScrub').addEventListener('input', (e) => { playing = false; offset = +e.target.value; syncTime(); writeHash(); });
+    document.documentElement.classList.toggle('no-motion', !ui.motion);
 
     // Lab-side capture guards for scan-sourced interaction controls (Item 2.3)
     const scaler = $('stageScaler');
-    const isScanControl = (id) => byId[id] && byId[id].source === 'scan';
-    scaler.addEventListener('pointermove', (e) => {
-      if (!def) return;
-      if (isScanControl('HOVER') && P.HOVER === 'off' && e.buttons === 0) {
-        e.stopImmediatePropagation();
-      }
-      if (isScanControl('DRAG') && P.DRAG === false && e.buttons !== 0) {
-        e.stopImmediatePropagation();
-      }
-    }, true);
+    scaler.addEventListener('pointerenter', (e) => {
+      scanHovering = true;
+      scanHoverTouch = e.pointerType === 'touch';
+    });
+    scaler.addEventListener('pointerleave', () => {
+      scanHovering = false;
+      scanHoverTouch = false;
+    });
     scaler.addEventListener('pointerdown', (e) => {
       if (!def) return;
-      if (isScanControl('TOUCH') && P.TOUCH === false && e.pointerType === 'touch') {
+      const curP = activeParams();
+      if (e.pointerType === 'touch') {
+        scanHoverTouch = true;
+        if (byId.TOUCH && byId.TOUCH.source === 'scan' && curP.TOUCH === 'ignore') {
+          e.stopImmediatePropagation();
+          return;
+        }
+      }
+      if (byId.DRAG && byId.DRAG.source === 'scan' && (curP.DRAG === 'ignore' || curP.DRAG === false)) {
         e.stopImmediatePropagation();
       }
     }, true);
-    scaler.addEventListener('click', (e) => {
+    scaler.addEventListener('pointermove', (e) => {
       if (!def) return;
-      if (isScanControl('CLICK') && P.CLICK === false) {
+      const curP = activeParams();
+      if (e.pointerType === 'touch' && byId.TOUCH && byId.TOUCH.source === 'scan' && curP.TOUCH === 'ignore') {
         e.stopImmediatePropagation();
-        e.preventDefault();
+        return;
+      }
+      if (e.buttons !== 0 && byId.DRAG && byId.DRAG.source === 'scan' && (curP.DRAG === 'ignore' || curP.DRAG === false)) {
+        e.stopImmediatePropagation();
       }
     }, true);
     scaler.addEventListener('wheel', (e) => {
       if (!def) return;
-      if (isScanControl('WHEEL') && P.WHEEL === 'off') {
+      const curP = activeParams();
+      if (byId.WHEEL && byId.WHEEL.source === 'scan' && !curP.WHEEL) {
+        e.stopImmediatePropagation();
+      }
+    }, { capture: true, passive: true });
+    scaler.addEventListener('click', (e) => {
+      if (!def) return;
+      const curP = activeParams();
+      if (byId.CLICK && byId.CLICK.source === 'scan' && !curP.CLICK) {
         e.stopImmediatePropagation();
         e.preventDefault();
       }
-    }, { capture: true, passive: false });
+    }, true);
     frameEl.addEventListener('keydown', (e) => {
       if (!def) return;
-      if (isScanControl('KEYS') && P.KEYS === false) {
+      const curP = activeParams();
+      if (byId.KEYS && byId.KEYS.source === 'scan' && !curP.KEYS) {
         e.stopImmediatePropagation();
         return;
       }
-      if (e.key === ' ' && byId.KEY_PAUSE && P.KEY_PAUSE !== false) {
-        const tag = (e.target && e.target.tagName) || '';
-        if (!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag)) {
+      if (e.key === ' ' && byId.KEY_PAUSE && byId.KEY_PAUSE.source === 'scan' && curP.KEY_PAUSE) {
+        const tag = (e.target && e.target.tagName || '').toLowerCase();
+        if (!['input', 'textarea', 'select', 'button'].includes(tag)) {
           e.preventDefault();
-          keyPaused = !keyPaused;
-          toast(keyPaused ? 'Timeline paused (Space)' : 'Timeline resumed');
+          e.stopImmediatePropagation();
+          scanKbdPause = !scanKbdPause;
         }
       }
     }, true);
 
-    TB.wire();
-    buildRail();
-    syncHeadTools();
-    placeDock();
-    card.inert = true;
-
-    // Hover-to-open dock & focus pinning so keyboard Tab does not auto-close the dock (Item 2.6)
-    dock.addEventListener('focusin', () => {
-      if (dockOpen) pinned = true;
-    });
-    rail.addEventListener('mouseenter', () => {
-      if (ui.openOn === 'hover' && !dockOpen) { clearTimeout(hoverTimer); hoverTimer = setTimeout(() => openDock('hover'), 70); }
-    });
-    dock.addEventListener('mouseenter', () => clearTimeout(hoverTimer));
+    const trig = $('dockTrigger');
+    trig.addEventListener('click', () => openDock('click'));
+    trig.addEventListener('mouseenter', () => { clearTimeout(hoverTimer); hoverTimer = setTimeout(() => openDock('hover'), 220); });
+    trig.addEventListener('mouseleave', () => clearTimeout(hoverTimer));
+    dock.addEventListener('mouseenter', () => clearTimeout(leaveTimer));
     dock.addEventListener('mouseleave', () => {
-      if (ui.openOn === 'hover' && dockOpen && !pinned && !Arc.isOpen && !dock.contains(document.activeElement)) {
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(closeDock, 260);
-      }
+      if (!dockOpen || pinned || Arc.isOpen || Pop.isOpen || dock.contains(document.activeElement)) return;
+      clearTimeout(leaveTimer);
+      leaveTimer = setTimeout(() => { if (!pinned && !Arc.isOpen && !dock.contains(document.activeElement)) closeDock(); }, 500);
     });
+    dock.addEventListener('pointerdown', () => { if (dockOpen) pinned = true; });
+    dock.addEventListener('focusin', () => { if (dockOpen) pinned = true; });
+
     document.addEventListener('pointerdown', (e) => {
-      if (Arc.isOpen && !Arc.contains(e.target)) Arc.close();
-      if (Pop.isOpen && !Pop.contains(e.target)) Pop.hide();
-      TB.outsideDown(e.target);
-      if (dockOpen && !dock.contains(e.target) && !Arc.contains(e.target)) closeDock();
+      const t = e.target;
+      if (Arc.isOpen && !Arc.contains(t) && !t.closest('.swatch-trigger')) Arc.close();
+      if (Pop.isOpen && !Pop.contains(t)) Pop.hide();
+      TB.outside(t);
+      if (!dockOpen || dock.contains(t) || Arc.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame')) return;
+      closeDock();
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (Arc.isOpen) { Arc.close(false, true); e.preventDefault(); }
-        else if (Pop.isOpen) { Pop.hide(true); e.preventDefault(); }
-        else if (TB.isMenuOpen) { TB.menuHide(); e.preventDefault(); }
-        else if (navStack.length > 1) { back(); e.preventDefault(); }
-        else if (dockOpen) { closeDock(); e.preventDefault(); }
+        if (TB.esc()) return;
+        if (Pop.isOpen) { Pop.hide(true); return; }
+        if (Arc.isOpen) { Arc.close(false, true); return; }
+        if (dockOpen) { closeDock(); trig.focus({ preventScroll: true }); return; }
+        TB.close();
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'z' || e.key === 'Z' || e.key === 'y' || e.key === 'Y')) {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[zy]$/i.test(e.key)) {
         const a = document.activeElement;
-        const texty = a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && a.type === 'text') || a.isContentEditable);
+        const texty = a && (a.tagName === 'TEXTAREA' || a.isContentEditable || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes(a.type)));
         if (dockOpen && !texty && def) {
           e.preventDefault();
-          if (e.key === 'y' || e.key === 'Y' || e.shiftKey) Hist.redo();
-          else Hist.undo();
+          const redo = e.key.toLowerCase() === 'y' || e.shiftKey;
+          if (!(redo ? Hist.redo() : Hist.undo())) announce(redo ? 'Nothing to redo' : 'Nothing to undo');
         }
+        return;
       }
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (e.key === ' ' && !['input', 'textarea', 'select', 'button'].includes(tag) && def && def.animated) { e.preventDefault(); playing = !playing; syncTime(); writeHash(); }
     });
-    window.addEventListener('resize', () => { Arc.close(true); Pop.hide(); TB.menuHide(); placeDock(); fitStage(false); fitPages(null, false); });
-    window.addEventListener('hashchange', () => {
-      const h = S.readHash();
+    let rz = 0;
+    addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { Arc.close(true); TB.menuClose(); relayout(); }); });
+    addEventListener('hashchange', () => {
+      const h = readHash();
+      const reg = window.LAB_REGISTRY || [];
       if (h.c && reg.includes(h.c) && (!def || h.c !== def.id)) loadComponent(h.c, true);
     });
   }
@@ -2758,32 +2752,41 @@
     try {
       const url = new URL(location.href);
       if (url.searchParams.has('reset')) {
-        store.clearAll();
-        Object.keys(ui).forEach((k) => delete ui[k]);
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(KEY)) localStorage.removeItem(k);
+        }
         Object.assign(ui, {
-          mode: 'basic', anchor: 'bottom-right', openOn: 'hover', motion: 'full', stage: 'obsidian',
-          view: 'fit', accVariant: 'B', accCollapse: 'remember', genInteract: true,
-          railOrder: CAT_IDS.slice(), railHidden: [], toolOrder: TOOL_IDS.slice(), toolHidden: [],
-          tbOut: true, tbGroups: 0, tbInit: 'icon', tbCloseOut: false, tbFlick: true, tbPower: 'normal'
+          dockPos: 'right', anchor: 'top-right', mode: 'basic', motion: true, paletteSource: 'project',
+          view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
+          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal',
+          railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
-        mode = ui.mode;
+        mode = 'basic';
         url.searchParams.delete('reset');
         history.replaceState(null, '', url.pathname + url.search + url.hash);
       }
     } catch (_) {}
 
-    applyMotionPref();
     buildChrome();
-    await loadRegistry();
-    const h = S.readHash();
-    const first = (h.c && reg.includes(h.c)) ? h.c : reg[0];
+    applyDockLayout();
+    try { kindsInfo = JSON.parse(await fetchText('components/_template/kinds.json')); } catch (e) { kindsInfo = null; }
+    const reg = window.LAB_REGISTRY || [];
+    const h = readHash();
+    const first = h.c && reg.includes(h.c) ? h.c : reg[0];
+    if (!first) { toast('No components in components/registry.js', 8000); return; }
     requestAnimationFrame(tick);
     try {
       await loadComponent(first, true);
     } finally {
       TB.start();
-      openDock('click');
-      requestAnimationFrame(() => document.querySelector('.lab').classList.add('is-ready'));
+      if (ui.open !== false) {
+        const prev = M.enabled;
+        M.enabled = false;   // first paint: no morph
+        openDock('click');
+        M.enabled = prev;
+      } else layoutStage();
+      document.documentElement.classList.add('is-ready');
     }
 
     // Smoke self-test: ?selftest=1 (Item 4.6)
@@ -2794,7 +2797,6 @@
       }
     } catch (_) {}
   }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  window.__lab = { openDock, closeDock, go, push, back, setMode, startNew, get state() { return { dockOpen, pinned, mode, navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
+  init();
 })();

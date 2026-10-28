@@ -205,3 +205,4 @@
     return { manifestForExport, saveManifest, copyText, interactionText, changesText, copyChanges, workingFile, copyFull, exportLabData, importLabData };
   };
 })();
+

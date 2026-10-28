@@ -209,8 +209,9 @@
     const slop = o.slop || 6, axis = o.axis || 'x';
     let st = null, eatClick = false;
     const down = (e) => {
-      if (!M.flickOn || e.button !== 0 || (o.enabled && !o.enabled())) return;
+      if ((!M.flickOn && !o.alwaysDrag) || e.button !== 0 || (o.enabled && !o.enabled()) || (o.ignore && o.ignore(e))) return;
       st = { id: e.pointerId, x0: e.clientX, y0: e.clientY, drag: false, s: [{ x: e.clientX, y: e.clientY, t: e.timeStamp }] };
+      if (o.onDown) o.onDown(e);
       try { el.setPointerCapture(e.pointerId); } catch (_) {}   // keep tracking past the button edge
     };
     const move = (e) => {
@@ -219,7 +220,7 @@
       if (!st.drag) {
         if (axis === 'xy') { if (Math.hypot(dx, dy) < slop) return; } else {
           const main = axis === 'x' ? Math.abs(dx) : Math.abs(dy), cross = axis === 'x' ? Math.abs(dy) : Math.abs(dx);
-          if (main < slop || main < cross) { if (cross > slop * 2) st = null; return; }
+          if (main < slop || main < cross) { if (cross > slop * 2) { if (o.onTap) o.onTap(e, true); st = null; } return; }
         }
         st.drag = true;
         el.classList.add('is-flicking');
@@ -228,12 +229,17 @@
       e.preventDefault();
       st.s.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
       while (st.s.length > 2 && e.timeStamp - st.s[0].t > 90) st.s.shift();
-      if (o.onMove) o.onMove(axis === 'y' ? dy : dx, M.level() === 'full', dy);
+      const a0 = st.s[0], b0 = st.s[st.s.length - 1], dt0 = Math.max(1, b0.t - a0.t);
+      const vxNow = (b0.x - a0.x) / dt0;
+      if (o.onMove) o.onMove(axis === 'y' ? dy : dx, M.level() === 'full', dy, vxNow);
     };
     const up = (e) => {
       if (!st || e.pointerId !== st.id) return;
       const s = st; st = null;
-      if (!s.drag) return;              // a plain click: let the click handler run
+      if (!s.drag) {
+        if (o.onTap) o.onTap(e, false);
+        return;              // a plain click: let the click handler run
+      }
       el.classList.remove('is-flicking');
       eatClick = true;                  // a drag never also counts as a click
       setTimeout(() => { eatClick = false; }, 0);
@@ -244,9 +250,9 @@
       // 'xy': the dominant axis of the throw decides the direction
       const ax = axis === 'xy' ? (Math.abs(vx) + Math.abs(dx) / 300 >= Math.abs(vy) + Math.abs(dy) / 300 ? 'x' : 'y') : axis;
       const d = ax === 'x' ? dx : dy, v = ax === 'x' ? vx : vy;
-      const power = (e.type === 'pointercancel' || stale) ? 0 : axis === 'xy' ? M.flickPower(Math.hypot(dx, dy), Math.hypot(vx, vy)) : M.flickPower(d, v);
+      const power = (e.type === 'pointercancel' || stale || !M.flickOn) ? 0 : axis === 'xy' ? M.flickPower(Math.hypot(dx, dy), Math.hypot(vx, vy)) : M.flickPower(d, v);
       const dir = Math.sign(Math.abs(v) > 0.05 ? v : d) || 1;
-      if (o.onRelease) o.onRelease({ d, v, dir, power, axis: ax, dx, dy, vx, vy });
+      if (o.onRelease) o.onRelease({ d, v, dir, power, axis: ax, dx, dy, vx, vy, stale });
     };
     const click = (e) => { if (eatClick) { eatClick = false; e.stopImmediatePropagation(); e.preventDefault(); } };
     el.addEventListener('pointerdown', down);
