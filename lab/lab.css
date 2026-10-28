@@ -17,20 +17,7 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--lab-bg); color: var(--lab-fg); font: 13px/1.4 var(--ui); -webkit-font-smoothing: antialiased; }
-button, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
-button:disabled { cursor: default; }
-:focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }
 .lab-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-
-.glass {
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid var(--lab-line);
-  box-shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
 
 /* ---------- stage ---------- */
 .stage {
@@ -48,13 +35,41 @@ button:disabled { cursor: default; }
 .vp-box.is-on { display: block; }
 .vp-tag { position: absolute; right: 10px; top: 8px; font: 11px var(--mono); color: rgba(110, 231, 255, 0.6); }
 
+/* Donut scope: lab UI chrome rules never bleed into the component sandbox (#labFrame). */
+@scope (:root) to (#labFrame) {
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--lab-line);
+  box-shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
 /* Floating nested toolbar. Fixed layer over the stage: it never takes part in the stage layout,
-   so the sandbox box is identical whether it is closed, open or showing its menu. */
-.tb { position: fixed; top: 16px; left: 16px; z-index: 12; display: flex; align-items: center; padding: 4px; border-radius: 14px; max-width: calc(100vw - 32px); }
+   so the sandbox box is identical whether it is closed, open, dragged over the stage, or showing its menu. */
+.tb {
+  position: fixed; top: 16px; left: 16px; z-index: 12; display: flex; align-items: center;
+  padding: 5px; border-radius: 14px; max-width: calc(100vw - 24px);
+  cursor: grab; user-select: none; touch-action: none;
+  transition: border-color 0.16s, box-shadow 0.18s;
+}
 .tb[data-out="false"] { display: none; }
-body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb { left: auto; right: 16px; flex-direction: row-reverse; }
-.tb-icon { width: 32px; height: 32px; border: 0; border-radius: 10px; padding: 0; display: grid; place-items: center; flex: none; background: transparent; color: var(--lab-muted); transition: background 0.15s, color 0.15s; touch-action: pan-y; }
-.tb-icon:hover { background: rgba(255, 255, 255, 0.07); color: var(--lab-fg); }
+body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) { left: auto; right: 16px; flex-direction: row-reverse; }
+.tb[data-flip="true"] { flex-direction: row-reverse; }
+.tb.is-held {
+  cursor: grabbing;
+  border-color: rgba(110, 231, 255, 0.55);
+  box-shadow: 0 22px 54px -14px rgba(0, 0, 0, 0.85), 0 0 18px rgba(110, 231, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+.tb-icon { width: 32px; height: 32px; border: 0; border-radius: 10px; padding: 0; display: grid; place-items: center; flex: none; background: transparent; color: var(--lab-muted); cursor: inherit; transition: background 0.15s, color 0.15s, transform 0.18s var(--spring); touch-action: none; }
+.tb-icon:hover, .tb.is-held .tb-icon { background: rgba(110, 231, 255, 0.1); color: var(--lab-fg); }
+.tb.is-held .tb-icon { color: var(--lab-accent, #6ee7ff); transform: scale(1.08); }
 .tb-icon[aria-expanded="true"] { color: var(--lab-accent, #6ee7ff); }
 .tb-icon .ico { transition: transform 0.4s var(--spring-soft); }
 .tb-icon[aria-expanded="true"] .ico { transform: rotate(180deg); }
@@ -65,6 +80,7 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .tb-group:has(.time.is-hidden) { display: none; }
 .tb-inner { min-width: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .tb-inner > * { margin-left: 6px; }
+.tb[data-flip="true"] .tb-inner > *, body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) .tb-inner > * { margin-left: 0; margin-right: 6px; }
 .tb-group.is-open .tb-inner { overflow: visible; }
 .tb-group.is-moving .tb-inner { overflow: hidden; }
 .tb-group .seg, .tb-group .time { flex: none; }
@@ -85,6 +101,7 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .rail-btn.is-on { color: var(--lab-accent, #6ee7ff); }
 .stage-note { position: fixed; left: 18px; bottom: 12px; font: 11px var(--mono); color: var(--lab-dim); pointer-events: none; white-space: nowrap; }
 .time { display: flex; align-items: center; gap: 6px; padding-left: 4px; border-left: 1px solid var(--lab-line); }
+.tb[data-flip="true"] .time, body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) .time { padding-left: 0; padding-right: 4px; border-left: 0; border-right: 1px solid var(--lab-line); }
 .time.is-hidden { display: none; }
 
 .lab-select {
@@ -154,7 +171,9 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .head-kicker { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--lab-dim); }
 .head-name { margin-right: 2px; }
 /* the name wraps to a second line instead of being cut off by the mode switch and ⋮ */
-.head-name strong { font-size: 13.5px; line-height: 1.22; font-weight: 600; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.head-name strong, .cmp-pick { font-size: 13.5px; line-height: 1.22; font-weight: 600; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cmp-pick { border: 0; background: transparent; padding: 2px 6px 2px 0; border-radius: 6px; text-align: left; color: var(--lab-fg); transition: color 0.15s, background 0.15s; width: fit-content; max-width: 100%; }
+.cmp-pick:hover { color: var(--lab-accent); background: rgba(255, 255, 255, 0.05); padding-left: 4px; }
 .crumb-row { display: flex; align-items: center; margin-top: 10px; min-height: 26px; }
 .back-btn { width: 0; height: 26px; opacity: 0; overflow: hidden; pointer-events: none; transition: width 0.3s var(--settle), opacity 0.2s, margin 0.3s var(--settle); margin-left: -4px; }
 .back-btn.is-on { width: 26px; opacity: 1; pointer-events: auto; margin-right: 4px; }
@@ -182,8 +201,10 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .foot-btn-primary:disabled { opacity: 0.45; }
 .foot-btn.is-ok { color: var(--lab-accent); border-color: rgba(110, 231, 255, 0.5); background: rgba(110, 231, 255, 0.12); }
 .foot-btn.is-bad { color: var(--lab-danger); border-color: rgba(255, 107, 107, 0.5); }
-.changed { margin-left: auto; font: 11px var(--mono); color: var(--lab-dim); white-space: nowrap; transition: color 0.2s; }
-.changed.is-on { color: var(--lab-accent); }
+.changed { margin-left: auto; font: 11px var(--mono); color: var(--lab-dim); white-space: nowrap; border: 1px solid transparent; border-radius: 7px; background: none; padding: 3px 7px; transition: color 0.2s, background 0.15s, border-color 0.15s; user-select: none; }
+.changed.is-on { color: var(--lab-accent); cursor: pointer; }
+.changed.is-on:hover { background: rgba(110, 231, 255, 0.08); border-color: rgba(110, 231, 255, 0.28); }
+.changed.is-holding { background: rgba(110, 231, 255, 0.22); border-color: var(--lab-accent); color: #fff; }
 .foot-log { font: 10.5px/15px var(--mono); min-height: 30px; color: rgba(110, 231, 255, 0.72); letter-spacing: 0.01em; }
 .log-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .log-line.is-old { opacity: 0.42; }
@@ -217,6 +238,11 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .ctl-label.sub { flex: none; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lab-dim); }
 .ctl-label.sec { margin-top: 2px; margin-bottom: -6px; }
 .ctl-val { font: 11.5px var(--mono); color: var(--lab-muted); white-space: nowrap; transition: color 0.2s; }
+.ctl-val.is-editable { cursor: text; border-radius: 5px; padding: 1px 4px; margin: -1px -4px; }
+.ctl-val.is-editable:hover { background: rgba(255, 255, 255, 0.07); color: var(--lab-fg); }
+.val-in { width: 62px; padding: 1px 4px; border-radius: 5px; border: 1px solid var(--lab-accent); background: rgba(0, 0, 0, 0.45); font: 11.5px var(--mono); color: var(--lab-fg); text-align: right; outline: none; }
+.ctl-sub { font: 10.5px/1.3 var(--mono); color: var(--lab-dim); margin-top: -2px; overflow-wrap: anywhere; }
+.ctl-sub.is-const { color: rgba(255, 209, 102, 0.78); }
 .ctl.is-changed .ctl-val { color: var(--lab-accent); }
 .ctl.is-changed > .ctl-head .ctl-label::after { content: ''; display: inline-block; width: 5px; height: 5px; margin-left: 6px; border-radius: 50%; background: var(--lab-accent); vertical-align: middle; }
 .star { width: 22px; height: 22px; border: 0; border-radius: 6px; padding: 0; background: none; color: var(--lab-dim); display: grid; place-items: center; flex: none; transition: color 0.15s, transform 0.25s var(--spring); }
@@ -304,7 +330,8 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 .anchor-grid { display: grid; grid-template-columns: repeat(3, 30px); gap: 4px; padding: 6px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--lab-line); width: max-content; transition: opacity 0.2s; }
 .anchor-grid.is-disabled { opacity: 0.4; }
 .anchor-dot { width: 30px; height: 22px; border: 0; border-radius: 6px; padding: 0; background: none; display: grid; place-items: center; }
-.anchor-dot:hover { background: rgba(255, 255, 255, 0.06); }
+.anchor-dot:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+.anchor-dot:disabled { opacity: 0.2; cursor: not-allowed; }
 .anchor-dot i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.25); transition: width 0.3s var(--spring), height 0.3s var(--spring), background 0.2s; }
 .anchor-dot.is-on i { width: 16px; height: 10px; background: var(--lab-accent); }
 .ctl-inline .ctl-head { min-height: 24px; }
@@ -505,6 +532,15 @@ html.no-motion *, html.no-motion *::before, html.no-motion *::after { transition
 .order-foot .link-btn { align-self: center; white-space: nowrap; }
 .order-foot .link-btn:disabled { opacity: 0.4; }
 
+/* ---------- Pro snapshot slots (A / B / C) ---------- */
+.snap-bar { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 2px 4px 4px; font: 10.5px var(--mono); color: var(--lab-dim); }
+.snap-bar .snap-tag { color: var(--lab-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-right: 2px; font-size: 10px; }
+.snap-slot { padding: 2px 9px; border-radius: 999px; border: 1px dashed rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.02); color: var(--lab-muted); font: 10.5px var(--mono); transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s var(--ease-out); }
+.snap-slot:hover { border-color: rgba(110, 231, 255, 0.5); color: var(--lab-fg); background: rgba(255, 255, 255, 0.06); }
+.snap-slot:active { transform: scale(0.95); }
+.snap-slot.is-filled { border-style: solid; border-color: rgba(110, 231, 255, 0.42); background: rgba(110, 231, 255, 0.12); color: #cdf7ff; }
+
 @media (prefers-reduced-motion: reduce) {
   .order-row, .quick-pill { transition-duration: 0.01ms !important; }
+}
 }

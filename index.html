@@ -63,7 +63,7 @@
       <div class="card-main">
         <header class="card-head" id="cardHead">
           <div class="head-row">
-            <div class="head-name"><span class="head-kicker">Component</span><strong id="cmpName"></strong></div>
+            <div class="head-name"><span class="head-kicker">Component</span><button class="cmp-pick" id="cmpName" type="button" aria-haspopup="listbox" aria-expanded="false" title="Switch component"></button></div>
             <div class="seg seg-mode" id="modeSeg" role="radiogroup" aria-label="Control set"></div>
             <button class="icon-btn more-dots is-hidden" id="moreBtn" type="button" aria-label="Section options" aria-haspopup="menu" aria-expanded="false" aria-controls="accPop" title="Sections: collapse + motion"></button>
             <button class="icon-btn close-btn" id="dockClose" type="button" aria-label="Close controls (Esc)"></button>
@@ -87,7 +87,7 @@
                   <button class="foot-btn" id="undoBtn" type="button" title="Nothing to undo" aria-label="Undo" disabled></button>
                   <button class="foot-btn" id="resetBtn" type="button" title="Nothing to reset" aria-label="Reset all to defaults" disabled></button>
                 </span>
-                <span class="changed" id="changedCount"></span>
+                <button class="changed" id="changedCount" type="button" title="Hold to preview defaults"></button>
               </div>
               <div class="foot-log" id="footLog" aria-hidden="true"></div>
               <span class="sr-only" id="footLive" role="status" aria-live="polite"></span>
@@ -108,6 +108,8 @@
   <script src="components/registry.js"></script>
   <script src="lab/motion.js"></script>
   <script src="lab/scan.js"></script>
+  <script src="lab/controls.js"></script>
+  <script src="lab/export.js"></script>
   <script src="lab/lab.js"></script>
 </body>
 </html>

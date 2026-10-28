@@ -33,13 +33,14 @@ python serve.py 5180          # use another port if 5179 is busy
 
 Component Lab separates everyday visual tuning (**Basic**) from deep parameter inspection, layout organization, and manifest curation (**Pro**). Switch between them anytime using the **`Basic | Pro`** segmented toggle in the card header.
 
-| Area | **Basic Mode** (Everyday Tuning) | **Pro Mode** (Deep Tuning, Curation & Authoring) |
+| Area | **Basic Mode** (Everyday Tuning) | **Pro Mode** (Deep Tuning, Curation & Authoring — configured via `PRO_FEATURES` in `lab/lab.js`) |
 |---|---|---|
-| **Controls shown** | Up to **8 starred (`★`) controls**, shown one category page at a time via the right-hand rail icons. | **Every control** in one scrollable **All controls** accordion, grouped into mini-cards (`Card`, `Text`, `Glow`, etc.) with `More` and `Advanced` folds. |
-| **Curation & badges** | Clean labels and live values only. | Shows `✦` signature badges, `★` star buttons (click to add/remove a control from Basic's 8 slots), and source/wiring hints (`where`, `lab-bound`, `js-const`). |
-| **Colour picking** | Project palette presets + radial gooey swatch picker (`Arc`). | Compact swatch chip rows + `Custom…` native colour/hex input + 6-slot **My palette** editor. |
-| **Section layout (`⋮`)** | Standard single-category page view. | Header **`⋮`** menu & **Settings › Pro sections** choose collapse mode (*Remember*, *All open*, *All closed*) and motion/layout variant (**A Slide**, **B Spring**, **C Stagger**, **D Exclusive chips**). |
-| **Exports (Footer)** | **Copy changes**, **Copy full working file**, **Undo**, **Reset**, and **`N changed`**. | Same export bar in both modes so you never have to switch modes just to copy. |
+| **Controls shown** | Up to **8 starred (`★`) controls**, shown one category page at a time via the right-hand rail icons (ignores hidden rail categories so Basic is never locked out). | **Every control** in one scrollable **All controls** accordion (`PRO_FEATURES.accordion`), grouped into mini-cards (`Card`, `Text`, `Glow`, etc.) with `More` and `Advanced` folds + **A/B/C Snapshot slots** (`PRO_FEATURES.snapshots`). |
+| **Curation & badges** | Clean labels and live values only. | Shows `✦` signature badges, `★` star buttons (`PRO_FEATURES.starCurate`), and source/wiring sub-labels (`--css-var`, `CSS bind`, `JS param` via `PRO_FEATURES.sourceHints`). |
+| **Colour picking** | Project palette presets + radial gooey swatch picker (`Arc`). | Compact swatch chip rows + `Custom…` native colour/hex input + **My palette** editor (`PRO_FEATURES.userPalette`). |
+| **Section layout (`⋮`)** | Standard single-category page view. | Header **`⋮`** menu & **Settings › Pro sections** (`PRO_FEATURES.sectionMenu`) choose collapse mode (*Remember*, *All open*, *All closed*) and motion/layout variant (**A Slide**, **B Spring**, **C Stagger**, **D Exclusive chips**). |
+| **Settings & Manifest** | Essential settings (Anchor, Open trigger, Motion, Background, Show toolbar icon, Backup/Reset) + one-click link to switch to Pro. | Adds **Rail order & Rail actions** (`PRO_FEATURES.railCustomize`), **Stage toolbar advanced options** (`PRO_FEATURES.toolbarAdvanced`), **Interaction scan**, **Manifest Save/Export**, and **Live Re-scan files** (`PRO_FEATURES.manifestTools`). |
+| **Exports (Footer)** | **Copy changes**, **Copy working file**, **Hold to reset**, and **`N changed` (Hold to compare defaults)**. | Same export bar in both modes so you never have to switch modes just to copy. |
 
 ---
 
@@ -57,29 +58,33 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
   1. **Categories:** `Color`, `Interaction` (shown only when the component has cursor/touch/key behaviour), `Surface`, `Type`, `Motion`, `Rate`, `Layout`.
   2. **Actions:** **`+`** (New Component modal) and **Toolbar** (shows/throws out the floating stage toolbar).
   3. **Settings (Gear):** Always last on the rail and can never be hidden.
-- **Quick Shortcuts:**
+- **Quick Shortcuts & Power Features:**
+  - **Click any component title (`#cmpName`)** in the dock header or floating toolbar to switch components even when the floating toolbar is dismissed.
+  - **Click any numeric readout (`.ctl-val`)** on a slider or radial dial to type an exact value (`Enter` or blur commits; `Esc` cancels).
+  - **Press and hold `N changed` (`#changedCount`)** in the card header to temporarily preview the component with all default values; release to restore your tuned state.
+  - **Snapshots (`A` / `B` / `C` in Pro mode):** Click an empty slot to save your current look; click a filled slot to restore it (undoable via `Ctrl+Z`); `Shift+Click` to overwrite; `Alt+Click` or right-click to clear.
   - **Double-click any control label** to reset that single control to its default.
-  - **`Ctrl+Z`** undoes and **`Ctrl+Shift+Z` / `Ctrl+Y`** redoes (up to 100 steps; a full slider drag counts as one step).
-  - **URL Hash State:** Tuned values sync live to the URL hash (e.g. `http://127.0.0.1:5179/#c=helix&SPEED=1.5&CARD_OPACITY=0.6`) for bookmarking or sharing.
+  - **`Ctrl+Z`** undoes and **`Ctrl+Shift+Z` / `Ctrl+Y`** redoes (up to 100 steps; works whenever the dock is open).
+  - **URL Query & Hash Helpers:**
+    - `?reset` (`http://127.0.0.1:5179/?reset`) clears all `componentLab:v2:*` `localStorage` keys and reloads clean defaults.
+    - `?selftest=1` (`http://127.0.0.1:5179/?selftest=1`) runs an automated smoke check across all registered components and logs/toasts the pass/fail summary.
+    - `#c=<id>` switches between registered components via the URL hash.
 
-### Floating Stage Toolbar & Flick Physics
-- Floats at the top-left of the stage (moves to top-right if the dock is anchored on the left) without affecting sandbox dimensions.
-- **Groups (left to right):**
-  1. **Component Picker:** Switches between registered components (also accessible by clicking the component title in the dock header).
-  2. **Playback:** Play/Pause (`Space`) and loop speed/scrub slider (shown for animated components).
-- **Progressive Open/Close:** Clicking the toolbar icon opens or closes all groups; **`Shift+Click`** or **`←` / `→`** steps one group at a time on a staggered spring (`TB_OPEN_ORDER` / `TB_CLOSE_ORDER` in `lab/lab.js`).
-- **Flick Physics (`lab/motion.js` — `Motion.Flick`):**
-  - Dragging `< 6 px` acts as a click; dragging further pulls with rubber-band resistance and measures release velocity over the last `90 ms` (pausing stationary for `> 90 ms` before release zeroes velocity and snaps back without triggering a flick):
-
-| Strength Setting | Gentle Flick (speed or distance) | Strong Flick (speed or distance) |
-|---|---|---|
-| **Light** | `≥ 0.22 px/ms` or `≥ 40 px` | `≥ 0.75 px/ms` or `≥ 120 px` |
-| **Normal** | `≥ 0.35 px/ms` or `≥ 60 px` | `≥ 1.10 px/ms` or `≥ 170 px` |
-| **Heavy** | `≥ 0.55 px/ms` or `≥ 85 px` | `≥ 1.60 px/ms` or `≥ 230 px` |
-
-  - **Rail Toolbar Button:** Flick toward the stage to throw the toolbar out of the rail (gentle = 1 group, strong = all groups). Flick back toward the rail to retract.
-  - **Floating Toolbar Icon:** Flick right to open groups; gentle flick left closes one group; **strong flick left/up** dismisses the floating toolbar for the current session (click the rail toolbar icon or toggle **Settings › Show toolbar icon** to bring it back).
-- **Extension Point (`TOOLBAR_GROUPS`):** Defined in `lab/lab.js` (`{ id, label, primary, when }`) matching `.tb-group[data-group]` elements in `index.html`. Re-enabling the built-in `#tbViewport` group requires only adding `{ id: 'viewport', label: 'Viewport' }` to `TOOLBAR_GROUPS`.
+### Floating Stage Toolbar, Free-Roam Drag-and-Drop & Arcade Flick Physics
+- **Overlays the entire viewport freely:** `#stageBar` (`.tb`) is `position: fixed; z-index: 12` and floats above the stage without altering `#stageFit` or `#stageScaler` dimensions.
+- **Whole-card hit detection & tactile hold (`.is-held`):** Grabbing anywhere on the nested toolbar card shell, border, padding, or `#tbToggle` icon immediately lifts the card (`scale(1.06)`, cyan border glow, elevated shadow, `cursor: grabbing`) and tracks **1:1 with the cursor** with subtle velocity banking.
+- **Calm Release = Custom Session Drop Position:** Releasing calmly (or holding stationary `> 90 ms` before letting go) drops the toolbar at that exact `(x, y)` coordinate for the current session (clamped `12 px` inside viewport edges). Dropping it on the right half of the window (`x > 55%` viewport width) sets `data-flip="true"` so expanded groups grow **leftward** (`row-reverse`) and never clip off-screen. Use **Settings › Reset toolbar position** to snap it back to the top-left corner.
+- **Short Horizontal Flick (`< 75 px`):** A quick wrist flick in the expansion direction opens 1 group (gentle) or all 3 groups (strong); a gentle flick in the opposite direction collapses 1 group.
+- **Strong Throw (`power >= 2`) = 5 Video-Game Physics Exit Trajectories:** Throwing the toolbar in any direction launches it into the rail toolbar icon using 1 of 5 arcade trajectories (logged in the footer log) and automatically unhides the rail toolbar icon if it was hidden:
+  1. **Gravity Lob (`arc`):** High parabolic lob with backspin before plummeting into the rail slot.
+  2. **Wall Ricochet (`ricochet`):** Banks off the nearest viewport edge with squash-and-stretch before zipping into the rail.
+  3. **Boomerang Curveball (`curve`):** Sweeps out on a wide S-curve with banking tilt before curving home.
+  4. **Slingshot Warp (`warp`):** Pulls back slightly, stretches with motion blur, and streaks into the rail.
+  5. **Corkscrew Spiral (`spiral`):** Performs a `720°` barrel roll along the flight vector into the rail.
+- **Groups:**
+  1. **Component Picker (`#tbPick`):** Switches between registered components or starts the New Component wizard.
+  2. **Playback (`#labPlay`, `#labScrub`):** Play/Pause (`Space`) and loop scrub slider.
+  3. **Viewport Scale (`#viewSeg`):** `Fit` vs. `1×` native size.
 
 ---
 
@@ -198,10 +203,12 @@ jsconfig.json                   # Zero-build ES2022 editor config for VS Code / 
 project/
   tokens.css                    # Shared project colour/token definitions (palette source)
 lab/
-  lab.css                       # Lab UI chrome styles
+  lab.css                       # Lab UI chrome styles (scoped via @scope (:root) to (#labFrame))
   motion.js                     # Spring presets, FLIP helpers, and Motion.Flick physics
   scan.js                       # Auto-manifest generator & CSS/JS interaction scanner
-  lab.js                        # Core lab state, dock, controls, toolbar, and export logic
+  controls.js                   # Control rows, click-to-type inputs, radial dials, colour Arc & hold button
+  export.js                     # Manifest clean export/save, clipboard summaries, standalone HTML & JSON backup
+  lab.js                        # Core lab state, PRO_FEATURES, dock, floating toolbar & self-test runner
   fonts/                        # Offline Chakra Petch & JetBrains Mono font files + fonts.css
 components/
   registry.js                   # Ordered list of components shown in the lab picker

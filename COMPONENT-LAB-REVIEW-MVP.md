@@ -426,6 +426,32 @@ Instead of scattering `mode === 'pro'` checks across `lab/lab.js`, organize the 
 
 ---
 
+#### 7. Floating stage toolbar (`#stageBar`): full-card hit detection, tactile grab feedback, 1:1 free-roam drag-and-drop over the sandbox, and video-game exit trajectories
+**Why it matters:** Previously, `M.Flick(icon(), ...)` was bound only to the inner `32×32 px` `#tbToggle` button (missing the outer `.tb` glass border/padding), compressed movement through `M.rubber(dx, 28)` so the icon lagged behind the cursor and felt trapped in the top-left corner, always snapped back to `(16px, 16px)` on release, and used a single linear fade-out when dismissed. Because `.tb` is `position: fixed; z-index: 12;`, it floats above the stage without affecting `#stageFit` or `#stageScaler` sandbox layout at all.
+
+1. **Full-card & border hit detection (`#stageBar`):**
+   - Bind gesture handling on the entire `#stageBar` (`.tb`) shell so grabbing the icon, the `4 px` glass padding, or the `1 px` outer border engages the toolbar (while ignoring interactive inner controls like `#tbPick`, `#labPlay`, `#labScrub`, and `#viewSeg`).
+2. **Tactile press/hold & velocity-tilt feedback:**
+   - Add `.is-held` on `pointerdown` (immediate `scale(1.05)`, elevated cyan border glow `rgba(110, 231, 255, 0.48)`, deeper drop shadow, `cursor: grabbing`) and `.is-dragging` during movement with subtle live velocity banking (`rotate(clamp(vx * 4, -9, 9)deg)`).
+3. **1:1 cursor tracking & session-persistent drop anywhere over the stage:**
+   - Replace `M.rubber(dx, 28)` with true **1:1 cursor tracking** (`left` / `top` updated from `startLeft + dx`, `startTop + dy`).
+   - **Drop to relocate (session-scoped until reload):** Releasing the cursor without a flick velocity (`power === 0` or after holding stationary `> 90 ms`) drops and anchors the toolbar at that custom `(x, y)` spot (clamped within `12 px` of viewport edges) with a crisp spring settle.
+   - **Auto-flip expansion (`data-flip`):** If dropped on the right half of the viewport (`x > innerWidth * 0.55`), automatically flip `.tb` (`flex-direction: row-reverse`) so groups expand inward toward the stage center instead of clipping off the right edge.
+4. **Gesture disambiguation (Click vs. Drop vs. Flick):**
+   - **Tap (`< 6 px`):** Toggles groups open/closed (`Shift+Click` steps 1 group).
+   - **Short directional flick (`< 75 px` drag with flick velocity along `x`):** Snaps back to the current custom anchor spot and opens `1` group (gentle), opens `all` groups (strong toward `growDir()`), or closes `1` group (gentle against `growDir()`).
+   - **Drag & Drop (`≥ 10 px` move released calmly / after hold):** Relocates `#stageBar` to the release coordinates for the current session.
+   - **Strong throw (`power >= 2` away / any high-speed throw):** Triggers the video-game exit trajectory (`TB.dismiss`).
+5. **Video-game exit trajectories (`TB.dismiss`):**
+   - Cycle/randomize across 5 distinct arcade flight paths when thrown off-screen (logging the trick name in the footer log):
+     1. **Gravity Lob (`arc`):** Launches along `(vx, vy)` then accelerates downward under arcade gravity in a parabolic arc while tumbling (`rotate(420deg)`).
+     2. **Wall Ricochet (`ricochet`):** Streaks to the nearest viewport wall, bounces off with a squash-stretch impact flash (`scale(1.28, 0.74)`), and ricochets across the stage spinning.
+     3. **Boomerang Curveball (`curve`):** Curves perpendicular to the throw vector (Magnus spin) while spinning `540deg` off-screen.
+     4. **Slingshot Warp (`warp`):** Briefly winds back (`-vx`) with a charge-up squash (`scale(1.2, 0.82)`), then blasts out at hyper-speed with motion-stretch (`scale(1.65, 0.68)` + `blur(2px)`).
+     5. **Corkscrew Spiral (`spiral`):** Flies outward along a sinusoidal corkscrew path while spinning `720deg` and shrinking into the horizon (`scale(0.12)`).
+
+---
+
 ### Future project review & post-MVP audit log
 
 #### 1. Claude Opus's ES Module (`<script type="module">`) & shared state proposal (Item 1.7 — for later evaluation)
@@ -461,6 +487,10 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 9. **Paused final report sections (Opus snippets #6–#10):**
    - Opus's trace cut off mid-sentence while writing snippet #6 (`@scope` CSS isolation) and before writing its final sections on `scan.js` `uniq()`, `manifestForExport()` cleanup, keyboard focus fixes, `serve.py` CSRF/Origin hardening, and `run.bat` / `serve.py --open`—all of which we recovered directly from its earlier reasoning trace and merged into sections 1–3 above.
 
+#### 3. Future Settings Option: Persist Custom Floating Toolbar Location (`ui.tbPos`)
+- **Current MVP behaviour (Main Step 3):** Dragging and dropping `#stageBar` relocates the floating toolbar anywhere over the viewport/sandbox for the current browser session (resets to default corner on full page reload).
+- **Future enhancement:** Add a **Settings › Toolbar › Position** control (`Default corner` | `Remember custom spot` | `Reset position`) backed by `ui.tbPos = { xRatio, yRatio, flip }` in `componentLab:v2:ui` (`localStorage`). Storing normalized viewport ratios (`x / innerWidth`, `y / innerHeight`) ensures the saved custom spot adapts cleanly when switching between `1600×770` and `1366×768` laptop displays or resizing the Chrome window.
+
 ---
 
 ### Next-session pickup notes
@@ -475,9 +505,10 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
      - Added `alphaOf()` and `h + '@' + a` colour grouping with `rgb(from {v} r g b / a)` in `scan.js`.
      - Added `uniq()` ID collision suffixing and tightened `interactions()` (`drag` requires move, ignore `preventDefault`/`stopPropagation` click guards, check CSS `:focus-visible`, strip `@media` before `:hover`).
      - Added the `e.timeStamp - b.t > 90` stale-velocity and power zeroing check in `M.Flick` in `motion.js`.
-  3. ⏳ **[NEXT — Main Step 3] Core lab fixes, `PRO_FEATURES` organization, enhancements & file split (`lab/lab.js`, `lab/controls.js`, `lab/export.js`, `lab/lab.css`, `index.html`, `README.md`):**
-     - Replace `loadScript` in `loadComponent()` with single-fetch `new Function` + `//# sourceURL=` and harden `init()` startup order.
-     - Add `isModified(v)` guard to `applyVar()` / `flushBinds()`, `v.alpha` support in `cssVal()`, `sig` hash invalidation for `manifest:<id>`, clean `manifestForExport()`, and capture-phase enforcement for scan-sourced interactions.
-     - Apply the 5 recovery fixes (`railCats` Basic guard, `TB.shown` switch sync + rail unhide, clickable `#cmpName` picker, disabled `middle-center` anchor, `?reset` URL parameter) and 5 keyboard/focus fixes (`Ctrl+Z` without `dock.contains`, `Arc` owner focus, `openDock` keyboard focus, `focusin` pin, `cardFoot.inert`).
-     - Add `PRO_FEATURES` / `hasPro()`, wire all 7 enhancements (hold `N changed` to preview defaults, Pro `where`/`hint` subtitles, click `.ctl-val` to type, backup/restore JSON + UI reset, `jsconfig.json`, `?selftest=1` smoke check, and `A/B/C` snapshot slots), wrap `lab.css` in `@scope (:root) to (#labFrame)`, split `lab/controls.js` and `lab/export.js` out of `lab/lab.js`, and sync `README.md`.
+  3. ✅ **[COMPLETED — Main Step 3] Core lab fixes, `PRO_FEATURES` organization, floating toolbar overhaul, enhancements & file split (`lab/lab.js`, `lab/controls.js`, `lab/export.js`, `lab/lab.css`, `index.html`, `README.md`):**
+     - Replaced `loadScript` in `loadComponent()` with single-fetch `new Function(rawJs + '\n//# sourceURL=components/' + id + '/component.js')()` and hardened `init()` startup order (`try / finally` + `hashchange` registry validation).
+     - Added `isModified(v)` guard to `applyVar()` / `flushBinds()` so unmodified defaults do not clobber CSS `:hover`/`:focus` pseudo-states, `v.alpha` support in `cssVal()`, `sig` hash invalidation (`_genOpts` + `rawFiles`) for `manifest:<id>`, clean `manifestForExport()`, and capture-phase enforcement on `#stageScaler` / `#labFrame` for scan-sourced interactions.
+     - Applied all 5 recovery fixes (`railCats` Basic guard, `TB.shown` switch sync + rail unhide on dismiss/flyHome, clickable `#cmpName` component picker in header, disabled `middle-center` anchor, `?reset` URL parameter) and all keyboard/focus fixes (`Ctrl+Z` without `dock.contains`, `Arc.close(false, true)` owner focus restoration, `focusin` pin on dock, `cardFoot.inert`).
+     - Overhauled the floating stage toolbar (`TB` in `lab/lab.js` + `.tb` in `lab/lab.css` — Enhancement #7): whole-card hit detection (ignoring interactive child controls), `.is-held` tactile lift + cyan border glow, 1:1 free-roam cursor tracking across the viewport with live velocity banking, session-only custom drop position on calm release (or `>90 ms` hold) with automatic `data-flip="true"` inward expansion on the right half of the window, `Reset toolbar position` button in Settings, and 5 video-game physics exit trajectories (`arc`, `ricochet`, `curve`, `warp`, `spiral`) when thrown off-screen.
+     - Added `PRO_FEATURES` / `hasPro()`, wired all 7 enhancements (hold `N changed` to preview defaults, Pro `where`/`hint` subtitles, click `.ctl-val` to type, backup/restore JSON + UI reset + live `Re-scan files`, `jsconfig.json`, `?selftest=1` smoke check, and `A/B/C` snapshot slots), wrapped `lab/lab.css` UI chrome rules in `@scope (:root) to (#labFrame)`, split `lab/controls.js` and `lab/export.js` out of `lab/lab.js`, and synchronized `README.md`.
 
