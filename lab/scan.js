@@ -15,12 +15,20 @@
     ctx.fillStyle = String(c).trim();
     const v = ctx.fillStyle;
     if (v === '#010203' && !/^#010203$/i.test(String(c).trim())) return null;
-    if (v[0] === '#') return { r: parseInt(v.slice(1, 3), 16), g: parseInt(v.slice(3, 5), 16), b: parseInt(v.slice(5, 7), 16), a: 1 };
+    if (v[0] === '#') {
+      return {
+        r: parseInt(v.slice(1, 3), 16),
+        g: parseInt(v.slice(3, 5), 16),
+        b: parseInt(v.slice(5, 7), 16),
+        a: v.length === 9 ? +(parseInt(v.slice(7, 9), 16) / 255).toFixed(3) : 1
+      };
+    }
     const m = v.match(/[\d.]+/g);
     return m ? { r: +m[0], g: +m[1], b: +m[2], a: m[3] !== undefined ? +m[3] : 1 } : null;
   }
   const hx = (n) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
   function hex(c) { const p = typeof c === 'string' ? parse(c) : c; return p ? '#' + hx(p.r) + hx(p.g) + hx(p.b) : null; }
+  const alphaOf = (c) => { const p = typeof c === 'string' ? parse(c) : c; return p ? +(p.a != null ? p.a : 1).toFixed(3) : 1; };
   function hsl(c) {
     const p = parse(c); if (!p) return { h: 0, s: 0, l: 0 };
     const r = p.r / 255, g = p.g / 255, b = p.b / 255;
@@ -212,32 +220,50 @@
   const stripCss = (t) => String(t || '').replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
   const INTERACTIONS = [
     { kind: 'hover', label: 'hover', re: /['"`](pointerenter|pointerleave|mouseenter|mouseleave|mouseover|mouseout)['"`]|\bon(mouseenter|mouseover|pointerenter)\s*=/ },
-    { kind: 'drag', label: 'drag', re: /['"`](pointerdown|mousedown|dragstart)['"`]|['"`]touchmove['"`]/ },
+    { kind: 'drag', label: 'drag', re: /['"`](pointerdown|mousedown|dragstart)['"`]/ },
     { kind: 'wheel', label: 'wheel / scroll', re: /['"`](wheel|scroll)['"`]|\bonwheel\s*=/ },
     { kind: 'click', label: 'click', re: /['"`](click|dblclick)['"`]/ },
-    { kind: 'key', label: 'keyboard', re: /['"`](keydown|keyup|focusin|focusout)['"`]|:focus-visible/ },
+    { kind: 'key', label: 'keyboard', re: /['"`](keydown|keyup|focusin|focusout)['"`]/ },
     { kind: 'touch', label: 'touch', re: /['"`](touchstart|touchend)['"`]|pointerType\s*[!=]==?\s*['"`]touch|matchMedia\(\s*['"`]\(hover:\s*none/ }
   ];
   function lineOf(text, idx) { return text.slice(0, idx).split('\n').length; }
   function interactions(opts) {
     const js = stripJs(opts.js), css = stripCss(opts.css), markup = String(opts.markup || '');
+    const hasMove = /['"`](pointermove|mousemove|touchmove|drag)['"`]|\bon(pointermove|mousemove|touchmove)\s*=/.test(js);
     const out = [];
     INTERACTIONS.forEach((it) => {
       let m, hit = null;
-      const re = new RegExp(it.re.source, 'g');
-      while ((m = re.exec(js))) {
-        if (it.kind === 'click') {
-          // ignore addEventListener('click', e => e.preventDefault()) guards
-          const tail = js.slice(m.index, m.index + 120);
-          if (/^['"`]click['"`]\s*,\s*\(?\s*\w*\s*\)?\s*=>\s*\{?\s*\w+\.preventDefault\(\)\s*;?\s*\}?\s*\)/.test(tail)) continue;
+      if (it.kind !== 'drag' || hasMove) {
+        const re = new RegExp(it.re.source, 'g');
+        while ((m = re.exec(js))) {
+          if (it.kind === 'click') {
+            // ignore addEventListener('click', e => e.preventDefault()) and post-drag click-suppression guards
+            const tail = js.slice(m.index, m.index + 240);
+            const fn = tail.match(/^['"`]click['"`]\s*,\s*(?:function\s*\([^)]*\)|\(?\s*\w*\s*\)?\s*=>)\s*(\{[\s\S]*?\}|[^,)]+)/);
+            if (fn && /(?:preventDefault|stopPropagation)/.test(fn[1])) {
+              const rest = fn[1]
+                .replace(/\bif\s*\([^)]*\)/g, '')
+                .replace(/\breturn\b/g, '')
+                .replace(/\b\w+\.(?:preventDefault|stopPropagation|stopImmediatePropagation)\(\)/g, '')
+                .replace(/\b\w*drag\w*\s*=\s*(?:false|0)\b/gi, '')
+                .replace(/[\s;{}()]+/g, '');
+              if (!rest) continue;
+            }
+          }
+          hit = { kind: it.kind, label: it.label, evidence: 'component.js:' + lineOf(js, m.index) + ' ' + m[0].replace(/['"`]/g, '').trim(), line: lineOf(js, m.index) };
+          break;
         }
-        hit = { kind: it.kind, label: it.label, evidence: 'component.js:' + lineOf(js, m.index) + ' ' + m[0].replace(/['"`]/g, '').trim(), line: lineOf(js, m.index) };
-        break;
       }
-      if (!hit && it.kind === 'key' && /tabindex=/.test(markup) && /focus/.test(js)) hit = { kind: 'key', label: 'keyboard', evidence: 'markup tabindex + focus', line: 0 };
+      if (!hit && it.kind === 'drag' && /\bdraggable\s*=\s*['"]?true/i.test(markup)) hit = { kind: 'drag', label: 'drag', evidence: 'markup draggable="true"', line: 0 };
+      if (!hit && it.kind === 'key') {
+        const fv = css.match(/[^{}]*:(?:focus-visible|focus-within)[^{]*\{/);
+        if (/tabindex=/.test(markup) && /focus/.test(js)) hit = { kind: 'key', label: 'keyboard', evidence: 'markup tabindex + focus', line: 0 };
+        else if (fv) hit = { kind: 'key', label: 'keyboard', evidence: 'CSS ' + fv[0].replace(/\{$/, '').trim().split(',')[0].trim(), line: 0 };
+      }
       if (hit) out.push(hit);
     });
-    const hoverCss = css.match(/[^{}]*:hover[^{]*\{/);
+    const cssNoMedia = css.replace(/@media[^{]*\{/g, '');
+    const hoverCss = cssNoMedia.match(/[^{}]*:hover[^{]*\{/);
     if (hoverCss) out.push({ kind: 'hover-css', label: 'hover styles', evidence: 'CSS ' + hoverCss[0].replace(/\{$/, '').trim().split(',')[0].trim(), line: 0 });
     if (!out.some((x) => x.kind === 'touch') && /touch-action\s*:\s*none/.test(css) && out.some((x) => x.kind === 'drag')) out.push({ kind: 'touch', label: 'touch', evidence: 'CSS touch-action: none', line: 0 });
     return out;
@@ -268,6 +294,7 @@
     const vars = [];
     const seen = new Set();
     const add = (v) => { if (seen.has(v.id)) return null; seen.add(v.id); vars.push(v); return v; };
+    const uniq = (base) => { let id = base, n = 2; while (seen.has(id)) id = base + '_' + (n++); return id; };
     const cssAll = (opts.cssFiles || []).map((f) => f.text).join('\n');
     const notes = [];
 
@@ -278,7 +305,7 @@
     });
 
     // 2) CSS custom properties (bound live with style.setProperty on the frame)
-    const colorLits = new Map(); // hex -> { binds, props, firstSel }
+    const colorLits = new Map(); // hex@alpha -> { hex, alpha, binds, props }
     const durations = [];
     rules(cssAll).forEach((r) => {
       r.decls.forEach((d) => {
@@ -286,7 +313,11 @@
           const val = d.value.trim();
           const c = val.match(COLOR_RE);
           if (c && c[0] === val) {
-            add({ id: idOf(d.prop), label: human(d.prop), category: 'color', control: 'swatch-role', role: roleOf(d.prop), default: hex(val), css: d.prop, source: 'css-var' });
+            const p = parse(val), a = alphaOf(p);
+            add(Object.assign(
+              { id: idOf(d.prop), label: human(d.prop), category: 'color', control: 'swatch-role', role: roleOf(d.prop), default: hex(p), css: d.prop, source: 'css-var' },
+              a < 1 ? { alpha: a } : {}
+            ));
             return;
           }
           const n = val.match(/^(-?\d*\.?\d+)(px|rem|em|s|ms|deg|%)?$/);
@@ -298,38 +329,44 @@
           return;
         }
         if (/var\(/.test(d.value)) return;
-        // colour literals: one control per distinct colour, bound to every place it is used
+        // colour literals: one control per distinct colour+alpha, bound to every place it is used
         (d.value.match(COLOR_RE) || []).slice(0, 1).forEach((lit) => {
-          const h = hex(lit);
+          const p = parse(lit), h = hex(p);
           if (!h) return;
-          const e = colorLits.get(h) || { binds: [], props: [] };
-          e.binds.push({ sel: r.sel, prop: d.prop, tpl: d.value.replace(lit, '{v}') });
+          const a = alphaOf(p), key = h + '@' + a;
+          const e = colorLits.get(key) || { hex: h, alpha: a, binds: [], props: [] };
+          const repl = a < 1 ? 'rgb(from {v} r g b / ' + a + ')' : '{v}';
+          e.binds.push({ sel: r.sel, prop: d.prop, tpl: d.value.replace(lit, repl) });
           e.props.push(d.prop);
-          colorLits.set(h, e);
+          colorLits.set(key, e);
         });
         if (d.prop === 'opacity' && /^\d*\.?\d+$/.test(d.value)) {
-          add({ id: idOf(r.sel.split(/[\s,>+~]/).pop() + '_OPACITY'), label: human(r.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' opacity', category: 'surface', control: 'slider', min: 0, max: 1, step: 0.01, default: +d.value, bind: [{ sel: r.sel, prop: 'opacity', tpl: '{v}' }], source: 'css' });
+          add({ id: uniq(idOf(r.sel.split(/[\s,>+~]/).pop() + '_OPACITY')), label: human(r.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' opacity', category: 'surface', control: 'slider', min: 0, max: 1, step: 0.01, default: +d.value, bind: [{ sel: r.sel, prop: 'opacity', tpl: '{v}' }], source: 'css' });
         }
         if (/^(animation(-duration)?|transition(-duration)?)$/.test(d.prop)) {
           const m = d.value.match(/(^|\s)(\d*\.?\d+)(ms|s)\b/);
           if (m) durations.push({ sel: r.sel, prop: d.prop, value: d.value, n: +m[2], unit: m[3], lit: m[2] + m[3] });
         }
         if (d.prop === 'border-radius' && /^\d+px$/.test(d.value)) {
-          add({ id: idOf(r.sel.split(/[\s,]/).pop() + '_RADIUS'), label: human(r.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' radius', category: 'layout', control: 'slider', min: 0, max: 48, step: 1, unit: 'px', default: parseInt(d.value, 10), bind: [{ sel: r.sel, prop: 'border-radius', tpl: '{v}' }], source: 'css' });
+          add({ id: uniq(idOf(r.sel.split(/[\s,]/).pop() + '_RADIUS')), label: human(r.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' radius', category: 'layout', control: 'slider', min: 0, max: 48, step: 1, unit: 'px', default: parseInt(d.value, 10), bind: [{ sel: r.sel, prop: 'border-radius', tpl: '{v}' }], source: 'css' });
         }
         if (d.prop === 'font-size' && /^\d*\.?\d+(px|rem)$/.test(d.value)) {
           const unit = d.value.endsWith('rem') ? 'rem' : 'px';
-          add({ id: idOf(r.sel.split(/[\s,]/).pop() + '_FONT'), label: human(r.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' size', category: 'type', control: 'slider', min: unit === 'px' ? 8 : 0.5, max: unit === 'px' ? 64 : 4, step: unit === 'px' ? 1 : 0.05, unit, default: parseFloat(d.value), bind: [{ sel: r.sel, prop: 'font-size', tpl: '{v}' }], source: 'css' });
+          add({ id: uniq(idOf(r.sel.split(/[\s,]/).pop() + '_FONT')), label: human(r.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' size', category: 'type', control: 'slider', min: unit === 'px' ? 8 : 0.5, max: unit === 'px' ? 64 : 4, step: unit === 'px' ? 1 : 0.05, unit, default: parseFloat(d.value), bind: [{ sel: r.sel, prop: 'font-size', tpl: '{v}' }], source: 'css' });
         }
       });
     });
     let ci = 0;
-    colorLits.forEach((e, h) => {
+    colorLits.forEach((e) => {
+      const h = e.hex;
       const prop = e.props[0];
       const role = roleOf('', prop.replace('background-color', 'background'));
       const what = { color: 'Text', background: 'Fill', 'background-color': 'Fill', border: 'Border', 'border-color': 'Border', 'box-shadow': 'Glow', 'text-shadow': 'Text glow', fill: 'Fill', stroke: 'Stroke', outline: 'Outline' }[prop] || human(prop);
       const where = e.binds && e.binds[0] ? human(e.binds[0].sel.split(',')[0].trim().split(/[\s>+~]/).pop().replace(/^[.#]/, '').replace(/:.*$/, '')) : '';
-      add({ id: 'COLOR_' + (++ci), label: (where ? where + ' ' + what.toLowerCase() : what + ' colour ' + ci), category: 'color', control: 'swatch-role', role, default: h, bind: e.binds, source: 'css-literal' });
+      add(Object.assign(
+        { id: 'COLOR_' + (++ci), label: (where ? where + ' ' + what.toLowerCase() : what + ' colour ' + ci), category: 'color', control: 'swatch-role', role, default: h, bind: e.binds, source: 'css-literal' },
+        e.alpha < 1 ? { alpha: e.alpha } : {}
+      ));
     });
 
     // 3) durations -> individual rate controls (Advanced) + one Speed master
@@ -363,5 +400,5 @@
     return { version: 2, kind, title: opts.title, auto: true, generated: new Date().toISOString(), vars, notes };
   }
 
-  window.Scan = { analyze, interactions, interactionVars, palette, presets, rolesFrom, rankFor, pickFeatured, guessKind, hex, hsl, mix, rules, KIND_TEMPLATES };
+  window.Scan = { analyze, interactions, interactionVars, palette, presets, rolesFrom, rankFor, pickFeatured, guessKind, hex, alphaOf, hsl, mix, rules, KIND_TEMPLATES };
 })();

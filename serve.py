@@ -100,4 +100,8 @@ if __name__ == "__main__":
     print("Component Lab: %s  (Ctrl+C to stop)" % url)
     if open_browser:
         webbrowser.open(url)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+        server.server_close()

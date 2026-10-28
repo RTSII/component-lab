@@ -238,7 +238,9 @@
       eatClick = true;                  // a drag never also counts as a click
       setTimeout(() => { eatClick = false; }, 0);
       const a = s.s[0], b = s.s[s.s.length - 1], dt = Math.max(1, b.t - a.t);
-      const dx = e.clientX - s.x0, dy = e.clientY - s.y0, vx = (b.x - a.x) / dt, vy = (b.y - a.y) / dt;
+      const stale = e.timeStamp - b.t > 90;
+      const dx = e.clientX - s.x0, dy = e.clientY - s.y0;
+      const vx = stale ? 0 : (b.x - a.x) / dt, vy = stale ? 0 : (b.y - a.y) / dt;
       // 'xy': the dominant axis of the throw decides the direction
       const ax = axis === 'xy' ? (Math.abs(vx) + Math.abs(dx) / 300 >= Math.abs(vy) + Math.abs(dy) / 300 ? 'x' : 'y') : axis;
       const d = ax === 'x' ? dx : dy, v = ax === 'x' ? vx : vy;
