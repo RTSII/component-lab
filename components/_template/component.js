@@ -17,7 +17,7 @@ Lab.register({
     const KINDS = {
       card: '<article class="cmp cmp-card"><span class="cmp-badge">New</span><h3 class="cmp-title">Card title</h3>' +
         '<p class="cmp-text">Short supporting text that wraps onto a second line.</p><button class="cmp-btn" type="button">Action</button></article>',
-      nav: '<nav class="cmp cmp-nav"><a class="is-active">Home</a><a>Study</a><a>Quiz</a><a>Stats</a></nav>',
+      nav: '<nav class="cmp cmp-nav"><a class="is-active" href="#">Home</a><a href="#">Study</a><a href="#">Quiz</a><a href="#">Stats</a></nav>',
       hero: '<section class="cmp cmp-hero"><p class="cmp-eyebrow">PTCE 2026</p><h1 class="cmp-title">Headline goes here</h1>' +
         '<p class="cmp-text">One line of supporting text.</p><button class="cmp-btn" type="button">Get started</button></section>',
       'animated-background': '<div class="cmp cmp-bg"><i class="b1"></i><i class="b2"></i><i class="b3"></i><span class="cmp-bg-label">Background</span></div>',
@@ -25,10 +25,12 @@ Lab.register({
         '<li><i></i><span>Order entry</span><b>71%</b></li><li><i></i><span>Federal law</span><b>0%</b></li></ul>',
       button: '<button class="cmp cmp-btn cmp-solo" type="button">Start quiz</button>'
     };
-    const host = frame.querySelector('.cmp-host') || frame;
-    host.innerHTML = KINDS[kind] || KINDS.card;
-    host.dataset.kind = kind;
-    host.addEventListener('click', (e) => e.preventDefault());
+    const host = frame.querySelector('.cmp-host');
+    if (host && !host.children.length) {
+      host.innerHTML = KINDS[kind] || KINDS.card;
+      host.dataset.kind = kind;
+    }
+    (host || frame).addEventListener('click', (e) => e.preventDefault());
     // Interaction (optional, not forced): the Interaction section and its rail icon appear only
     // once manifest.json has vars with "category": "interact". Example for a hover pause:
     //   manifest: { "id": "HOVER", "category": "interact", "interaction": "hover", "control": "segmented",

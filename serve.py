@@ -2,6 +2,7 @@
 
 Usage (from the component-lab folder):
     python serve.py            # http://127.0.0.1:5179
+    python serve.py 5179 --open
     python serve.py 8090       # another port (use one if 5179 is busy)
 
 Same as "python -m http.server", plus two endpoints. Listens on 127.0.0.1 only.
@@ -15,6 +16,9 @@ import json
 import os
 import re
 import sys
+import webbrowser
+
+sys.dont_write_bytecode = True
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("new_component", os.path.join(HERE, "new-component.py"))
@@ -44,6 +48,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_POST(self):
+        host = self.headers.get("Host", "")
+        origin = self.headers.get("Origin", "")
+        if not host.startswith(("127.0.0.1:", "localhost:")) or (
+            origin and not origin.startswith(("http://127.0.0.1:", "http://localhost:"))
+        ):
+            return self.reply(403, {"ok": False, "error": "Forbidden origin"})
         path = self.path.rstrip("/")
         try:
             n = int(self.headers.get("Content-Length") or 0)
@@ -56,6 +66,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path == "/api/manifest":
                 cid = body.get("id", "")
                 man = body.get("manifest")
+                if cid == "_template":
+                    raise ValueError("Template is read-only; use + New to create a component.")
                 if not ID_RE.match(cid) or not os.path.isdir(os.path.join(HERE, "components", cid)):
                     raise ValueError("No component folder components/%s" % cid)
                 if not isinstance(man, dict) or not isinstance(man.get("vars"), list):
@@ -67,15 +79,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404)
         except ValueError as e:
             self.reply(400, {"ok": False, "error": str(e)})
+        except Exception as e:
+            self.reply(500, {"ok": False, "error": str(e)})
 
 
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 5179
+    args = [a for a in sys.argv[1:] if a != "--open"]
+    open_browser = "--open" in sys.argv[1:]
+    port = int(args[0]) if args else 5179
+    url = "http://127.0.0.1:%d/" % port
     try:
         server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
     except OSError:
         print("Port %d is busy (another copy of the lab may already be running there)." % port)
-        print("Open http://127.0.0.1:%d/ or run: python serve.py %d" % (port, port + 1))
+        print("Open %s or run: python serve.py %d" % (url, port + 1))
+        if open_browser:
+            webbrowser.open(url)
+            sys.exit(0)
         sys.exit(1)
-    print("Component Lab: http://127.0.0.1:%d/  (Ctrl+C to stop)" % port)
+    print("Component Lab: %s  (Ctrl+C to stop)" % url)
+    if open_browser:
+        webbrowser.open(url)
     server.serve_forever()

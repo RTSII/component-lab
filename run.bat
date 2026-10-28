@@ -1,6 +1,5 @@
 @echo off
-rem Component Lab launcher: double-click. Opens Chrome and starts the local server.
+rem Component Lab launcher: double-click. Starts the local server and opens Chrome once bound.
 cd /d "%~dp0"
-start "" chrome "http://127.0.0.1:5179/"
-where python >nul 2>nul && (python serve.py 5179) || (py serve.py 5179)
+where py >nul 2>nul && (py serve.py 5179 --open) || (python serve.py 5179 --open)
 pause

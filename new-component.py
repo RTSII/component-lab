@@ -40,40 +40,43 @@ def create(name, kind="card", palette=None, title=None):
     title = (title or name.replace("-", " ").capitalize()).strip()[:60]
 
     shutil.copytree(TEMPLATE, dest, ignore=shutil.ignore_patterns("kinds.json"))
+    try:
+        js = os.path.join(dest, "component.js")
+        with open(js, encoding="utf-8") as f:
+            src = f.read()
+        src = src.replace("title: 'Blank template'", "title: %s" % json.dumps(title), 1)
+        with open(js, "w", encoding="utf-8", newline="\n") as f:
+            f.write(src)
 
-    js = os.path.join(dest, "component.js")
-    with open(js, encoding="utf-8") as f:
-        src = f.read()
-    src = src.replace("title: 'Blank template'", "title: %s" % json.dumps(title), 1)
-    with open(js, "w", encoding="utf-8", newline="\n") as f:
-        f.write(src)
+        k = all_kinds[kind]
+        mpath = os.path.join(dest, "manifest.json")
+        with open(mpath, encoding="utf-8") as f:
+            man = json.load(f)
+        man["kind"] = kind
+        man["title"] = title
+        man["frames"] = k.get("frames", man.get("frames"))
+        defaults = k.get("defaults", {})
+        for v in man["vars"]:
+            v["featured"] = v["id"] in k["featured"]
+            if v["id"] in defaults:
+                v["default"] = defaults[v["id"]]
+            role = v.get("role")
+            if palette and v.get("control") == "swatch-role" and role in palette and HEX_RE.match(str(palette[role])):
+                v["default"] = palette[role].lower()
+        with open(mpath, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(man, f, indent=2)
+            f.write("\n")
 
-    k = all_kinds[kind]
-    mpath = os.path.join(dest, "manifest.json")
-    with open(mpath, encoding="utf-8") as f:
-        man = json.load(f)
-    man["kind"] = kind
-    man["title"] = title
-    man["frames"] = k.get("frames", man.get("frames"))
-    defaults = k.get("defaults", {})
-    for v in man["vars"]:
-        v["featured"] = v["id"] in k["featured"]
-        if v["id"] in defaults:
-            v["default"] = defaults[v["id"]]
-        role = v.get("role")
-        if palette and v.get("control") == "swatch-role" and role in palette and HEX_RE.match(str(palette[role])):
-            v["default"] = palette[role].lower()
-    with open(mpath, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(man, f, indent=2)
-        f.write("\n")
-
-    reg = os.path.join(COMP, "registry.js")
-    with open(reg, encoding="utf-8") as f:
-        text = f.read()
-    if "'%s'" % name not in text:
-        text = text.replace("];", "  '%s',\n];" % name, 1)
-        with open(reg, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
+        reg = os.path.join(COMP, "registry.js")
+        with open(reg, encoding="utf-8") as f:
+            text = f.read()
+        if "'%s'" % name not in text:
+            text = text.replace("];", "  '%s',\n];" % name, 1)
+            with open(reg, "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
+    except Exception:
+        shutil.rmtree(dest, ignore_errors=True)
+        raise
     return dest
 
 
