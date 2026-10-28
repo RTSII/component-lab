@@ -48,11 +48,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_POST(self):
+        port = self.server.server_port
         host = self.headers.get("Host", "")
         origin = self.headers.get("Origin", "")
-        if not host.startswith(("127.0.0.1:", "localhost:")) or (
-            origin and not origin.startswith(("http://127.0.0.1:", "http://localhost:"))
-        ):
+        allowed_hosts = ("127.0.0.1:%d" % port, "localhost:%d" % port)
+        allowed_origins = ("http://127.0.0.1:%d" % port, "http://localhost:%d" % port)
+        if host not in allowed_hosts or (origin and origin not in allowed_origins):
             return self.reply(403, {"ok": False, "error": "Forbidden origin"})
         path = self.path.rstrip("/")
         try:

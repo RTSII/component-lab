@@ -25,7 +25,7 @@ python serve.py 5180          # use another port if 5179 is busy
 ```
 - If `python` is not on `PATH`, use `py serve.py` (`run.bat` checks `py` first to avoid the Windows Store alias stub).
 - Plain `python -m http.server` can preview components, but **`serve.py` is required** for the in-app **New Component (`+`)** modal (`/api/new`) and **Save to disk** (`/api/manifest`). `serve.py` validates local `Host`/`Origin` headers, protects `_template` as read-only, and suppresses `__pycache__` generation.
-- **Important Port / `localStorage` Note:** Browser `localStorage` is scoped by origin and port (`http://127.0.0.1:5179` vs. `http://127.0.0.1:5180`). Always use the same port (default `5179`) so your saved parameter values, starred Basic controls, and custom palettes stay visible, or use the JSON backup/restore tools in **Settings**.
+- **Important Origin / Port / `localStorage` Note:** Browser `localStorage` is strictly scoped by hostname and port (`http://127.0.0.1:5179` vs. `http://localhost:5179` vs. `http://127.0.0.1:5180`). Always open the lab at the exact same origin (`http://127.0.0.1:5179/`) so your saved parameter values, starred Basic controls, snapshots, and custom palettes stay visible, or use the JSON backup/restore tools in **Settings › Backup & Reset**.
 
 ---
 
@@ -36,11 +36,11 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 | Area | **Basic Mode** (Everyday Tuning) | **Pro Mode** (Deep Tuning, Curation & Authoring — configured via `PRO_FEATURES` in `lab/lab.js`) |
 |---|---|---|
 | **Controls shown** | Up to **8 starred (`★`) controls**, shown one category page at a time via the right-hand rail icons (ignores hidden rail categories so Basic is never locked out). | **Every control** in one scrollable **All controls** accordion (`PRO_FEATURES.accordion`), grouped into mini-cards (`Card`, `Text`, `Glow`, etc.) with `More` and `Advanced` folds + **A/B/C Snapshot slots** (`PRO_FEATURES.snapshots`). |
-| **Curation & badges** | Clean labels and live values only. | Shows `✦` signature badges, `★` star buttons (`PRO_FEATURES.starCurate`), and source/wiring sub-labels (`--css-var`, `CSS bind`, `JS param` via `PRO_FEATURES.sourceHints`). |
+| **Curation & badges** | Clean labels and live values only. | Shows `✦` signature badges, `★` star buttons (`PRO_FEATURES.starCurate`), and source/wiring sub-labels (`where`, `hint`, `js-const` via `PRO_FEATURES.signatureMarks`). |
 | **Colour picking** | Project palette presets + radial gooey swatch picker (`Arc`). | Compact swatch chip rows + `Custom…` native colour/hex input + **My palette** editor (`PRO_FEATURES.userPalette`). |
 | **Section layout (`⋮`)** | Standard single-category page view. | Header **`⋮`** menu & **Settings › Pro sections** (`PRO_FEATURES.sectionMenu`) choose collapse mode (*Remember*, *All open*, *All closed*) and motion/layout variant (**A Slide**, **B Spring**, **C Stagger**, **D Exclusive chips**). |
-| **Settings & Manifest** | Essential settings (Anchor, Open trigger, Motion, Background, Show toolbar icon, Backup/Reset) + one-click link to switch to Pro. | Adds **Rail order & Rail actions** (`PRO_FEATURES.railCustomize`), **Stage toolbar advanced options** (`PRO_FEATURES.toolbarAdvanced`), **Interaction scan**, **Manifest Save/Export**, and **Live Re-scan files** (`PRO_FEATURES.manifestTools`). |
-| **Exports (Footer)** | **Copy changes**, **Copy working file**, **Hold to reset**, and **`N changed` (Hold to compare defaults)**. | Same export bar in both modes so you never have to switch modes just to copy. |
+| **Settings & Manifest** | Essential settings (Dock position, Anchor, Animations, Viewport, Show toolbar icon, Backup & Reset) + one-click link to switch to Pro. | Adds **Palette source & My palette** (`PRO_FEATURES.userPalette`), **Rail order & Rail actions** (`PRO_FEATURES.railCustomize`), **Stage toolbar advanced options** (`PRO_FEATURES.toolbarAdvanced`), **Interaction scan**, and **Manifest Save/Export/Re-scan** (`PRO_FEATURES.manifestTools`). |
+| **Exports (Footer)** | **Copy changes**, **Copy full working file**, **Undo**, **Reset**, and **`N changed` (Hold to compare defaults)**. | Same export bar in both modes so you never have to switch modes just to copy. |
 
 ---
 
@@ -81,10 +81,10 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
   3. **Boomerang Curveball (`curve`):** Sweeps out on a wide S-curve with banking tilt before curving home.
   4. **Slingshot Warp (`warp`):** Pulls back slightly, stretches with motion blur, and streaks into the rail.
   5. **Corkscrew Spiral (`spiral`):** Performs a `720°` barrel roll along the flight vector into the rail.
-- **Groups:**
-  1. **Component Picker (`#tbPick`):** Switches between registered components or starts the New Component wizard.
-  2. **Playback (`#labPlay`, `#labScrub`):** Play/Pause (`Space`) and loop scrub slider.
-  3. **Viewport Scale (`#viewSeg`):** `Fit` vs. `1×` native size.
+- **Groups (`TOOLBAR_GROUPS` in `lab/lab.js`):**
+  1. **Component Picker (`#tbPick`):** Switches between registered components (also accessible via `#cmpName` in the dock header).
+  2. **Playback (`#labPlay`, `#labScrub`):** Play/Pause (`Space`) and loop scrub slider (shown for animated components).
+  3. **Viewport (`#viewSeg` — optional extension):** `1600×770`, `1366×768`, and `Fit` (configured in **Settings › Viewport** by default; add `{ id: 'viewport', label: 'Viewport' }` to `TOOLBAR_GROUPS` to also show on the floating toolbar).
 
 ---
 
@@ -117,7 +117,7 @@ Every component lives in `components/<id>/` and is listed in `components/registr
   ```powershell
   python new-component.py <component-id> --kind card
   ```
-  *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `bg`, `list`, `button`.)*
+  *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `animated-background`, `list`, `button`.)*
 - **Component Folder Structure:**
   ```text
   components/<id>/
