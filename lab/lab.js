@@ -54,7 +54,8 @@
     interact: '<path d="M6.5 4.2l11 5.6-4.9 1.4-2.2 4.8z"/><path d="M12.8 11.4l4.4 4.6"/><path d="M4 15.5c.4 2 1.8 3.6 3.8 4.3"/>',
     undo: '<path d="M6 9.6A7 7 0 1 1 6.6 16"/><path d="M5.6 4.8v4.9h4.9"/>',
     reset: '<path d="M15.6 4.4l4 4-8.8 8.8H6.7l-2.2-2.2a1.4 1.4 0 0 1 0-2z"/><path d="M10.4 20h9.1"/><path d="M10.9 9.1l4 4"/>',
-    sig: '<path d="M12 3.5l2 6.5 6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2z" class="fill"/>'
+    sig: '<path d="M12 3.5l2 6.5 6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2z" class="fill"/>',
+    flip: '<path d="M17 4l3 3-3 3"/><path d="M4 11V9a2 2 0 0 1 2-2h14"/><path d="M7 20l-3-3 3-3"/><path d="M20 13v2a2 2 0 0 1-2 2H4"/>'
   };
   const svg = (n, cls) => '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICON[n] + '</svg>';
 
@@ -998,18 +999,85 @@
     const rank = (g) => (g.items.some((v) => v.signature && !v.advanced) ? -1000 : 0) + (order.includes(g.name) ? order.indexOf(g.name) : 500 + g.i);
     return gs.sort((a, b) => rank(a) - rank(b));
   }
+  function buildFlipCard(spec) {
+    const { frontTitle, frontItems, backTitle, backItems, backBadgeLabel, group } = spec;
+    const card = el('div', 'mini is-flip');
+    if (group) card.dataset.group = group;
+    const head = el('div', 'mini-head is-flip-head');
+    const titleEl = el('span', 'mini-flip-title', esc(frontTitle));
+    const flipBtn = el('button', 'flip-btn', svg('flip', 'flip-ico') + '<span class="flip-btn-txt"></span><span class="adv-n flip-btn-n"></span>');
+    flipBtn.type = 'button';
+    flipBtn.setAttribute('aria-pressed', 'false');
+    head.append(titleEl, flipBtn);
+    card.appendChild(head);
+
+    const stage = el('div', 'flip-stage');
+    const rotor = el('div', 'flip-rotor');
+    const faceA = el('div', 'flip-face is-front');
+    const bodyA = el('div', 'mini-body' + (frontItems.length > 1 && frontItems.every((v) => v.control === 'radial') ? ' is-dials' : ''));
+    frontItems.forEach((v) => bodyA.appendChild(ctlRow(v, { compact: true })));
+    faceA.appendChild(bodyA);
+
+    const faceB = el('div', 'flip-face is-back');
+    const bodyB = el('div', 'mini-body' + (backItems.length > 1 && backItems.every((v) => v.control === 'radial') ? ' is-dials' : ''));
+    backItems.forEach((v) => bodyB.appendChild(ctlRow(v, { compact: true })));
+    faceB.appendChild(bodyB);
+    faceB.setAttribute('inert', '');
+
+    rotor.append(faceA, faceB);
+    stage.appendChild(rotor);
+    card.appendChild(stage);
+
+    let flipped = false;
+    const syncFlipUi = () => {
+      card.classList.toggle('is-flipped', flipped);
+      flipBtn.classList.toggle('is-on', flipped);
+      flipBtn.setAttribute('aria-pressed', flipped ? 'true' : 'false');
+      titleEl.textContent = flipped ? backTitle : frontTitle;
+      flipBtn.querySelector('.flip-btn-txt').textContent = flipped ? frontTitle : (backBadgeLabel || 'Advanced');
+      flipBtn.querySelector('.flip-btn-n').textContent = flipped ? frontItems.length : backItems.length;
+      flipBtn.title = flipped ? 'Flip back to ' + frontTitle + ' controls' : 'Flip card to ' + backTitle + ' (' + backItems.length + ')';
+      if (flipped) {
+        faceA.setAttribute('inert', '');
+        faceB.removeAttribute('inert');
+      } else {
+        faceB.setAttribute('inert', '');
+        faceA.removeAttribute('inert');
+      }
+      const activeFace = flipped ? faceB : faceA;
+      requestAnimationFrame(() => activeFace.querySelectorAll('.seg').forEach((sg) => syncSeg(sg, null, sg.dataset.value, true)));
+    };
+    flipBtn.addEventListener('click', () => {
+      flipped = !flipped;
+      syncFlipUi();
+      if (M.level() === 'full') {
+        titleEl.animate([{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: M.easeOut });
+      }
+    });
+    syncFlipUi();
+    return card;
+  }
   function miniCard(g, bare, inAdv) {
     const rawMore = inAdv ? [] : g.items.filter((v) => v.advanced);
     const foldSingle = !inAdv && (g.name === 'Opacity' || (rawMore.length === 1 && g.items.length <= 3 && g.items.every((v) => v.control === 'slider')));
     const lead = (inAdv || foldSingle) ? g.items : g.items.filter((v) => !v.advanced);
     const more = (inAdv || foldSingle) ? [] : rawMore;
+    if (more.length) {
+      return buildFlipCard({
+        frontTitle: g.name,
+        frontItems: lead,
+        backTitle: g.name + ' \u00b7 Adv',
+        backItems: more,
+        backBadgeLabel: 'Advanced',
+        group: g.name
+      });
+    }
     const card = el('div', 'mini' + (bare ? ' is-bare' : ''));
     card.dataset.group = g.name;
     if (!bare) card.appendChild(el('div', 'mini-head', '<span>' + esc(g.name) + '</span>'));
     const body = el('div', 'mini-body' + (lead.length > 1 && lead.every((v) => v.control === 'radial') ? ' is-dials' : ''));
     lead.forEach((v) => body.appendChild(ctlRow(v, { compact: !bare })));
     card.appendChild(body);
-    if (more.length) card.appendChild(foldEl('More', more.length, (b) => more.forEach((v) => b.appendChild(ctlRow(v, { compact: !bare }))), 'mini-more'));
     return card;
   }
   function fillPro(cat, inner) {
@@ -1019,10 +1087,42 @@
     const groups = groupsFor(all, cat);
     const front = groups.filter((g) => g.items.some((v) => !v.advanced));
     const back = groups.filter((g) => g.items.every((v) => v.advanced));
-    const bare = front.length === 1 && front[0].items.length <= 3;
-    front.forEach((g) => inner.appendChild(miniCard(g, bare)));
     const advN = all.filter((v) => v.advanced).length;
-    if (back.length) inner.appendChild(foldEl('Advanced', back.reduce((a, g) => a + g.items.length, 0), (b) => back.forEach((g) => b.appendChild(miniCard(g, false, true))), 'adv-sec'));
+    // Pair a single trailing back (advanced) group onto a front group that has no advanced items of its own
+    // (e.g. Interaction: Pointer <-> Touch & keys, Motion: Loop <-> Depth, Layout: Size <-> Depth).
+    const pairedFrontIdx = back.length === 1 ? front.findIndex((g) => g.items.every((v) => !v.advanced)) : -1;
+    const bare = front.length === 1 && front[0].items.length <= 3 && !back.length;
+    front.forEach((g, idx) => {
+      if (idx === pairedFrontIdx) {
+        inner.appendChild(buildFlipCard({
+          frontTitle: g.name,
+          frontItems: g.items,
+          backTitle: back[0].name,
+          backItems: back[0].items,
+          backBadgeLabel: back[0].name,
+          group: g.name
+        }));
+      } else {
+        inner.appendChild(miniCard(g, bare));
+      }
+    });
+    const remBack = pairedFrontIdx >= 0 ? [] : back;
+    // Pair remaining back (advanced) groups two-by-two into dual-sided 3D flip cards (e.g. Text fade <-> Shell dim, End fade <-> Border fill)
+    for (let i = 0; i < remBack.length; i += 2) {
+      const gA = remBack[i], gB = remBack[i + 1];
+      if (gB) {
+        inner.appendChild(buildFlipCard({
+          frontTitle: gA.name,
+          frontItems: gA.items,
+          backTitle: gB.name,
+          backItems: gB.items,
+          backBadgeLabel: gB.name,
+          group: gA.name
+        }));
+      } else {
+        inner.appendChild(miniCard(gA, false, true));
+      }
+    }
     return { n: all.length, adv: advN };
   }
   function proStrip() {

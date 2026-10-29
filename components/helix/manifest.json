@@ -407,7 +407,7 @@
       "default": 26,
       "advanced": true,
       "featured": false,
-      "group": "Loop time",
+      "group": "Tempo",
       "short": "Seconds per loop"
     },
     {

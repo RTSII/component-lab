@@ -537,6 +537,22 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
   - **Single `More` Fold (`4–6` controls):** Show the top `2–3` primary/featured controls inline and group the remaining `2–3` secondary controls into a single `More (N)` disclosure.
   - **Range-Indexed / Paginated Dropdowns (`7+` controls):** When a subcard or category contains larger parameter sets, split overflow controls into indexed range disclosures (e.g. `More (4–6)`, `More (7–9)`) or sub-group folds so no single card exceeds comfortable viewport height.
 
+#### 9. Dual-Sided 3D Card-Flip UI/UX for Secondary & Advanced Options (`buildFlipCard` / `.mini.is-flip`)
+- **Applied Architecture (`lab/lab.js`, `lab/lab.css`):**
+  - Replaced vertical-resizing `Advanced (N)` and `More (N)` dropdown folds with **Dual-Sided 3D Flip Subcards (`buildFlipCard`)**.
+  - Both faces (`.flip-face.is-front` and `.flip-face.is-back`) share `grid-area: 1 / 1` inside `.flip-rotor` (`perspective: 900px; transform-style: preserve-3d`), so spinning 180° (`rotateY(180deg)`) between the primary controls and the secondary/advanced controls **never resizes the card or shifts the menu scroll position**.
+  - Applied across **Interaction** (`Pointer` ↔ `Touch & keys`), **Motion** (`Loop` ↔ `Depth`), **Color** (`Card` ↔ `Adv`, `Text` ↔ `Adv`), **Rate** (`Tempo` ↔ `Adv`, `Turn` ↔ `Adv`, `Text fade` ↔ `Shell dim`, `End fade` ↔ `Border fill`), and **Layout** (`Size` ↔ `Depth`, `Radius` ↔ `Adv`, `Spacing` ↔ `Adv`).
+
+#### 10. Future 3-Tier Control Architecture (`Basic` | `Mid` | `Pro`) — DDJ Preset Pads vs. XDJ-XZ Fine-Tune Deck
+- **`Basic` Tier (Quick Look & Core Visuals):**
+  - Focused strictly on core visual/surface/layout essentials.
+  - **Move `Interaction` out of `Basic`** and into `Mid` and `Pro` tiers.
+- **`Mid` Tier (New — Pioneer DDJ-Style Preset Controller UI/UX):**
+  - Introduces the `Interaction` category (`Pointer` ↔ `Touch & keys` flip card) and curated intermediate controls.
+  - Features a **Pioneer DDJ-controller style UI/UX** where controls like `Rate / Tempo` use **3 tactile preset rate buttons / performance pads** (e.g. `0.5× Half` | `1.0× Nominal` | `2.0× Double`) for fast, musical one-tap selection without overwhelming the user with full calibration scales.
+- **`Pro` Tier (Pioneer XDJ-XZ Full Fine-Tune Studio):**
+  - Full access to every control, dual-sided advanced flip cards, `A / B / C` snapshots, manifest/rail customization, and continuous fine-tune adjustment using the **Pioneer XDJ-XZ** vertical tempo fader + jog platter display and `HI / MID / LOW` mixer EQ rotary knobs.
+
 ---
 
 ### Next-session pickup notes

@@ -692,6 +692,103 @@ html.no-motion *, html.no-motion *::before, html.no-motion *::after { transition
 .mixer-pad.is-on { border-color: rgba(0, 229, 255, 0.75); background: rgba(0, 184, 255, 0.16); color: #ffffff; box-shadow: 0 0 12px rgba(0, 229, 255, 0.28); }
 .mixer-pad.is-on .mixer-pad-led { background: var(--lab-accent); box-shadow: 0 0 8px var(--lab-accent); }
 
+/* ---------- Dual-Sided 3D Flip Subcards (.mini.is-flip) ---------- */
+.mini.is-flip {
+  position: relative;
+  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  box-shadow: 0 3px 0 -1px rgba(255, 255, 255, 0.04), 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+}
+.mini.is-flip.is-flipped {
+  border-color: rgba(110, 231, 255, 0.24);
+  background: rgba(110, 231, 255, 0.03);
+}
+.mini-head.is-flip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.mini-flip-title {
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--lab-dim);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini.is-flip.is-flipped .mini-flip-title { color: #cdf7ff; }
+.flip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 21px;
+  padding: 0 7px 0 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--lab-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  flex: none;
+  transition: color 0.18s, border-color 0.18s, background 0.18s, transform 0.15s var(--ease-out);
+}
+.flip-btn:hover {
+  color: var(--lab-fg);
+  border-color: rgba(110, 231, 255, 0.42);
+  background: rgba(110, 231, 255, 0.09);
+}
+.flip-btn:active { transform: scale(0.95); }
+.flip-btn.is-on {
+  color: #cdf7ff;
+  border-color: rgba(110, 231, 255, 0.5);
+  background: rgba(110, 231, 255, 0.14);
+}
+.flip-ico {
+  width: 12px !important;
+  height: 12px !important;
+  color: var(--lab-accent);
+  transition: transform 0.42s var(--spring);
+}
+.flip-btn:hover .flip-ico { transform: rotate(180deg); }
+.flip-btn.is-on .flip-ico { transform: rotate(180deg); }
+.flip-btn-n {
+  font: 10px var(--mono);
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--lab-dim);
+}
+.flip-btn.is-on .flip-btn-n { background: rgba(110, 231, 255, 0.22); color: #ffffff; }
+.flip-stage { perspective: 900px; width: 100%; }
+.flip-rotor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  transform-style: preserve-3d;
+  transition: transform 0.52s var(--spring);
+  will-change: transform;
+}
+.mini.is-flip.is-flipped .flip-rotor { transform: rotateY(180deg); }
+.flip-face {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: opacity 0.22s var(--ease-out);
+}
+.flip-face.is-front { transform: rotateY(0deg); z-index: 2; opacity: 1; }
+.flip-face.is-back { transform: rotateY(180deg); pointer-events: none; opacity: 0; z-index: 1; }
+.mini.is-flip.is-flipped .flip-face.is-front { pointer-events: none; opacity: 0; z-index: 1; }
+.mini.is-flip.is-flipped .flip-face.is-back { pointer-events: auto; opacity: 1; z-index: 2; }
+
 @media (prefers-reduced-motion: reduce) {
   .order-row, .quick-pill { transition-duration: 0.01ms !important; }
 }
