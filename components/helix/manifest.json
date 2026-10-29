@@ -250,7 +250,7 @@
       "featured": false,
       "group": "Opacity",
       "short": "Back cards",
-      "advanced": true
+      "advanced": false
     },
     {
       "id": "TEXT_FADE_ON",

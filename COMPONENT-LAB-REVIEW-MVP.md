@@ -529,6 +529,14 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
   - Supports pro-audio vertical drag (`Shift` for fine precision), outer-ring radial angle drag, mouse-wheel stepping, and double-click to reset.
   - Built-in extensible hardware variants (`v.variant` / `v.control`) for future controls: `'eq'` (default High/Mid/Low pot), `'fx'` / `'color'` (silver Sound Color FX cap), `'gain'` / `'trim'` (amber/orange peak arc), `'fader'` / `'volume'` (`faderEl` vertical channel fader), and `'pad'` / `'button'` (`padBtnEl` illuminated performance pad).
 
+#### 8. Future Rubric: Subcard Item Caps vs. `More (x–y)` Dropdown Thresholds
+- **Immediate Change Applied (`Surface › Opacity`):**
+  - Folded `Back-card opacity` (`Back cards`) directly into the main `OPACITY` subcard alongside `Card` and `Border` (`components/helix/manifest.json` + `miniCard()` in `lab/lab.js`), removing the `More (1)` dropdown and sizing `.mini` (`padding: 9px 11px 12px`) to house all 3 sliders cleanly.
+- **Future Rubric to Formalize Across Components:**
+  - **Inline Threshold (`1–3` controls):** Always display all controls directly inside the subcard without a `More` dropdown (never render `More (1)` for a 3-slider card).
+  - **Single `More` Fold (`4–6` controls):** Show the top `2–3` primary/featured controls inline and group the remaining `2–3` secondary controls into a single `More (N)` disclosure.
+  - **Range-Indexed / Paginated Dropdowns (`7+` controls):** When a subcard or category contains larger parameter sets, split overflow controls into indexed range disclosures (e.g. `More (4–6)`, `More (7–9)`) or sub-group folds so no single card exceeds comfortable viewport height.
+
 ---
 
 ### Next-session pickup notes

@@ -999,8 +999,10 @@
     return gs.sort((a, b) => rank(a) - rank(b));
   }
   function miniCard(g, bare, inAdv) {
-    const lead = inAdv ? g.items : g.items.filter((v) => !v.advanced);
-    const more = inAdv ? [] : g.items.filter((v) => v.advanced);
+    const rawMore = inAdv ? [] : g.items.filter((v) => v.advanced);
+    const foldSingle = !inAdv && (g.name === 'Opacity' || (rawMore.length === 1 && g.items.length <= 3 && g.items.every((v) => v.control === 'slider')));
+    const lead = (inAdv || foldSingle) ? g.items : g.items.filter((v) => !v.advanced);
+    const more = (inAdv || foldSingle) ? [] : rawMore;
     const card = el('div', 'mini' + (bare ? ' is-bare' : ''));
     card.dataset.group = g.name;
     if (!bare) card.appendChild(el('div', 'mini-head', '<span>' + esc(g.name) + '</span>'));
