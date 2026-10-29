@@ -101,8 +101,10 @@
       const out = el('span', 'ctl-val', esc(fmt(v, P[v.id])));
       const isTempoDeck = (v.master === 'speed' || v.id === 'SPEED' || v.control === 'tempo' || v.variant === 'tempo') && (hasPro('accordion') || v.control === 'tempo' || v.variant === 'tempo');
       const isVertFader = !isTempoDeck && (v.control === 'fader' || v.variant === 'fader' || v.variant === 'volume');
-      const isPadBtn = v.control === 'pad' || v.variant === 'pad' || v.variant === 'button';
-      if (v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader) wireClickToType(v, out);
+      const isFxUnit = (v.id === 'GLOW_STRENGTH' || (v.category === 'surface' && v.group === 'Glow') || v.control === 'fx' || (v.variant === 'fx' && v.control !== 'swatch-role')) && (hasPro('accordion') || v.control === 'fx' || v.variant === 'fx');
+      const isPadSwitch = v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad' || v.variant === 'button' || v.group === 'Fades');
+      const isPadBtn = !isPadSwitch && (v.control === 'pad' || v.variant === 'pad' || v.variant === 'button');
+      if (v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader || isFxUnit) wireClickToType(v, out);
       head.append(lab, out);
       if (hasPro('starCurate')) head.appendChild(starBtn(v));
       row.appendChild(head);
@@ -114,6 +116,14 @@
       } else if (isVertFader) {
         row.classList.add('ctl-vert-fader');
         row.appendChild(faderEl(v, out));
+      } else if (isFxUnit) {
+        row.classList.add('ctl-fx-cell');
+        head.remove();
+        row.appendChild(fxUnitEl(v, out));
+      } else if (isPadSwitch) {
+        row.classList.add('ctl-pad-cell');
+        head.remove();
+        row.appendChild(padSwitchEl(v));
       } else if (isPadBtn && v.control === 'switch') {
         row.classList.add('ctl-pad-btn');
         out.remove();
@@ -515,6 +525,164 @@
       return wrap;
     }
 
+    // Pioneer XDJ-XZ Backlit Silicone Performance Pad for boolean toggles (Fades / FX switches)
+    function padSwitchEl(v) {
+      const pad = el('button', 'xdj-perf-pad');
+      pad.type = 'button';
+      pad.setAttribute('role', 'switch');
+      pad.dataset.id = v.id;
+
+      let titleText = v.short || v.label;
+      let subText = 'Toggle';
+      if (v.id === 'TEXT_FADE_ON') {
+        titleText = 'TEXT FADE';
+        subText = 'Turned cards';
+      } else if (v.id === 'END_FADE_ON') {
+        titleText = 'END FADE';
+        subText = 'Cards at ends';
+      }
+
+      pad.title = (v.hint || v.label) + '\n' + v.id + '\nClick to toggle';
+      pad.innerHTML =
+        '<div class="xdj-pad-led"></div>' +
+        '<div class="xdj-pad-body">' +
+          '<span class="xdj-pad-title">' + esc(titleText) + '</span>' +
+          '<span class="xdj-pad-sub">' + esc(subText) + '</span>' +
+          '<span class="xdj-pad-state"><i class="xdj-pad-dot"></i><span class="xdj-pad-txt">ON</span></span>' +
+        '</div>';
+
+      if (hasPro('starCurate')) {
+        const star = starBtn(v);
+        star.classList.add('xdj-pad-star');
+        pad.appendChild(star);
+      }
+
+      const paint = () => {
+        const on = !!getP()[v.id];
+        pad.classList.toggle('is-on', on);
+        pad.setAttribute('aria-checked', on ? 'true' : 'false');
+        const txt = pad.querySelector('.xdj-pad-txt');
+        if (txt) txt.textContent = on ? 'ON' : 'OFF';
+      };
+
+      pad.addEventListener('click', (e) => {
+        if (e.target.closest('.star-btn')) return;
+        setValue(v.id, !getP()[v.id]);
+        paint();
+      });
+
+      pad._paint = paint;
+      paint();
+      return pad;
+    }
+
+    // Pioneer XDJ-XZ Beat FX / Sound Color FX Unit
+    // Combines illuminated Beat FX ON/OFF stomp button + LEVEL / DEPTH rotary dial + 4 performance depth pads
+    function fxUnitEl(v, out) {
+      const min = v.min != null ? v.min : 0;
+      const max = v.max != null ? v.max : 3;
+      const step = v.step || 0.05;
+      const defVal = v.default != null ? v.default : 1;
+      let lastNonZero = defVal || 1;
+
+      const unit = el('div', 'xdj-fx-unit');
+
+      // Top row: Beat FX ON/OFF button + Level/Depth dial column
+      const topRow = el('div', 'xdj-fx-row');
+
+      // Iconic illuminated BEAT FX ON/OFF circular button
+      const fxBtn = el('button', 'xdj-fx-btn');
+      fxBtn.type = 'button';
+      fxBtn.setAttribute('role', 'switch');
+      fxBtn.title = 'BEAT FX ON/OFF \u00b7 Click to bypass / engage glow';
+      fxBtn.innerHTML =
+        '<div class="xdj-fx-btn-bezel">' +
+          '<div class="xdj-fx-btn-lens">' +
+            '<span class="xdj-fx-btn-kicker">BEAT FX</span>' +
+            '<span class="xdj-fx-btn-state">ON/OFF</span>' +
+          '</div>' +
+        '</div>';
+
+      // Dial column
+      const col = el('div', 'xdj-fx-col');
+      const colHead = el('div', 'xdj-fx-col-head');
+      const colLabel = el('span', 'xdj-fx-col-label', 'LEVEL / DEPTH');
+      colLabel.title = v.id + (v.css ? '  ' + v.css : '') + '\nDouble-click to reset';
+      colLabel.addEventListener('dblclick', () => put(defVal));
+      colHead.append(colLabel, out);
+      if (hasPro('starCurate')) colHead.appendChild(starBtn(v));
+
+      // Dial: uses variant "fx"
+      const dialObj = Object.assign({}, v, { variant: 'fx', label: 'Glow level' });
+      const dial = dialEl(dialObj, out);
+
+      col.append(colHead, dial);
+      topRow.append(fxBtn, col);
+
+      // Quick-depth preset pads row: [ OFF ] [ 0.5× ] [ 1.0× ] [ 2.0× ]
+      const padsRow = el('div', 'xdj-fx-pads');
+      const presets = [
+        { val: 0, label: 'OFF' },
+        { val: 0.5, label: '0.5\u00d7' },
+        { val: 1.0, label: '1.0\u00d7' },
+        { val: 2.0, label: '2.0\u00d7' }
+      ];
+      const padBtns = presets.map((p) => {
+        const pBtn = el('button', 'xdj-fx-pad', '<span class="xdj-fx-pad-led"></span><span class="xdj-fx-pad-lbl">' + p.label + '</span>');
+        pBtn.type = 'button';
+        pBtn.dataset.val = String(p.val);
+        pBtn.title = 'Set glow to ' + p.label;
+        pBtn.addEventListener('click', () => put(p.val));
+        padsRow.appendChild(pBtn);
+        return pBtn;
+      });
+
+      const put = (val) => {
+        val = Math.min(max, Math.max(min, Math.round(val / step) * step));
+        val = +val.toFixed(decimals(step));
+        if (val > 0) lastNonZero = val;
+        setValue(v.id, val, { quiet: true });
+        paint();
+        if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
+        if (dial._paint) dial._paint();
+      };
+
+      fxBtn.addEventListener('click', () => {
+        const cur = Number(getP()[v.id]);
+        if (cur > 0) {
+          lastNonZero = cur;
+          put(0);
+        } else {
+          put(lastNonZero || defVal);
+        }
+      });
+
+      const paint = () => {
+        const cur = Number(getP()[v.id]);
+        const on = cur > 0;
+        fxBtn.classList.toggle('is-on', on);
+        fxBtn.setAttribute('aria-checked', on ? 'true' : 'false');
+        const st = fxBtn.querySelector('.xdj-fx-btn-state');
+        if (st) st.textContent = on ? 'ON' : 'OFF';
+        padBtns.forEach((pBtn) => {
+          const pVal = Number(pBtn.dataset.val);
+          const active = Math.abs(cur - pVal) < 0.02;
+          pBtn.classList.toggle('is-active', active);
+        });
+      };
+
+      dial.addEventListener('input', () => {
+        const cur = Number(getP()[v.id]);
+        if (cur > 0) lastNonZero = cur;
+        paint();
+      });
+
+      unit.append(topRow, padsRow);
+      unit._paint = paint;
+      paint();
+      return unit;
+    }
+
     // Backlit DJ performance pad button (for future controls with control: 'pad' or variant: 'pad'/'button')
     function padBtnEl(v) {
       const btn = el('button', 'mixer-pad', '<i class="mixer-pad-led"></i><span class="mixer-pad-lbl">' + esc(v.short || v.label) + '</span>');
@@ -610,6 +778,7 @@
         setValue(v.id, +val.toFixed(decimals(st)), { quiet: true });
         paint();
         if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
+        d.dispatchEvent(new Event('input', { bubbles: true }));
       };
       const fromAngle = (e) => {
         const r = d.getBoundingClientRect();
@@ -712,6 +881,10 @@
         if (mf && mf._paint) mf._paint();
         const mp = row.querySelector('.mixer-pad');
         if (mp && mp._paint) mp._paint();
+        const pp = row.querySelector('.xdj-perf-pad');
+        if (pp && pp._paint) pp._paint();
+        const ufx = row.querySelector('.xdj-fx-unit');
+        if (ufx && ufx._paint) ufx._paint();
         const trig = row.querySelector('.swatch-trigger');
         if (trig) { trig.querySelector('.sw').style.background = P[id]; trig.querySelector('.sw-hex').textContent = String(P[id]).toUpperCase(); }
         row.querySelectorAll('.chip').forEach((c) => c.classList.toggle('is-on', same(c.dataset.c, P[id])));

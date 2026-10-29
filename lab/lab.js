@@ -1014,12 +1014,14 @@
     const stage = el('div', 'flip-stage');
     const rotor = el('div', 'flip-rotor');
     const faceA = el('div', 'flip-face is-front');
-    const bodyA = el('div', 'mini-body' + (frontItems.length > 1 && frontItems.every((v) => v.control === 'radial') ? ' is-dials' : ''));
+    const isPadsA = frontItems.length > 1 && frontItems.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad'));
+    const bodyA = el('div', 'mini-body' + (frontItems.length > 1 && frontItems.every((v) => v.control === 'radial') ? ' is-dials' : '') + (isPadsA ? ' is-pads' : ''));
     frontItems.forEach((v) => bodyA.appendChild(ctlRow(v, { compact: true })));
     faceA.appendChild(bodyA);
 
     const faceB = el('div', 'flip-face is-back');
-    const bodyB = el('div', 'mini-body' + (backItems.length > 1 && backItems.every((v) => v.control === 'radial') ? ' is-dials' : ''));
+    const isPadsB = backItems.length > 1 && backItems.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad'));
+    const bodyB = el('div', 'mini-body' + (backItems.length > 1 && backItems.every((v) => v.control === 'radial') ? ' is-dials' : '') + (isPadsB ? ' is-pads' : ''));
     backItems.forEach((v) => bodyB.appendChild(ctlRow(v, { compact: true })));
     faceB.appendChild(bodyB);
     faceB.setAttribute('inert', '');
@@ -1076,7 +1078,9 @@
     const card = el('div', 'mini' + (bare ? ' is-bare' : ''));
     card.dataset.group = g.name;
     if (!bare) card.appendChild(el('div', 'mini-head', '<span>' + esc(g.name) + '</span>'));
-    const body = el('div', 'mini-body' + (lead.length > 1 && lead.every((v) => v.control === 'radial') ? ' is-dials' : ''));
+    const isDials = lead.length > 1 && lead.every((v) => v.control === 'radial');
+    const isPads = g.name === 'Fades' || (lead.length > 1 && lead.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad')));
+    const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : ''));
     lead.forEach((v) => body.appendChild(ctlRow(v, { compact: !bare })));
     card.appendChild(body);
     return card;

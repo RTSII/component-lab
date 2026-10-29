@@ -553,6 +553,17 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **`Pro` Tier (Pioneer XDJ-XZ Full Fine-Tune Studio):**
   - Full access to every control, dual-sided advanced flip cards, `A / B / C` snapshots, manifest/rail customization, and continuous fine-tune adjustment using the **Pioneer XDJ-XZ** vertical tempo fader + jog platter display and `HI / MID / LOW` mixer EQ rotary knobs.
 
+#### 11. Pioneer XDJ-XZ Performance Pads & Beat FX Module (`Surface › Fades` & `Surface › Glow`)
+- **Pioneer XDJ-XZ Backlit Silicone Performance Pads (`padSwitchEl` / `.xdj-perf-pad`):**
+  - Converts boolean switch controls under `Fades` (`TEXT_FADE_ON` and `END_FADE_ON`) from stacked mobile toggle rows into an authentic side-by-side **2-column Pioneer XDJ-XZ Performance Pad strip** (`.mini-body.is-pads`).
+  - **Tactile Hardware Styling:** Modeled directly after the 8 backlit silicone pads under the XDJ-XZ jog wheels, featuring a matte dark rubber bevel, brilliant cyan top LED indicator bar (`#00f0ff` glow), uppercase title (`TEXT FADE` / `END FADE`), subtitle (`Turned cards` / `Cards at ends`), and status pill (`● ON` / `○ OFF`).
+  - **Space & Ergonomic Optimization:** Cuts vertical card height by nearly 50% (from ~84px down to ~48px) while doubling the click/tap target area. Includes tactile physical depression animation (`:active`), keyboard accessibility (`Space` / `Enter`), and corner curate star button (`starBtn(v)`) for Basic mode curation.
+- **Pioneer XDJ-XZ Beat FX & Level/Depth Unit (`fxUnitEl` / `.xdj-fx-unit`):**
+  - Converts continuous intensity controls under `Glow` (`GLOW_STRENGTH`: `0.00..3.00×`, `step: 0.05`, `default: 1.00×`, `css: "--hx-glow-k"`) from a generic horizontal slider into a dedicated **XDJ-XZ Beat FX module**.
+  - **Iconic Illuminated BEAT FX ON/OFF Stomp Button (`.xdj-fx-btn`):** Modeled directly on the round illuminated blue/cyan Beat FX button from the DJM-900 / XDJ-XZ mixer. Displays an outer chrome bezel, dark well, and glowing cyan neon lens when active (`>0`). Clicking toggles between bypass (`0.00×`) and active (instantly restoring the last non-zero intensity or default `1.00×`).
+  - **`LEVEL / DEPTH` Rotary Knob (`dialEl` with `variant: "fx"`):** Brushed silver metallic cap, knurled skirt, 270° calibrated sweep (`0..3×`), glowing cyan pointer needle, click-to-type numerical input (`.ctl-val`), and double-click reset to default `1.00×`.
+  - **Quick-Depth Performance Pads (`.xdj-fx-pads`):** 4 micro performance pads (`[ OFF ]`, `[ 0.5× ]`, `[ 1.0× ]`, `[ 2.0× ]`) for instant one-touch jumps to key glow intensities, with active backlit cyan illumination matching the dial level. Fully synchronized via `syncRow(id)`.
+
 ---
 
 ### Next-session pickup notes

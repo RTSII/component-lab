@@ -234,6 +234,7 @@
       "css": "--hx-glow-k",
       "where": "text-shadow 12px / drop-shadow 3px at 1",
       "featured": false,
+      "variant": "fx",
       "group": "Glow",
       "short": "Strength"
     },
@@ -257,6 +258,7 @@
       "label": "Fade text on turned cards",
       "category": "surface",
       "control": "switch",
+      "variant": "pad",
       "default": true,
       "featured": false,
       "group": "Fades",
@@ -267,6 +269,7 @@
       "label": "Fade cards at the ends",
       "category": "surface",
       "control": "switch",
+      "variant": "pad",
       "default": true,
       "featured": false,
       "group": "Fades",
