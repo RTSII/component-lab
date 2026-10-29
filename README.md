@@ -186,7 +186,7 @@ If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `m
 }
 ```
 - **Categories (`category`):** `color`, `interact`, `surface`, `type`, `motion`, `rate`, `layout`.
-- **Controls (`control`):** `slider`, `swatch-role`, `switch`, `segmented`, `select` (auto-expands integer range if `min`/`max` are given without `options`), `radial` (angle dial with `unit: "°"`).
+- **Controls (`control`):** `slider`, `swatch-role`, `switch`, `segmented`, `select` (auto-expands integer range if `min`/`max` are given without `options`), `radial` (Pioneer XDJ-XZ `HI / MID / LOW` mixer EQ rotary pot; supports optional `variant`: `"eq"`, `"fx"` / `"color"`, `"gain"` / `"trim"`), `tempo` (Pioneer XDJ-XZ vertical tempo fader + jog display deck, automatic for `master: "speed"` in Pro mode), `fader` (vertical mixer channel fader), `pad` (illuminated performance pad switch).
 - **Colour roles (`role`):** `accent`, `border`, `glow`, `text`, `muted`, `surface`, `surface2`, `danger`.
 - **Interactions (`interaction`):** `hover` (`keep`/`pause`/`slow`/`fast`), `drag` (`spin`/`ignore`), `touch` (`hover`/`ignore`), `key`, `wheel`, `click`, `hover-css` (toggles CSS `:hover` rules on/off).
 

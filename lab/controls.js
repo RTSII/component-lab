@@ -99,13 +99,26 @@
       lab.title = (tipExtra ? tipExtra + '\n' : '') + v.id + (v.css ? '  ' + v.css : '') + '\nDouble-click to reset';
       lab.addEventListener('dblclick', () => setValue(v.id, v.default));
       const out = el('span', 'ctl-val', esc(fmt(v, P[v.id])));
-      if (v.control === 'slider' || v.control === 'radial') wireClickToType(v, out);
+      const isTempoDeck = (v.master === 'speed' || v.id === 'SPEED' || v.control === 'tempo' || v.variant === 'tempo') && (hasPro('accordion') || v.control === 'tempo' || v.variant === 'tempo');
+      const isVertFader = !isTempoDeck && (v.control === 'fader' || v.variant === 'fader' || v.variant === 'volume');
+      const isPadBtn = v.control === 'pad' || v.variant === 'pad' || v.variant === 'button';
+      if (v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader) wireClickToType(v, out);
       head.append(lab, out);
       if (hasPro('starCurate')) head.appendChild(starBtn(v));
       row.appendChild(head);
       const uid = 'c-' + v.id;
 
-      if (v.control === 'slider') {
+      if (isTempoDeck) {
+        row.classList.add('ctl-tempo-deck');
+        row.appendChild(tempoDeckEl(v, out));
+      } else if (isVertFader) {
+        row.classList.add('ctl-vert-fader');
+        row.appendChild(faderEl(v, out));
+      } else if (isPadBtn && v.control === 'switch') {
+        row.classList.add('ctl-pad-btn');
+        out.remove();
+        row.appendChild(padBtnEl(v));
+      } else if (v.control === 'slider') {
         lab.htmlFor = uid;
         const r = el('input', 'range');
         Object.assign(r, { type: 'range', id: uid, min: v.min, max: v.max, step: v.step, value: P[v.id] });
@@ -165,28 +178,431 @@
       return row;
     }
 
+    // Pioneer XDJ-XZ / DDJ-Controller style vertical Tempo Deck
+    function tempoDeckEl(v, out) {
+      const deck = el('div', 'tempo-deck');
+      const min = v.min != null ? v.min : 0.25;
+      const max = v.max != null ? v.max : 3;
+      const defVal = v.default != null ? v.default : 1;
+      const step = v.step || 0.05;
+      const span = (max - min) || 1;
+      // Center-detent (50% = default 1.00x) piecewise mapping so default sits at the true XDJ-XZ center '0' mark
+      const hasCenterDetent = defVal > min && defVal < max;
+      const valToNorm = (val) => {
+        const c = Math.min(max, Math.max(min, Number(val)));
+        if (!hasCenterDetent) return (c - min) / span;
+        return c <= defVal
+          ? 0.5 * ((c - min) / ((defVal - min) || 1))
+          : 0.5 + 0.5 * ((c - defVal) / ((max - defVal) || 1));
+      };
+      const normToVal = (n) => {
+        const cl = Math.min(1, Math.max(0, n));
+        if (!hasCenterDetent) return min + cl * span;
+        return cl <= 0.5
+          ? min + (cl / 0.5) * (defVal - min)
+          : defVal + ((cl - 0.5) / 0.5) * (max - defVal);
+      };
+      const defPct = hasCenterDetent ? 50 : Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
+
+      // Build 19 authentic Pioneer XDJ-XZ silkscreen horizontal fader ticks (9 above center, center 0, 9 below)
+      let ticksHtml = '';
+      for (let i = 0; i <= 18; i++) {
+        const p = (i / 18) * 100;
+        const isZero = i === 9;
+        const isMajor = i === 0 || i === 9 || i === 18;
+        ticksHtml += '<span class="xdj-tick' + (isZero ? ' is-zero' : isMajor ? ' is-major' : '') + '" style="top:' + p.toFixed(2) + '%"><i></i><i></i></span>';
+      }
+
+      const pt = (cx, cy, a, r) => [(cx + r * Math.sin(a * Math.PI / 180)).toFixed(2), (cy - r * Math.cos(a * Math.PI / 180)).toFixed(2)];
+      const arc = (cx, cy, a1, a2, r) => {
+        if (a2 - a1 < 0.5) return '';
+        const p1 = pt(cx, cy, a1, r), p2 = pt(cx, cy, a2, r);
+        return 'M' + p1.join(' ') + ' A' + r + ' ' + r + ' 0 ' + (a2 - a1 > 180 ? 1 : 0) + ' 1 ' + p2.join(' ');
+      };
+      // XDJ-XZ On-Jog Display iconic left & right glowing blue/cyan side-wing arcs
+      const leftWing = arc(56, 56, 222, 318, 28.5);
+      const rightWing = arc(56, 56, 42, 138, 28.5);
+
+      deck.innerHTML =
+        '<div class="xdj-platter-col">' +
+          '<div class="xdj-Model-bar">' +
+            '<span class="xdj-badge">PIONEER DJ \u00b7 XDJ-XZ</span>' +
+            '<button type="button" class="xdj-mt" title="Master Tempo indicator">MT</button>' +
+          '</div>' +
+          '<div class="xdj-jog" tabindex="0" role="slider" aria-label="' + esc(v.label) + ' jog wheel">' +
+            '<svg viewBox="0 0 112 112" aria-hidden="true">' +
+              '<circle class="xdj-jog-silver" cx="56" cy="56" r="53"/>' +
+              '<circle class="xdj-jog-outer" cx="56" cy="56" r="50.5"/>' +
+              '<circle class="xdj-jog-dimples" cx="56" cy="56" r="47.8"/>' +
+              '<circle class="xdj-jog-platter" cx="56" cy="56" r="43.5"/>' +
+              '<circle class="xdj-jog-groove" cx="56" cy="56" r="39.5"/>' +
+              '<path class="xdj-jog-range"/>' +
+              '<path class="xdj-jog-arc"/>' +
+              '<circle class="xdj-jog-screen" cx="56" cy="56" r="33"/>' +
+              '<path class="xdj-jog-wing" d="' + leftWing + '"/>' +
+              '<path class="xdj-jog-wing" d="' + rightWing + '"/>' +
+              '<g class="xdj-jog-rotor">' +
+                '<line class="xdj-jog-marker" x1="56" y1="13.5" x2="56" y2="21.5"/>' +
+                '<circle class="xdj-jog-cue" cx="56" cy="25.5" r="1.6"/>' +
+              '</g>' +
+              '<circle class="xdj-jog-screen-rim" cx="56" cy="56" r="33"/>' +
+            '</svg>' +
+            '<div class="xdj-lcd">' +
+              '<span class="xdj-lcd-kicker">TEMPO</span>' +
+              '<strong class="xdj-lcd-val"></strong>' +
+              '<span class="xdj-lcd-pct"></span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="xdj-btns">' +
+            '<button type="button" class="xdj-btn xdj-nudge-dn" title="Pitch bend down (-' + step + ')" aria-label="Decrease tempo">&minus;</button>' +
+            '<button type="button" class="xdj-btn xdj-reset" title="TEMPO RESET (' + fmt(v, defVal) + ')">' +
+              '<i class="xdj-led"></i><span>RESET</span>' +
+            '</button>' +
+            '<button type="button" class="xdj-btn xdj-nudge-up" title="Pitch bend up (+' + step + ')" aria-label="Increase tempo">+</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="xdj-fader-col">' +
+          '<div class="xdj-fader-head"><span class="xdj-fader-title">TEMPO</span></div>' +
+          '<div class="xdj-fader-pole"><span>+</span><small>' + esc(fmt(v, max)) + '</small></div>' +
+          '<div class="xdj-fader" tabindex="0" role="slider" aria-label="' + esc(v.label) + ' vertical tempo fader" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' +
+            '<div class="xdj-scale">' + ticksHtml + '</div>' +
+            '<span class="xdj-zero-led" title="TEMPO RESET LED (1.0\u00d7)" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
+            '<span class="xdj-detent-mark" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
+            '<div class="xdj-slot">' +
+              '<div class="xdj-fill"></div>' +
+            '</div>' +
+            '<div class="xdj-cap">' +
+              '<span class="xdj-cap-grip"></span>' +
+              '<span class="xdj-cap-line"></span>' +
+              '<span class="xdj-cap-grip"></span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="xdj-fader-pole"><span>&minus;</span><small>' + esc(fmt(v, min)) + '</small></div>' +
+        '</div>';
+
+      const jog = deck.querySelector('.xdj-jog');
+      const fader = deck.querySelector('.xdj-fader');
+      const cap = deck.querySelector('.xdj-cap');
+      const fill = deck.querySelector('.xdj-fill');
+      const lcdVal = deck.querySelector('.xdj-lcd-val');
+      const lcdPct = deck.querySelector('.xdj-lcd-pct');
+      const resetBtn = deck.querySelector('.xdj-reset');
+      const mtBadge = deck.querySelector('.xdj-mt');
+      const jogRange = deck.querySelector('.xdj-jog-range');
+      const jogArc = deck.querySelector('.xdj-jog-arc');
+      const jogRotor = deck.querySelector('.xdj-jog-rotor');
+
+      jogRange.setAttribute('d', arc(56, 56, -135, 135, 43));
+
+      const put = (raw) => {
+        let val = Math.min(max, Math.max(min, Math.round(raw / step) * step));
+        val = +val.toFixed(decimals(step));
+        setValue(v.id, val, { quiet: true });
+        paint();
+        if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
+      };
+
+      const paint = () => {
+        const cur = Number(getP()[v.id]);
+        const norm = valToNorm(cur);
+        const topPct = (1 - norm) * 100;
+        const zeroTop = 100 - defPct;
+        cap.style.top = topPct.toFixed(2) + '%';
+        const fTop = Math.min(topPct, zeroTop);
+        const fH = Math.max(1.5, Math.abs(topPct - zeroTop));
+        fill.style.top = fTop.toFixed(2) + '%';
+        fill.style.height = fH.toFixed(2) + '%';
+
+        const ang = -135 + norm * 270;
+        jogArc.setAttribute('d', arc(56, 56, -135, ang, 43));
+        jogRotor.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' 56 56)');
+
+        lcdVal.textContent = fmt(v, cur);
+        const deltaPct = ((cur - defVal) / (defVal || 1)) * 100;
+        const sign = deltaPct > 0.05 ? '+' : '';
+        lcdPct.textContent = sign + deltaPct.toFixed(1) + '%';
+
+        const atDef = same(cur, defVal);
+        resetBtn.classList.toggle('is-zero', atDef);
+        mtBadge.classList.toggle('is-active', !atDef);
+        deck.classList.toggle('is-modified', !atDef);
+        const zeroLed = deck.querySelector('.xdj-zero-led');
+        if (zeroLed) zeroLed.classList.toggle('is-on', atDef);
+
+        fader.setAttribute('aria-valuenow', cur);
+        fader.setAttribute('aria-valuetext', fmt(v, cur));
+        jog.setAttribute('aria-valuenow', cur);
+        jog.setAttribute('aria-valuetext', fmt(v, cur));
+      };
+
+      // Vertical Fader pointer drag
+      const fromFaderEvent = (e) => {
+        const r = fader.getBoundingClientRect();
+        const norm = 1 - Math.min(1, Math.max(0, (e.clientY - r.top) / Math.max(20, r.height)));
+        // Subtle magnetic snap right at the 50% (1.00x) center detent unless Shift is held
+        const snapped = (!e.shiftKey && hasCenterDetent && Math.abs(norm - 0.5) < 0.025) ? 0.5 : norm;
+        put(normToVal(snapped));
+      };
+      fader.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        fader.focus({ preventScroll: true });
+        fader.setPointerCapture(e.pointerId);
+        fader.classList.add('is-drag');
+        fromFaderEvent(e);
+        const mv = (ev) => fromFaderEvent(ev);
+        const up = () => {
+          fader.classList.remove('is-drag');
+          fader.removeEventListener('pointermove', mv);
+          fader.removeEventListener('pointerup', up);
+          fader.removeEventListener('pointercancel', up);
+        };
+        fader.addEventListener('pointermove', mv);
+        fader.addEventListener('pointerup', up);
+        fader.addEventListener('pointercancel', up);
+      });
+      fader.addEventListener('dblclick', (e) => { e.stopPropagation(); put(defVal); });
+
+      // Jog wheel drag (supports both vertical drag & circular platter spin)
+      jog.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        jog.focus({ preventScroll: true });
+        jog.setPointerCapture(e.pointerId);
+        jog.classList.add('is-drag');
+        const startVal = Number(getP()[v.id]);
+        const y0 = e.clientY;
+        const r = jog.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        let lastAng = Math.atan2(e.clientX - cx, -(e.clientY - cy)) * 180 / Math.PI;
+        let accumDeg = 0;
+        const mv = (ev) => {
+          const dx = ev.clientX - cx, dy = ev.clientY - cy;
+          const dist = Math.hypot(dx, dy);
+          const fine = ev.shiftKey ? 0.25 : 1;
+          if (dist > 22) {
+            const curAng = Math.atan2(dx, -dy) * 180 / Math.PI;
+            let dAng = curAng - lastAng;
+            if (dAng > 180) dAng -= 360;
+            if (dAng < -180) dAng += 360;
+            lastAng = curAng;
+            accumDeg += dAng * fine;
+            put(startVal + (accumDeg / 270) * span);
+          } else {
+            const dyDrag = (y0 - ev.clientY) * fine;
+            put(startVal + (dyDrag / 130) * span);
+          }
+        };
+        const up = () => {
+          jog.classList.remove('is-drag');
+          jog.removeEventListener('pointermove', mv);
+          jog.removeEventListener('pointerup', up);
+          jog.removeEventListener('pointercancel', up);
+        };
+        jog.addEventListener('pointermove', mv);
+        jog.addEventListener('pointerup', up);
+        jog.addEventListener('pointercancel', up);
+      });
+      jog.addEventListener('dblclick', (e) => { e.stopPropagation(); put(defVal); });
+
+      // Keyboard & wheel on both fader and jog
+      const onKey = (e) => {
+        const st = step * (e.shiftKey ? 5 : 1);
+        const k = { ArrowUp: st, ArrowRight: st, ArrowDown: -st, ArrowLeft: -st }[e.key];
+        if (k != null) { e.preventDefault(); put(Number(getP()[v.id]) + k); }
+        else if (e.key === 'Home') { e.preventDefault(); put(min); }
+        else if (e.key === 'End') { e.preventDefault(); put(max); }
+      };
+      const onWheel = (e) => {
+        if (document.activeElement !== fader && document.activeElement !== jog && !deck.matches(':hover')) return;
+        e.preventDefault();
+        const dir = e.deltaY < 0 ? 1 : -1;
+        put(Number(getP()[v.id]) + dir * step * (e.shiftKey ? 0.5 : 1));
+      };
+      fader.addEventListener('keydown', onKey);
+      jog.addEventListener('keydown', onKey);
+      fader.addEventListener('wheel', onWheel, { passive: false });
+      jog.addEventListener('wheel', onWheel, { passive: false });
+
+      // Hardware deck buttons
+      resetBtn.addEventListener('click', () => put(defVal));
+      deck.querySelector('.xdj-nudge-dn').addEventListener('click', () => put(Number(getP()[v.id]) - step));
+      deck.querySelector('.xdj-nudge-up').addEventListener('click', () => put(Number(getP()[v.id]) + step));
+
+      deck._paint = paint;
+      paint();
+      return deck;
+    }
+
+    // Standalone vertical mixer channel fader (for future controls with control: 'fader' or variant: 'fader'/'volume')
+    function faderEl(v, out) {
+      const wrap = el('div', 'mixer-fader-wrap');
+      const min = v.min != null ? v.min : 0;
+      const max = v.max != null ? v.max : 1;
+      const defVal = v.default != null ? v.default : min;
+      const step = v.step || 0.01;
+      const span = (max - min) || 1;
+      // Center-detent (50% = default 1.00x) piecewise mapping so default sits at the true XDJ-XZ center '0' mark
+      const hasCenterDetent = defVal > min && defVal < max;
+      const valToNorm = (val) => {
+        const c = Math.min(max, Math.max(min, Number(val)));
+        if (!hasCenterDetent) return (c - min) / span;
+        return c <= defVal
+          ? 0.5 * ((c - min) / ((defVal - min) || 1))
+          : 0.5 + 0.5 * ((c - defVal) / ((max - defVal) || 1));
+      };
+      const normToVal = (n) => {
+        const cl = Math.min(1, Math.max(0, n));
+        if (!hasCenterDetent) return min + cl * span;
+        return cl <= 0.5
+          ? min + (cl / 0.5) * (defVal - min)
+          : defVal + ((cl - 0.5) / 0.5) * (max - defVal);
+      };
+      const defPct = hasCenterDetent ? 50 : Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
+      let ticksHtml = '';
+      for (let i = 0; i <= 8; i++) {
+        const p = i * 12.5;
+        ticksHtml += '<span class="xdj-tick' + (i === 0 || i === 4 || i === 8 ? ' is-major' : '') + '" style="top:' + p + '%"><i></i><i></i></span>';
+      }
+      wrap.innerHTML =
+        '<div class="xdj-fader is-channel" tabindex="0" role="slider" aria-label="' + esc(v.label) + '" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' +
+          '<div class="xdj-scale">' + ticksHtml + '</div>' +
+          '<span class="xdj-detent-mark" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
+          '<div class="xdj-slot"><div class="xdj-fill"></div></div>' +
+          '<div class="xdj-cap"><span class="xdj-cap-grip"></span><span class="xdj-cap-line"></span><span class="xdj-cap-grip"></span></div>' +
+        '</div>';
+      const fader = wrap.querySelector('.xdj-fader');
+      const cap = wrap.querySelector('.xdj-cap');
+      const fill = wrap.querySelector('.xdj-fill');
+      const put = (raw) => {
+        let val = Math.min(max, Math.max(min, Math.round(raw / step) * step));
+        val = +val.toFixed(decimals(step));
+        setValue(v.id, val, { quiet: true });
+        paint();
+        if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
+      };
+      const paint = () => {
+        const cur = Number(getP()[v.id]);
+        const norm = Math.min(1, Math.max(0, (cur - min) / span));
+        const topPct = (1 - norm) * 100;
+        cap.style.top = topPct.toFixed(2) + '%';
+        fill.style.top = topPct.toFixed(2) + '%';
+        fill.style.height = (norm * 100).toFixed(2) + '%';
+        fader.setAttribute('aria-valuenow', cur);
+        fader.setAttribute('aria-valuetext', fmt(v, cur));
+      };
+      const fromEv = (e) => {
+        const r = fader.getBoundingClientRect();
+        const norm = 1 - Math.min(1, Math.max(0, (e.clientY - r.top) / Math.max(20, r.height)));
+        put(min + norm * span);
+      };
+      fader.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        fader.focus({ preventScroll: true });
+        fader.setPointerCapture(e.pointerId);
+        fader.classList.add('is-drag');
+        fromEv(e);
+        const mv = (ev) => fromEv(ev);
+        const up = () => { fader.classList.remove('is-drag'); fader.removeEventListener('pointermove', mv); fader.removeEventListener('pointerup', up); fader.removeEventListener('pointercancel', up); };
+        fader.addEventListener('pointermove', mv);
+        fader.addEventListener('pointerup', up);
+        fader.addEventListener('pointercancel', up);
+      });
+      fader.addEventListener('dblclick', () => put(defVal));
+      wrap._paint = paint;
+      paint();
+      return wrap;
+    }
+
+    // Backlit DJ performance pad button (for future controls with control: 'pad' or variant: 'pad'/'button')
+    function padBtnEl(v) {
+      const btn = el('button', 'mixer-pad', '<i class="mixer-pad-led"></i><span class="mixer-pad-lbl">' + esc(v.short || v.label) + '</span>');
+      btn.type = 'button';
+      btn.setAttribute('role', 'switch');
+      const paint = () => {
+        const on = !!getP()[v.id];
+        btn.classList.toggle('is-on', on);
+        btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      };
+      btn.addEventListener('click', () => { setValue(v.id, !getP()[v.id]); paint(); });
+      btn._paint = paint;
+      paint();
+      return btn;
+    }
+
+    // New-age DJ Mixer EQ (High / Mid / Low Freq) Rotary Potentiometer
+    // Uniform 68x68 size & styling across Text fade, Shell dim, Turn; supports v.variant ('eq' | 'gain' | 'fx') for future controls.
     function dialEl(v, out) {
-      const isDeg = v.unit === '°';
-      const d = el('div', 'dial');
+      const variant = v.variant || 'eq';
+      const fullCircle = v.variant === 'compass' || (v.min === 0 && v.max >= 360);
+      const a0 = fullCircle ? v.min : -135;
+      const span = fullCircle ? Math.min(359.9, v.max - v.min) : 270;
+      const vSpan = (v.max - v.min) || 1;
+      const angOf = (val) => a0 + (Math.min(1, Math.max(0, (Number(val) - v.min) / vSpan))) * span;
+      const pt = (a, r) => [(34 + r * Math.sin(a * Math.PI / 180)).toFixed(2), (34 - r * Math.cos(a * Math.PI / 180)).toFixed(2)];
+      const arc = (a1, a2, r) => {
+        if (a2 - a1 < 0.5) return '';
+        const p1 = pt(a1, r), p2 = pt(a2, r);
+        return 'M' + p1.join(' ') + ' A' + r + ' ' + r + ' 0 ' + (a2 - a1 > 180 ? 1 : 0) + ' 1 ' + p2.join(' ');
+      };
+
+      // XDJ-XZ silkscreened white split C-arc scale (with 12 o'clock center detent notch) + 11 EQ ticks
+      const silkscreenL = fullCircle ? '' : arc(a0, -7, 28.6);
+      const silkscreenR = fullCircle ? '' : arc(7, a0 + span, 28.6);
+      let ticksSvg = '';
+      const tickCount = 10;
+      for (let i = 0; i <= tickCount; i++) {
+        const a = a0 + (i / tickCount) * span;
+        const isMajor = i === 0 || i === 5 || i === tickCount;
+        const pIn = pt(a, isMajor ? 26.8 : 28.2);
+        const pOut = pt(a, isMajor ? 31.8 : 30.6);
+        ticksSvg += '<line class="dial-tick' + (isMajor ? ' is-major' : '') + '" x1="' + pIn[0] + '" y1="' + pIn[1] + '" x2="' + pOut[0] + '" y2="' + pOut[1] + '"/>';
+      }
+      const defAng = angOf(v.default != null ? v.default : v.min);
+      const defPt = pt(defAng, 30.2);
+
+      const d = el('div', 'dial dial-mixer');
+      d.dataset.variant = variant;
       d.tabIndex = 0;
       d.setAttribute('role', 'slider');
       d.setAttribute('aria-label', v.label);
       d.setAttribute('aria-valuemin', v.min);
       d.setAttribute('aria-valuemax', v.max);
-      d.innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle class="dial-face" cx="32" cy="32" r="27"/><path class="dial-range"/><path class="dial-arc"/><line class="dial-needle" x1="32" y1="32" x2="32" y2="14"/><circle class="dial-hub" cx="32" cy="32" r="3.2"/></svg>';
-      const a0 = isDeg ? v.min : -135, span = isDeg ? Math.min(359.9, v.max - v.min) : 270;
-      const angOf = (val) => (isDeg ? Number(val) : a0 + ((val - v.min) / (v.max - v.min || 1)) * span);
-      const pt = (a, r) => [(32 + r * Math.sin(a * Math.PI / 180)).toFixed(2), (32 - r * Math.cos(a * Math.PI / 180)).toFixed(2)];
-      const arc = (a1, a2, r) => { if (a2 - a1 < 0.5) return ''; const p1 = pt(a1, r), p2 = pt(a2, r); return 'M' + p1.join(' ') + ' A' + r + ' ' + r + ' 0 ' + (a2 - a1 > 180 ? 1 : 0) + ' 1 ' + p2.join(' '); };
+      d.title = 'Drag up/down or turn around rim \u00b7 Shift for fine \u00b7 Double-click to reset';
+      d.innerHTML =
+        '<svg viewBox="0 0 68 68" aria-hidden="true">' +
+          (silkscreenL ? '<path class="dial-silk" d="' + silkscreenL + '"/><path class="dial-silk" d="' + silkscreenR + '"/>' : '') +
+          '<g class="dial-ticks">' + ticksSvg + '</g>' +
+          '<circle class="dial-def" cx="' + defPt[0] + '" cy="' + defPt[1] + '" r="1.4"/>' +
+          '<path class="dial-range"/>' +
+          '<path class="dial-arc"/>' +
+          '<circle class="dial-well" cx="34" cy="34" r="22.4"/>' +
+          '<circle class="dial-skirt" cx="34" cy="34" r="20.4"/>' +
+          '<g class="dial-rotor">' +
+            '<circle class="dial-knurl" cx="34" cy="34" r="19.5"/>' +
+            '<circle class="dial-cap" cx="34" cy="34" r="15.8"/>' +
+            '<circle class="dial-cap-rim" cx="34" cy="34" r="15.8"/>' +
+            '<line class="dial-needle-glow" x1="34" y1="30" x2="34" y2="14.2"/>' +
+            '<line class="dial-needle" x1="34" y1="30" x2="34" y2="14.2"/>' +
+            '<circle class="dial-hub" cx="34" cy="34" r="2.2"/>' +
+          '</g>' +
+        '</svg>';
+
+      const rangeEl = d.querySelector('.dial-range');
+      const arcEl = d.querySelector('.dial-arc');
+      const rotorEl = d.querySelector('.dial-rotor');
+      rangeEl.setAttribute('d', arc(a0, a0 + span, 25));
+
       const paint = () => {
         const P = getP();
-        const a = angOf(P[v.id]);
-        d.querySelector('.dial-range').setAttribute('d', arc(a0, a0 + span, 24));
-        d.querySelector('.dial-arc').setAttribute('d', arc(a0, a, 24));
-        const tip = pt(a, 18), n = d.querySelector('.dial-needle');
-        n.setAttribute('x2', tip[0]); n.setAttribute('y2', tip[1]);
-        d.setAttribute('aria-valuenow', P[v.id]);
-        d.setAttribute('aria-valuetext', fmt(v, P[v.id]));
+        const cur = P[v.id];
+        const a = angOf(cur);
+        arcEl.setAttribute('d', arc(a0, a, 25));
+        rotorEl.setAttribute('transform', 'rotate(' + a.toFixed(1) + ' 34 34)');
+        d.classList.toggle('is-modified', !same(cur, v.default));
+        d.setAttribute('aria-valuenow', cur);
+        d.setAttribute('aria-valuetext', fmt(v, cur));
       };
       const put = (val) => {
         const st = v.step || 1;
@@ -195,27 +611,60 @@
         paint();
         if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
       };
-      const fromEvent = (e) => {
+      const fromAngle = (e) => {
         const r = d.getBoundingClientRect();
         let a = Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180 / Math.PI;
-        if (isDeg) {
+        if (fullCircle) {
           a = (a + 360) % 360;
           if (a < v.min || a > v.max) { const mid = (v.max + (360 - v.max + v.min) / 2) % 360; a = a > v.max && a < mid ? v.max : v.min; }
           put(a);
-        } else put(v.min + ((Math.min(135, Math.max(-135, a)) + 135) / 270) * (v.max - v.min));
+        } else {
+          put(v.min + ((Math.min(135, Math.max(-135, a)) + 135) / 270) * vSpan);
+        }
       };
       d.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
         e.preventDefault();
         d.focus({ preventScroll: true });
         d.setPointerCapture(e.pointerId);
         d.classList.add('is-drag');
-        fromEvent(e);
-        const mv = (ev) => fromEvent(ev);
-        const upf = () => { d.classList.remove('is-drag'); d.removeEventListener('pointermove', mv); d.removeEventListener('pointerup', upf); d.removeEventListener('pointercancel', upf); };
+        const r = d.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const dist0 = Math.hypot(e.clientX - cx, e.clientY - cy);
+        // Clicking the outer LED scale ring jumps directly to that angle; grabbing the knob cap uses smooth mixer drag
+        if (dist0 > r.width * 0.34) fromAngle(e);
+        const startVal = Number(getP()[v.id]);
+        const x0 = e.clientX, y0 = e.clientY;
+        const mv = (ev) => {
+          const dx = ev.clientX - x0, dy = y0 - ev.clientY;
+          const distNow = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+          if (distNow > r.width * 0.36 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+            fromAngle(ev);
+          } else {
+            const sensitivity = ev.shiftKey ? 320 : 120;
+            put(startVal + ((dy + dx * 0.35) / sensitivity) * vSpan);
+          }
+        };
+        const upf = () => {
+          d.classList.remove('is-drag');
+          d.removeEventListener('pointermove', mv);
+          d.removeEventListener('pointerup', upf);
+          d.removeEventListener('pointercancel', upf);
+        };
         d.addEventListener('pointermove', mv);
         d.addEventListener('pointerup', upf);
         d.addEventListener('pointercancel', upf);
       });
+      d.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        put(v.default);
+      });
+      d.addEventListener('wheel', (e) => {
+        if (document.activeElement !== d && !d.matches(':hover')) return;
+        e.preventDefault();
+        const st = (v.step || 1) * (e.shiftKey ? 0.5 : 1);
+        put(Number(getP()[v.id]) + (e.deltaY < 0 ? st : -st));
+      }, { passive: false });
       d.addEventListener('keydown', (e) => {
         const st = (v.step || 1) * (e.shiftKey ? 10 : 1);
         const k = { ArrowUp: st, ArrowRight: st, ArrowDown: -st, ArrowLeft: -st }[e.key];
@@ -257,6 +706,12 @@
         if (sel) sel.value = String(P[id]);
         const dl = row.querySelector('.dial');
         if (dl && dl._paint) dl._paint();
+        const td = row.querySelector('.tempo-deck');
+        if (td && td._paint) td._paint();
+        const mf = row.querySelector('.mixer-fader-wrap');
+        if (mf && mf._paint) mf._paint();
+        const mp = row.querySelector('.mixer-pad');
+        if (mp && mp._paint) mp._paint();
         const trig = row.querySelector('.swatch-trigger');
         if (trig) { trig.querySelector('.sw').style.background = P[id]; trig.querySelector('.sw-hex').textContent = String(P[id]).toUpperCase(); }
         row.querySelectorAll('.chip').forEach((c) => c.classList.toggle('is-on', same(c.dataset.c, P[id])));

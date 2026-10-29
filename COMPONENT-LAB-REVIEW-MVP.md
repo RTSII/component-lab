@@ -519,6 +519,16 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Future FAQ / Help Section:**
   - Repurpose the Base vs. Pro feature breakdown (`all N controls` vs. `8 featured`, inner `Advanced` / `More` folds, `Interaction` controls, `★ curate Basic`, `A / B / C` snapshots, `⋮` section collapse & motion variants, custom 6-slot palette, and rail/manifest tools) into a dedicated **FAQ / Base-vs-Pro Guide** section (in docs or a dedicated Help modal/drawer) rather than taking up permanent vertical space inside the control menu card.
 
+#### 7. Pioneer DJ XDJ-XZ Hardware-Styled Tempo Deck & Mixer EQ Knobs (`lab/controls.js`, `lab/lab.css`)
+- **Pioneer XDJ-XZ Vertical Tempo Deck (`tempoDeckEl`):**
+  - Replaces the horizontal `Speed` slider in the Pro `Tempo` card with a vertical **Pioneer DJ XDJ-XZ** controller deck while preserving the exact same `SPEED` parameter range (`0.25×` – `3.00×`, `step: 0.05`, `default: 1.00×`), click-to-type `.ctl-val`, undo/redo, and reset functionality.
+  - **Vertical Pitch / Tempo Fader (`TEMPO`):** Features a recessed vertical slot with 19 silkscreened horizontal calibration ticks, a true `50%` center `0` (`1.00×`) detent with a glowing green `TEMPO RESET` LED (`.xdj-zero-led`), magnetic center-detent snap (bypassed with `Shift`), bi-directional LED track fill, and a 3D dark P-LOCK style horizontal fader cap with a bright white center index stripe.
+  - **XDJ-XZ Jog Platter & On-Jog Display:** Features the silver-rimmed XDJ-XZ platter with dimpled outer bevel, glowing cyan/blue side-wing arcs around the central LCD (`1.00×` speed + `+0.0%` pitch delta), red-illuminated `MT` (`MASTER TEMPO`) badge when shifted off `1.00×`, `-` / `+` pitch-bend nudge buttons, and a green-LED `RESET` button.
+- **XDJ-XZ Mixer `HI / MID / LOW` EQ Rotary Knobs (`dialEl`) & Extensible Variants:**
+  - All `radial` rotary controls (`Text fade` › `Starts` & `Gone`, `Shell dim` › `Starts` & `Full`, and `Turn` › `Turn per card`) share a uniform `68×68px` **Pioneer XDJ-XZ EQ (`HI / MID / LOW` freq)** potentiometer design: white silkscreened split C-arc scale with a 12 o'clock center notch, 11 radial EQ ticks, dark rubberized P-LOCK style cap with knurled grip skirt, and a bold solid white pointer stripe.
+  - Supports pro-audio vertical drag (`Shift` for fine precision), outer-ring radial angle drag, mouse-wheel stepping, and double-click to reset.
+  - Built-in extensible hardware variants (`v.variant` / `v.control`) for future controls: `'eq'` (default High/Mid/Low pot), `'fx'` / `'color'` (silver Sound Color FX cap), `'gain'` / `'trim'` (amber/orange peak arc), `'fader'` / `'volume'` (`faderEl` vertical channel fader), and `'pad'` / `'button'` (`padBtnEl` illuminated performance pad).
+
 ---
 
 ### Next-session pickup notes

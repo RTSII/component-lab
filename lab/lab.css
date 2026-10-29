@@ -540,6 +540,158 @@ html.no-motion *, html.no-motion *::before, html.no-motion *::after { transition
 .snap-slot:active { transform: scale(0.95); }
 .snap-slot.is-filled { border-style: solid; border-color: rgba(110, 231, 255, 0.42); background: rgba(110, 231, 255, 0.12); color: #cdf7ff; }
 
+/* ---------- Pioneer DJ XDJ-XZ Vertical Tempo Deck & Mixer EQ Knobs ---------- */
+.dial.dial-mixer { width: 68px; height: 68px; position: relative; border-radius: 50%; cursor: ns-resize; touch-action: none; outline: none; transition: transform 0.18s var(--ease-out), filter 0.2s; }
+.dial.dial-mixer:hover { transform: scale(1.03); }
+.dial.dial-mixer.is-drag { cursor: grabbing; transform: scale(1.05); }
+.dial.dial-mixer .dial-silk { fill: none; stroke: rgba(235, 240, 248, 0.42); stroke-width: 1.35; stroke-linecap: round; }
+.dial.dial-mixer .dial-tick { stroke: rgba(230, 236, 245, 0.36); stroke-width: 1.15; stroke-linecap: round; }
+.dial.dial-mixer .dial-tick.is-major { stroke: rgba(255, 255, 255, 0.78); stroke-width: 1.65; }
+.dial.dial-mixer .dial-def { fill: rgba(110, 231, 255, 0.65); }
+.dial.dial-mixer .dial-range { fill: none; stroke: rgba(255, 255, 255, 0.08); stroke-width: 3.1; stroke-linecap: round; }
+.dial.dial-mixer .dial-arc { fill: none; stroke: var(--lab-accent); stroke-width: 3.1; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.45)); }
+.dial.dial-mixer .dial-well { fill: #07090e; stroke: rgba(255, 255, 255, 0.07); stroke-width: 1; }
+.dial.dial-mixer .dial-skirt { fill: #171b24; stroke: #2b3242; stroke-width: 1.2; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.75)); }
+.dial.dial-mixer .dial-knurl { fill: none; stroke: rgba(255, 255, 255, 0.16); stroke-width: 2.1; stroke-dasharray: 1.5 2.55; }
+.dial.dial-mixer .dial-cap { fill: #202634; stroke: #10141d; stroke-width: 1; }
+.dial.dial-mixer .dial-cap-rim { fill: none; stroke: rgba(255, 255, 255, 0.22); stroke-width: 0.9; }
+.dial.dial-mixer .dial-needle-glow { stroke: rgba(0, 229, 255, 0.55); stroke-width: 3.8; stroke-linecap: round; opacity: 0; transition: opacity 0.2s; }
+.dial.dial-mixer:hover .dial-needle-glow, .dial.dial-mixer.is-drag .dial-needle-glow, .dial.dial-mixer.is-modified .dial-needle-glow { opacity: 1; }
+.dial.dial-mixer .dial-needle { stroke: #ffffff; stroke-width: 2.4; stroke-linecap: round; }
+.dial.dial-mixer .dial-hub { fill: #121620; stroke: rgba(255, 255, 255, 0.35); stroke-width: 0.9; }
+.dial.dial-mixer.is-modified .dial-hub { fill: var(--lab-accent); stroke: #ffffff; }
+/* Future Mixer Knob Variants: SOUND COLOR FX (silver cap) & TRIM/GAIN (amber/red peak) */
+.dial.dial-mixer[data-variant="fx"] .dial-cap, .dial.dial-mixer[data-variant="color"] .dial-cap { fill: #b8c2d1; stroke: #6e7889; }
+.dial.dial-mixer[data-variant="fx"] .dial-cap-rim, .dial.dial-mixer[data-variant="color"] .dial-cap-rim { stroke: #ffffff; }
+.dial.dial-mixer[data-variant="fx"] .dial-needle, .dial.dial-mixer[data-variant="color"] .dial-needle { stroke: #0c1017; stroke-width: 2.6; }
+.dial.dial-mixer[data-variant="gain"] .dial-arc, .dial.dial-mixer[data-variant="trim"] .dial-arc { stroke: #ff9f43; filter: drop-shadow(0 0 4px rgba(255, 159, 67, 0.5)); }
+.dial.dial-mixer[data-variant="gain"].is-modified .dial-hub, .dial.dial-mixer[data-variant="trim"].is-modified .dial-hub { fill: #ff9f43; }
+
+/* Pioneer XDJ-XZ Vertical Tempo Deck */
+.tempo-deck {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  gap: 10px;
+  align-items: stretch;
+  padding: 10px 10px 10px 11px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #131720 0%, #0b0e14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 20px -8px rgba(0, 0, 0, 0.7);
+  user-select: none;
+}
+.xdj-platter-col { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 7px; }
+.xdj-Model-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 0 2px; }
+.xdj-badge { font: 700 9px/1 var(--mono); letter-spacing: 0.09em; color: rgba(233, 237, 243, 0.58); text-transform: uppercase; }
+.xdj-mt {
+  font: 700 8.5px/1 var(--mono); letter-spacing: 0.06em; padding: 3px 6px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16); background: #171b24; color: var(--lab-dim);
+  transition: color 0.18s, border-color 0.18s, background 0.18s, box-shadow 0.18s;
+}
+.xdj-mt.is-active { color: #ffd6d6; border-color: rgba(255, 75, 75, 0.75); background: rgba(235, 45, 45, 0.24); box-shadow: 0 0 8px rgba(255, 60, 60, 0.4); }
+.xdj-jog { position: relative; width: 112px; height: 112px; border-radius: 50%; cursor: grab; touch-action: none; outline: none; }
+.xdj-jog.is-drag { cursor: grabbing; }
+.xdj-jog:focus-visible { box-shadow: 0 0 0 2px var(--lab-accent); }
+.xdj-jog svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.xdj-jog-silver { fill: #181c26; stroke: #adb8c9; stroke-width: 2.2; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8)); }
+.xdj-jog-outer { fill: #0e1118; stroke: #2c3446; stroke-width: 1.4; }
+.xdj-jog-dimples { fill: none; stroke: rgba(255, 255, 255, 0.18); stroke-width: 2.2; stroke-dasharray: 2.2 4.05; }
+.xdj-jog-platter { fill: #12161f; stroke: rgba(255, 255, 255, 0.08); stroke-width: 1; }
+.xdj-jog-groove { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 3.5; }
+.xdj-jog-range { fill: none; stroke: rgba(255, 255, 255, 0.09); stroke-width: 2.8; stroke-linecap: round; }
+.xdj-jog-arc { fill: none; stroke: var(--lab-accent); stroke-width: 2.8; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.5)); }
+.xdj-jog-screen { fill: #05070b; }
+.xdj-jog-wing { fill: none; stroke: #00b8ff; stroke-width: 2.8; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(0, 184, 255, 0.65)); opacity: 0.88; }
+.xdj-jog-screen-rim { fill: none; stroke: rgba(255, 255, 255, 0.18); stroke-width: 1.1; }
+.xdj-jog-marker { stroke: #ffffff; stroke-width: 2.2; stroke-linecap: round; }
+.xdj-jog-cue { fill: var(--lab-accent); }
+.xdj-lcd { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; text-align: center; gap: 1px; }
+.xdj-lcd-kicker { font: 600 7.5px/1 var(--mono); letter-spacing: 0.14em; color: rgba(110, 231, 255, 0.72); }
+.xdj-lcd-val { font: 700 13px/1.15 var(--mono); color: #ffffff; letter-spacing: -0.02em; text-shadow: 0 0 8px rgba(0, 229, 255, 0.35); }
+.xdj-lcd-pct { font: 500 9px/1 var(--mono); color: var(--lab-muted); }
+.tempo-deck.is-modified .xdj-lcd-pct { color: var(--lab-accent); }
+.xdj-btns { width: 100%; display: grid; grid-template-columns: 24px 1fr 24px; gap: 4px; align-items: center; }
+.xdj-btn {
+  height: 23px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, #202634 0%, #141821 100%); color: #d6dce8;
+  font: 700 10px/1 var(--mono); display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 0 5px; transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+}
+.xdj-btn:hover { border-color: rgba(110, 231, 255, 0.45); color: #ffffff; background: #262e3f; }
+.xdj-btn:active { transform: scale(0.95); }
+.xdj-reset { letter-spacing: 0.06em; font-size: 9px; }
+.xdj-led { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.22); transition: background 0.2s, box-shadow 0.2s; }
+.xdj-reset.is-zero .xdj-led { background: #2ee59d; box-shadow: 0 0 7px #2ee59d; }
+
+/* XDJ-XZ Vertical Pitch / Tempo Fader Strip */
+.xdj-fader-col {
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 5px 6px; border-radius: 9px; background: #090b10;
+  border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+.xdj-fader-head { width: 100%; text-align: center; margin-bottom: 1px; }
+.xdj-fader-title { font: 700 8.5px/1 var(--mono); letter-spacing: 0.14em; color: rgba(255, 255, 255, 0.65); }
+.xdj-fader-pole { display: flex; align-items: center; justify-content: space-between; width: 100%; font: 600 9px/1 var(--mono); color: var(--lab-dim); padding: 0 2px; }
+.xdj-fader-pole span { color: rgba(255, 255, 255, 0.68); font-size: 10.5px; }
+.xdj-fader-pole small { font-size: 8.5px; }
+.xdj-fader { position: relative; width: 100%; height: 102px; margin: 9px 0; padding: 0; cursor: ns-resize; touch-action: none; outline: none; }
+.xdj-fader.is-channel { height: 96px; width: 68px; margin: 10px auto; }
+.xdj-fader:focus-visible .xdj-slot { box-shadow: 0 0 0 2px var(--lab-accent); }
+.xdj-scale { position: absolute; inset: 0 4px; pointer-events: none; }
+.xdj-tick { position: absolute; left: 0; right: 0; height: 0; display: flex; justify-content: space-between; align-items: center; transform: translateY(-0.5px); }
+.xdj-tick i { width: 10px; height: 1px; background: rgba(235, 240, 248, 0.34); }
+.xdj-tick.is-major i { width: 14px; height: 1.5px; background: rgba(255, 255, 255, 0.72); }
+.xdj-tick.is-zero i { width: 17px; height: 2px; background: #ffffff; box-shadow: 0 0 4px rgba(255, 255, 255, 0.45); }
+.xdj-zero-led {
+  position: absolute; left: 1px; width: 5.5px; height: 5.5px; border-radius: 50%;
+  transform: translateY(-50%); background: rgba(46, 229, 157, 0.18); border: 1px solid rgba(46, 229, 157, 0.35);
+  pointer-events: none; transition: background 0.18s, box-shadow 0.18s;
+}
+.xdj-zero-led.is-on { background: #2ee59d; border-color: #a8ffdc; box-shadow: 0 0 8px #2ee59d; }
+.xdj-detent-mark {
+  position: absolute; left: 50%; width: 22px; height: 2px; transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.45); pointer-events: none;
+}
+.xdj-slot {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 5px; transform: translateX(-50%);
+  border-radius: 3px; background: #020305; border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.95); overflow: hidden;
+}
+.xdj-fill {
+  position: absolute; left: 0; right: 0; background: var(--lab-accent);
+  box-shadow: 0 0 8px var(--lab-accent); border-radius: 2px;
+}
+.xdj-cap {
+  position: absolute; left: 50%; width: 42px; height: 18px;
+  margin-top: 10px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #323949 0%, #1c212c 35%, #12161e 65%, #282f3d 100%);
+  border: 1px solid #454f64;
+  box-shadow: 0 4px 9px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 3px 4px; pointer-events: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+/* Cap centered on 0%..100% track coordinates */
+.xdj-cap { margin-top: 0; }
+.xdj-fader:hover .xdj-cap, .xdj-fader.is-drag .xdj-cap {
+  border-color: rgba(110, 231, 255, 0.75);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 229, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.xdj-cap-grip { width: 100%; height: 1px; background: rgba(0, 0, 0, 0.65); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.xdj-cap-line { width: 100%; height: 2.2px; border-radius: 1px; background: #ffffff; box-shadow: 0 0 6px rgba(255, 255, 255, 0.85); }
+.mixer-fader-wrap { display: flex; justify-content: center; width: 100%; }
+.mixer-pad {
+  width: 100%; height: 34px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, #222836 0%, #141822 100%); color: var(--lab-muted);
+  display: flex; align-items: center; justify-content: center; gap: 8px; font: 600 11.5px var(--mono);
+  transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.mixer-pad-led { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); }
+.mixer-pad.is-on { border-color: rgba(0, 229, 255, 0.75); background: rgba(0, 184, 255, 0.16); color: #ffffff; box-shadow: 0 0 12px rgba(0, 229, 255, 0.28); }
+.mixer-pad.is-on .mixer-pad-led { background: var(--lab-accent); box-shadow: 0 0 8px var(--lab-accent); }
+
 @media (prefers-reduced-motion: reduce) {
   .order-row, .quick-pill { transition-duration: 0.01ms !important; }
 }
