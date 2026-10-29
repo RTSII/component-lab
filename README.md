@@ -54,6 +54,13 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 
 ### Control Dock & Right Rail
 - **Opening & Pinning:** Hover or click the round trigger button (`#dockTrigger`) to open the glass card. Clicking or tabbing inside the card pins it open; pressing **`Esc`** or clicking the stage backdrop unpins and closes it (`Esc` closes any open colour arc or popover first).
+- **Pro Side Menu Anchor States (`Settings › Dock › Side menu`):**
+  - **`Slim menu` (Default in Pro):** Collapses the dock to a thin vertical glass rail capsule (`48px` wide) anchored to the screen edge. Stage gets almost full width (`innerWidth - 78px`) while keeping all rail category icons, tools, and actions immediately accessible.
+  - **`Nested icon`:** Collapses to the classic round trigger button (`#dockTrigger`).
+  - **`Full expanded`:** Loads and stays full expanded (`392px`).
+  - **Two-Stage Esc Gesture:** Esc while full open collapses to `slim`; Esc while in `slim` collapses to `closed` (nested icon).
+  - **Tuck Tool (`#railTools [data-tool="tuck"]`):** Pro rail includes a collapse icon tool to tuck the slim menu directly into the nested icon.
+  - **Basic Mode Invariant:** Basic mode remains strictly full expanded with zero extra dock options in Settings. *(Note: Upcoming Mid-tier will receive the added option of collapsing the anchor point to thin `slim`).*
 - **Rail Icons (top to bottom):**
   1. **Categories:** `Color`, `Interaction` (shown only when the component has cursor/touch/key behaviour), `Surface`, `Type`, `Motion`, `Rate`, `Layout`.
   2. **Actions:** **`+`** (New Component modal) and **Toolbar** (shows/throws out the floating stage toolbar).

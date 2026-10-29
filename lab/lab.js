@@ -89,7 +89,7 @@
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal' }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal' }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
@@ -104,7 +104,7 @@
   let scanHovering = false, scanHoverTouch = false, scanKbdPause = false;
   let projectPalette = [], presets = [], kindsInfo = null;
   let navStack = [{ type: 'cat', cat: 'color' }];
-  let dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
+  let dockState = 'closed', dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
   let railPill = null, modePill = null, viewPill = null;
   let newDraft = { kind: 'card', palette: 'project', name: '' };
   let pageRO = null;
@@ -531,9 +531,12 @@
   function freeRect() {
     const W = innerWidth, H = innerHeight;
     const r = { x: 0, y: 0, w: W, h: H };
-    if (!dockOpen) return r;
+    const curState = (dock && dock.dataset.state) || dockState;
+    if (!curState || curState === 'closed') return r;
     const [row, col] = (ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor).split('-');
-    const cw = cardWidth() + 2 * MARGIN, ch = cardMaxH() + 2 * MARGIN;
+    const isSlim = curState === 'slim';
+    const cw = isSlim ? (RAIL_W + 2 * MARGIN) : (cardWidth() + 2 * MARGIN);
+    const ch = cardMaxH() + 2 * MARGIN;
     if (ui.dockPos === 'bottom' || col === 'center') {
       if (row === 'bottom') r.h = H - ch;
       else if (row === 'top') { r.y = ch; r.h = H - ch; }
@@ -650,72 +653,147 @@
     dock.style.setProperty('--card-w', cardWidth() + 'px');
     dock.style.setProperty('--card-maxh', cardMaxH() + 'px');
   }
-  function openDock(how) {
+  function setDockState(targetState, opts) {
+    opts = opts || {};
+    const fromState = (dock && dock.dataset.state) || dockState || 'closed';
+    if (fromState === targetState && !opts.force) return;
+
     clearTimeout(leaveTimer);
+    clearTimeout(hoverTimer);
+
     const fromKey = document.activeElement === $('dockTrigger');
-    if (dockOpen) { if (how !== 'hover') pinned = true; return; }
-    dockOpen = true;
-    pinned = how !== 'hover';
-    ui.open = true; saveUi();
-    applyDockLayout();
+    const lv = opts.instant ? 'off' : M.level();
+
+    if (fromState === 'open' && targetState !== 'open') {
+      Arc.close(true);
+      Pop.hide();
+    }
+
+    const prevRect = (dock && dock.offsetWidth && dock.offsetHeight) ? dock.getBoundingClientRect() : null;
+
     dock.getAnimations().forEach((a) => a.cancel());
     card.querySelector('.card-main').getAnimations().forEach((a) => a.cancel());
     $('rail').getAnimations().forEach((a) => a.cancel());
-    dock.dataset.state = 'open';
-    dock.classList.remove('is-closing');
-    $('dockTrigger').setAttribute('aria-expanded', 'true');
-    fitPages(null, false);
-    syncRail(true);
-    syncSeg($('modeSeg'), modePill, mode, true);
-    if (fromKey) {
-      requestAnimationFrame(() => {
-        const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
-        if (target) target.focus({ preventScroll: true });
-      });
+
+    dockState = targetState;
+    dockOpen = (targetState === 'open');
+    if (targetState === 'open') {
+      pinned = opts.how !== 'hover';
+      ui.open = true;
+    } else {
+      pinned = false;
+      ui.open = false;
     }
-    const to = card.getBoundingClientRect();
-    layoutStage();
-    const lv = M.level();
-    if (lv !== 'off') {
-      dock.classList.add('is-morphing');
+    saveUi();
+
+    applyDockLayout();
+
+    const finish = () => {
+      dock.dataset.state = targetState;
+      dock.classList.remove('is-morphing', 'is-closing');
+      $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
+      if (targetState === 'closed') {
+        M.contentIn($('dockTrigger').firstChild);
+      }
+    };
+
+    if (lv === 'off' || !prevRect) {
+      finish();
+      if (targetState === 'open') {
+        fitPages(null, false);
+        syncRail(true);
+        syncSeg($('modeSeg'), modePill, mode, true);
+        if (fromKey) {
+          requestAnimationFrame(() => {
+            const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
+            if (target) target.focus({ preventScroll: true });
+          });
+        }
+      } else if (targetState === 'slim') {
+        syncRail(true);
+      }
+      layoutStage();
+      return;
+    }
+
+    // Animated transition
+    if (targetState === 'closed') {
+      dock.classList.add('is-morphing', 'is-closing');
+      if (fromState === 'open') {
+        M.travel($('dockClose'), $('dockTrigger'), svg('close'), { rotate: -90 });
+        M.contentOut(card.querySelector('.card-main'));
+      }
+      M.contentOut($('rail'));
+      layoutStage();
       const a = dock.animate([
-        { width: '52px', height: '52px', borderRadius: '26px' },
-        { width: to.width + 'px', height: to.height + 'px', borderRadius: '22px' }
-      ], { duration: lv === 'full' ? 300 : 150, easing: M.settle });
-      a.finished.catch(() => {}).then(() => { if (dockOpen) dock.classList.remove('is-morphing'); });
+        { width: prevRect.width + 'px', height: prevRect.height + 'px', borderRadius: fromState === 'slim' ? '20px' : '22px' },
+        { width: '52px', height: '52px', borderRadius: '26px' }
+      ], { duration: lv === 'full' ? 280 : 150, easing: M.settle });
+      a.finished.catch(() => {}).then(finish);
+      return;
+    }
+
+    // Target is 'open' or 'slim'
+    dock.dataset.state = targetState;
+    dock.classList.remove('is-closing');
+    $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
+
+    if (targetState === 'open') {
+      fitPages(null, false);
+      syncRail(true);
+      syncSeg($('modeSeg'), modePill, mode, true);
+      if (fromKey) {
+        requestAnimationFrame(() => {
+          const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
+          if (target) target.focus({ preventScroll: true });
+        });
+      }
+    } else if (targetState === 'slim') {
+      syncRail(true);
+    }
+    layoutStage();
+
+    dock.classList.add('is-morphing');
+    const toRect = (targetState === 'open' ? card : dock).getBoundingClientRect();
+    const radFrom = fromState === 'closed' ? '26px' : fromState === 'slim' ? '20px' : '22px';
+    const radTo = targetState === 'slim' ? '20px' : '22px';
+
+    if (targetState === 'open' && fromState === 'closed') {
+      M.travel($('dockTrigger'), $('dockClose'), svg('sliders'));
       M.contentIn(card.querySelector('.card-main'), 60);
       M.contentIn($('rail'), 30);
-      M.travel($('dockTrigger'), $('dockClose'), svg('sliders'));
+    } else if (targetState === 'open' && fromState === 'slim') {
+      M.contentIn(card.querySelector('.card-main'), 60);
+    } else if (targetState === 'slim' && fromState === 'open') {
+      M.contentOut(card.querySelector('.card-main'));
+    } else if (targetState === 'slim' && fromState === 'closed') {
+      M.contentIn($('rail'), 30);
     }
-  }
-  function closeDock() {
-    if (!dockOpen) return;
-    Arc.close(true);
-    Pop.hide();
-    const from = card.getBoundingClientRect();
-    dockOpen = false; pinned = false;
-    ui.open = false; saveUi();
-    layoutStage();
-    const lv = M.level();
-    const finish = () => {
-      if (dockOpen) return;
-      dock.dataset.state = 'closed';
-      dock.classList.remove('is-morphing', 'is-closing');
-      card.querySelector('.card-main').getAnimations().forEach((x) => x.cancel());
-      $('rail').getAnimations().forEach((x) => x.cancel());
-      $('dockTrigger').setAttribute('aria-expanded', 'false');
-      M.contentIn($('dockTrigger').firstChild);
-    };
-    if (lv === 'off') { finish(); return; }
-    dock.classList.add('is-morphing', 'is-closing');
-    M.travel($('dockClose'), $('dockTrigger'), svg('close'), { rotate: -90 });
+
     const a = dock.animate([
-      { width: from.width + 'px', height: from.height + 'px', borderRadius: '22px' },
-      { width: '52px', height: '52px', borderRadius: '26px' }
+      { width: prevRect.width + 'px', height: prevRect.height + 'px', borderRadius: radFrom },
+      { width: toRect.width + 'px', height: toRect.height + 'px', borderRadius: radTo }
     ], { duration: lv === 'full' ? 280 : 150, easing: M.settle });
-    M.contentOut(card.querySelector('.card-main'));
-    M.contentOut($('rail'));
-    a.finished.catch(() => {}).then(finish);
+    a.finished.catch(() => {}).then(() => {
+      dock.classList.remove('is-morphing');
+    });
+  }
+  function openDock(how) {
+    if (dockState === 'open') {
+      if (how !== 'hover') pinned = true;
+      return;
+    }
+    setDockState('open', { how });
+  }
+  function closeDock(forceIcon) {
+    if (dockState === 'closed') return;
+    const force = (forceIcon === true);
+    const preferSlim = (mode === 'pro' && (ui.proDock || 'slim') !== 'icon');
+    if (dockState === 'open' && preferSlim && !force) {
+      setDockState('slim');
+    } else {
+      setDockState('closed');
+    }
   }
 
   // ---------- rail ----------
@@ -769,6 +847,9 @@
       if (t.id === 'toolbar') TB.railButton(tool('toolbar', svg('toolbar'), 'Stage toolbar (click, or flick toward the stage)', () => TB.railClick()));
     });
     tool('settings', svg('gear'), 'Settings', () => { openDock('click'); go({ type: 'settings' }); });
+    if (mode === 'pro') {
+      tool('tuck', svg('collapse'), 'Collapse to nested icon', () => setDockState('closed'));
+    }
     requestAnimationFrame(() => syncRail(true));
   }
   function railKey(spec) {
@@ -778,7 +859,7 @@
     return spec.type;
   }
   function railIndex(spec) {
-    const order = railCats().map((c) => c.id).concat(orderedTools().filter((t) => !toolHidden().includes(t.id)).map((t) => t.id), ['settings']);
+    const order = railCats().map((c) => c.id).concat(orderedTools().filter((t) => !toolHidden().includes(t.id)).map((t) => t.id), ['settings', 'tuck']);
     const i = order.indexOf(railKey(spec));
     return i < 0 ? 0 : i;
   }
@@ -811,6 +892,9 @@
     if (cur.type === 'cat' && !visibleCats().some((c) => c.id === cur.cat)) navStack = [{ type: 'cat', cat: railCats()[0].id }];
     else navStack = [cur];
     renderPage(0);
+    if (m === 'basic' && (dockState === 'slim' || (dock && dock.dataset.state === 'slim'))) {
+      setDockState('open');
+    }
     toast(mode === 'pro' ? 'Pro: every control. Star one to feature it in Basic.' : 'Basic: the ' + basicVars().length + ' featured controls.');
   }
 
@@ -1762,6 +1846,21 @@
     const anchorRow = setRow('Anchor', grid, 'The card stays pinned here and grows away from it.');
     inner.appendChild(anchorRow);
 
+    if (mode === 'pro') {
+      const pds = el('div', 'seg seg-sm');
+      pds.dataset.pro = 'dock';
+      buildSeg(pds, [
+        { value: 'icon', label: 'Nested icon' },
+        { value: 'slim', label: 'Slim menu' },
+        { value: 'full', label: 'Full expanded' }
+      ], ui.proDock || 'slim', (val) => {
+        ui.proDock = val;
+        saveUi();
+        toast('Pro side menu: ' + (val === 'icon' ? 'nested icon' : val === 'slim' ? 'slim vertical menu' : 'full expanded menu') + ' on load & anchor.');
+      }, { equal: true });
+      inner.appendChild(setRow('Side menu', pds, 'Pro default load and anchor state: nested icon, slim vertical rail, or full expanded card.'));
+    }
+
     section(inner, 'Behaviour');
     const sw = el('button', 'switch', '<span class="knob"></span>');
     sw.type = 'button';
@@ -2237,7 +2336,7 @@
       railBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     }
     function homeRect() {
-      const r = railBtn && railBtn.isConnected && dockOpen ? railBtn.getBoundingClientRect() : $('dockTrigger').getBoundingClientRect();
+      const r = railBtn && railBtn.isConnected && (dockOpen || (dock && dock.dataset.state === 'slim')) ? railBtn.getBoundingClientRect() : $('dockTrigger').getBoundingClientRect();
       return r.width ? r : null;
     }
     function flyOut(from, power, v) {
@@ -2706,7 +2805,7 @@
     $('backBtn').addEventListener('click', back);
     $('moreBtn').innerHTML = svg('dots');
     $('moreBtn').addEventListener('click', (e) => { e.stopPropagation(); Pop.toggle(); });
-    $('dockClose').addEventListener('click', closeDock);
+    $('dockClose').addEventListener('click', () => closeDock());
     $('labPlay').addEventListener('click', () => { playing = !playing; syncTime(); writeHash(); });
     $('labScrub').addEventListener('input', (e) => { playing = false; offset = +e.target.value; syncTime(); writeHash(); });
     document.documentElement.classList.toggle('no-motion', !ui.motion);
@@ -2805,6 +2904,7 @@
         if (Pop.isOpen) { Pop.hide(true); return; }
         if (Arc.isOpen) { Arc.close(false, true); return; }
         if (dockOpen) { closeDock(); trig.focus({ preventScroll: true }); return; }
+        if (dock && dock.dataset.state === 'slim') { setDockState('closed'); trig.focus({ preventScroll: true }); return; }
         TB.close();
         return;
       }
@@ -2840,7 +2940,7 @@
           if (k && k.startsWith(KEY)) localStorage.removeItem(k);
         }
         Object.assign(ui, {
-          dockPos: 'right', anchor: 'top-right', mode: 'basic', motion: true, paletteSource: 'project',
+          dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project',
           view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
           tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal',
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
@@ -2863,12 +2963,14 @@
       await loadComponent(first, true);
     } finally {
       TB.start();
-      if (ui.open !== false) {
-        const prev = M.enabled;
-        M.enabled = false;   // first paint: no morph
-        openDock('click');
-        M.enabled = prev;
-      } else layoutStage();
+      if (mode === 'pro') {
+        const pref = ui.proDock || 'slim';
+        const initDock = (pref === 'full') ? 'open' : (pref === 'icon') ? 'closed' : 'slim';
+        setDockState(initDock, { instant: true, how: 'init' });
+      } else {
+        const initDock = (ui.open !== false) ? 'open' : 'closed';
+        setDockState(initDock, { instant: true, how: 'init' });
+      }
       document.documentElement.classList.add('is-ready');
     }
 
@@ -2880,6 +2982,6 @@
       }
     } catch (_) {}
   }
-  window.__lab = { openDock, closeDock, go, push, back, setMode, startNew, get state() { return { dockOpen, pinned, mode, navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
+  window.__lab = { openDock, closeDock, setDockState, go, push, back, setMode, startNew, get state() { return { dockState, dockOpen, pinned, mode, navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
   init();
 })();

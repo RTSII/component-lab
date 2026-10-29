@@ -156,7 +156,7 @@ body {
     display: none;
   }
 
-  body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) {
+  body:has(.dock:is([data-state="open"],[data-state="slim"])[data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) {
     left: auto;
     right: 16px;
     flex-direction: row-reverse;
@@ -247,7 +247,7 @@ body {
   }
 
   .tb[data-flip="true"] .tb-inner>*,
-  body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) .tb-inner>* {
+  body:has(.dock:is([data-state="open"],[data-state="slim"])[data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) .tb-inner>* {
     margin-left: 0;
     margin-right: 6px;
   }
@@ -384,7 +384,7 @@ body {
   }
 
   .tb[data-flip="true"] .time,
-  body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) .time {
+  body:has(.dock:is([data-state="open"],[data-state="slim"])[data-anchor$="left"]:not([data-pos="bottom"])) .tb:not([data-custom-pos="true"]) .time {
     padding-left: 0;
     padding-right: 4px;
     border-left: 0;
@@ -572,6 +572,13 @@ body {
     border-radius: 22px;
   }
 
+  .dock[data-state="slim"] {
+    width: auto;
+    height: auto;
+    border-radius: 20px;
+    padding: 0;
+  }
+
   .dock.is-morphing {
     overflow: hidden;
   }
@@ -654,12 +661,33 @@ body {
     height: 22px;
   }
 
-  .dock[data-state="open"] .dock-trigger {
+  .dock[data-state="open"] .dock-trigger,
+  .dock[data-state="slim"] .dock-trigger {
     display: none;
   }
 
   .dock[data-state="closed"] .card {
     display: none;
+  }
+
+  .dock[data-state="slim"] .card {
+    display: flex;
+    width: auto;
+  }
+
+  .dock[data-state="slim"]:not(.is-morphing) .card-main {
+    display: none;
+  }
+
+  .dock[data-state="slim"].is-morphing .card-main {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  .dock[data-state="slim"] .rail {
+    border-left: 0;
+    border-radius: 19px;
   }
 
   .card {

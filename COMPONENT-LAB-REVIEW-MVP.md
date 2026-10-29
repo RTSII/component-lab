@@ -550,6 +550,7 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **`Mid` Tier (New — Pioneer DDJ-Style Preset Controller UI/UX):**
   - Introduces the `Interaction` category (`Pointer` ↔ `Touch & keys` flip card) and curated intermediate controls.
   - Features a **Pioneer DDJ-controller style UI/UX** where controls like `Rate / Tempo` use **3 tactile preset rate buttons / performance pads** (e.g. `0.5× Half` | `1.0× Nominal` | `2.0× Double`) for fast, musical one-tap selection without overwhelming the user with full calibration scales.
+  - **Mid-Tier Side Menu Collapsible Anchor Option:** Mid-tier will receive the added option of collapsing the side menu anchor point to a thin vertical dock capsule (sharing the `slim` anchor flexibility between Mid and Pro tiers), while Basic mode remains strictly full expanded with zero options.
 - **`Pro` Tier (Pioneer XDJ-XZ Full Fine-Tune Studio):**
   - Full access to every control, dual-sided advanced flip cards, `A / B / C` snapshots, manifest/rail customization, and continuous fine-tune adjustment using the **Pioneer XDJ-XZ** vertical tempo fader + jog platter display and `HI / MID / LOW` mixer EQ rotary knobs.
 
@@ -565,6 +566,21 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
   - **Quick-Depth Performance Pads (`.xdj-fx-pads`):** 4 micro performance pads (`[ OFF ]`, `[ 0.5× ]`, `[ 1.0× ]`, `[ 2.0× ]`) for instant one-touch jumps to key glow intensities, with active backlit cyan illumination matching the dial level. Fully synchronized via `syncRow(id)`.
 
 
+
+#### 13. Pro Side Menu Default Load State & Dock Anchor Point Settings (Nested Icon | Slim Menu | Full Expanded)
+- **Pro Default Load/Save State (`ui.proDock: 'slim'`):**
+  - Pro mode defaults on cold load to a collapsed, thin vertical dock capsule (`slim`), anchored to the screen edge (taking only 48px width).
+  - Maximizes the component testing stage (`freeRect()` allocates `innerWidth - 78px` instead of `392px`), keeping all rail category icons, tools, and actions immediately accessible.
+- **Settings Configuration (`Side menu` Segmented Control in Pro Mode Only):**
+  - Under `Settings > Dock`, Pro users can select and save their preferred side menu state:
+    1. `Nested icon` (`icon`): round floating trigger button (`#dockTrigger`).
+    2. `Slim menu` (`slim` — default for Pro): thin vertical dock anchor capsule.
+    3. `Full expanded` (`full` / `open`): expanded 392px card.
+  - Persisted across reloads in `componentLab:v2:ui.proDock`.
+- **Basic Mode Invariant:** Basic mode stays unchanged, defaulting to full expanded with no extra options displayed in Settings.
+- **Two-Stage Esc Gesture:** Esc while full open collapses to `slim`; Esc while in `slim` collapses to `closed` (nested icon).
+- **Dedicated Tuck Tool (`#railTools [data-tool="tuck"]`):** Pro users can collapse the slim menu to nested icon with one click using the collapse tool on the rail.
+- **Smooth 6-Way Morphing:** Animated transitions across all states with `.dock.is-morphing` and `.is-closing`.
 
 #### 12. Pioneer XDJ-XZ 3-Column Geometry Deck (Layout › Spacing & Radius)
 - **Combined Console Deck (.mini-body.is-deck):**
