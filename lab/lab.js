@@ -1169,6 +1169,25 @@
     const isDials = lead.length > 1 && lead.every((v) => v.control === 'radial');
     const isPads = g.name === 'Fades' || (lead.length > 1 && lead.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad')));
     const isDeck = g.name === 'Spacing & Radius' || (lead.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && lead.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
+
+    const faderItems = lead.filter((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader');
+    const topItems = lead.filter((v) => !faderItems.includes(v));
+    if (topItems.length && faderItems.length > 1) {
+      const body = el('div', 'mini-body is-mixed-deck');
+      const topArea = el('div', 'mini-deck-top');
+      topItems.forEach((v) => topArea.appendChild(ctlRow(v, { compact: !bare })));
+      body.appendChild(topArea);
+
+      const faderArea = el('div', 'mini-deck-faders' + (faderItems.length === 2 ? ' is-2col' : ''));
+      faderItems.forEach((v, idx) => {
+        v.deckCh = v.deckCh || (idx + 1);
+        faderArea.appendChild(ctlRow(v, { compact: true }));
+      });
+      body.appendChild(faderArea);
+      card.appendChild(body);
+      return card;
+    }
+
     const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : '') + (isDeck ? ' is-deck' : ''));
     lead.forEach((v) => body.appendChild(ctlRow(v, { compact: !bare })));
     card.appendChild(body);

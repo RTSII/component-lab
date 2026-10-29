@@ -598,6 +598,18 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Dual-Sided 3D Card Flip to Advanced Radius Options:**
   - Card header features clickable 3D flip badge (flip 2) that smoothly flips 180° to reveal the advanced radius controls (RADIUS_FRAC and RADIUS_PAD) rendered as two side-by-side Pioneer EQ rotary dials (.is-dials).
 
+#### 13. Pioneer XDJ-XZ 2-Column Size Deck & Inline Compact Select (Layout › Size)
+- **Consolidated Size Subcard (.mini-body.is-mixed-deck):**
+  - Unifies the previously split card count dropdown, `Card width` slider, and `Back scale` depth slider into a single high-density console card.
+  - Eliminates the 3D flip mechanism on the `Size` card completely by folding `Back scale` (`SCALE_MIN`) onto the front face beside `Card width` (`CARD_W`).
+  - Top Area (`.mini-deck-top`):
+    - Converts the card count dropdown (`N`) into an inline compact selector (`.ctl-select-inline` and `.lab-select.is-compact`).
+    - Eliminates redundant `.ctl-val` duplicate readout text. Placed cleanly inline: `Cards` [ `8 ▾` ] `☆` with a 52px width, cyan border accent, dark semi-transparent fill, and glowing cyan chevron.
+  - Lower Area (`.mini-deck-faders.is-2col`):
+    - Left Column (`CH 1`): Pioneer XDJ-XZ vertical channel fader for `CARD_W` (`Card width`, 80..240 px, default 156 px). Recessed `#090b10` well, 82px fader track, calibration tick marks, white illuminated center indicator line, and cyan LED fill.
+    - Right Column (`CH 2`): Pioneer XDJ-XZ vertical channel fader for `SCALE_MIN` (`Back scale`, 0.10..1.00×, default 0.56×). Recessed `#090b10` well, 82px fader track, calibration tick marks, white illuminated center indicator line, and cyan LED fill.
+  - Fully removes `"Depth"` from `manifest.json` `groups.layout`, leaving a clean 2-card layout accordion: `["Size", "Spacing & Radius"]`.
+
 ---
 
 ### Next-session pickup notes

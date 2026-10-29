@@ -178,19 +178,26 @@
         row.appendChild(dialEl(v, out));
       } else if (v.control === 'select') {
         lab.htmlFor = uid;
-        const s = el('select', 'lab-select');
+        out.remove();
+        const isCompact = (v.variant === 'compact' || v.id === 'N' || compact);
+        const s = el('select', 'lab-select' + (isCompact ? ' is-compact' : ''));
         s.id = uid;
         v.options.forEach((o) => { const op = el('option', null, esc(o.label)); op.value = o.value; s.appendChild(op); });
         s.value = String(P[v.id]);
         s.addEventListener('change', () => setValue(v.id, s.value));
-        row.appendChild(s);
+        if (isCompact) {
+          head.insertBefore(s, head.querySelector('.star'));
+          row.classList.add('ctl-inline', 'ctl-select-inline');
+        } else {
+          row.appendChild(s);
+        }
       }
       if (v.variant === 'master' || v.variant === 'gain' || v.id === 'RADIUS_MAX') {
         row.appendChild(el('div', 'xdj-deck-sub', 'MASTER'));
-      } else if (v.id === 'TRAVEL' || (isVertFader && (v.deckCh === 1 || v.variant === 'channel'))) {
-        row.appendChild(el('div', 'xdj-deck-sub', v.id === 'WAVE' ? 'CH 2' : 'CH 1'));
-      } else if (v.id === 'WAVE' || (isVertFader && v.deckCh === 2)) {
+      } else if (v.id === 'WAVE' || v.id === 'SCALE_MIN' || (isVertFader && v.deckCh === 2)) {
         row.appendChild(el('div', 'xdj-deck-sub', 'CH 2'));
+      } else if (v.id === 'TRAVEL' || v.id === 'CARD_W' || (isVertFader && (v.deckCh === 1 || v.variant === 'channel'))) {
+        row.appendChild(el('div', 'xdj-deck-sub', 'CH 1'));
       }
       return row;
     }
