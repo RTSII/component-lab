@@ -595,44 +595,46 @@
       "id": "RADIUS_MAX",
       "label": "Swing radius cap (px)",
       "category": "layout",
-      "control": "slider",
+      "control": "radial",
+      "variant": "master",
       "min": 0,
       "max": 160,
       "step": 1,
       "default": 84,
       "where": "radius cap in layout()",
       "featured": false,
-      "group": "Radius",
+      "group": "Spacing & Radius",
       "short": "Swing cap"
     },
     {
       "id": "TRAVEL",
       "label": "Vertical spread (share of height)",
       "category": "layout",
-      "control": "slider",
+      "control": "fader",
+      "variant": "channel",
       "min": 0.3,
       "max": 1.6,
       "step": 0.01,
       "default": 0.94,
       "where": "travel in layout()",
       "featured": false,
-      "group": "Spacing",
-      "short": "Vertical spread"
+      "group": "Spacing & Radius",
+      "short": "Spread"
     },
     {
       "id": "WAVE",
       "label": "Vertical S-curve",
       "category": "layout",
-      "control": "slider",
+      "control": "fader",
+      "variant": "channel",
       "min": -1,
       "max": 1,
       "step": 0.05,
       "default": 0.3,
       "where": "y in layout()",
       "featured": false,
-      "group": "Spacing",
-      "short": "S-curve",
-      "advanced": true
+      "group": "Spacing & Radius",
+      "short": "S-curve"
     },
     {
       "id": "SCALE_MIN",
@@ -653,7 +655,8 @@
       "id": "RADIUS_FRAC",
       "label": "Radius cap, share of column width",
       "category": "layout",
-      "control": "slider",
+      "control": "radial",
+      "variant": "eq",
       "min": 0,
       "max": 0.6,
       "step": 0.01,
@@ -661,14 +664,15 @@
       "where": "radius cap in layout()",
       "advanced": true,
       "featured": false,
-      "group": "Radius",
+      "group": "Spacing & Radius",
       "short": "Share of width"
     },
     {
       "id": "RADIUS_PAD",
       "label": "Radius: min gap to edge (px)",
       "category": "layout",
-      "control": "slider",
+      "control": "radial",
+      "variant": "eq",
       "min": 0,
       "max": 40,
       "step": 1,
@@ -676,7 +680,7 @@
       "where": "radius cap in layout()",
       "advanced": true,
       "featured": false,
-      "group": "Radius",
+      "group": "Spacing & Radius",
       "short": "Edge gap"
     }
   ],
@@ -713,8 +717,7 @@
     ],
     "layout": [
       "Size",
-      "Spacing",
-      "Radius",
+      "Spacing & Radius",
       "Depth"
     ]
   }

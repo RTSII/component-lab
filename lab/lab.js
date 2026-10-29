@@ -1015,13 +1015,17 @@
     const rotor = el('div', 'flip-rotor');
     const faceA = el('div', 'flip-face is-front');
     const isPadsA = frontItems.length > 1 && frontItems.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad'));
-    const bodyA = el('div', 'mini-body' + (frontItems.length > 1 && frontItems.every((v) => v.control === 'radial') ? ' is-dials' : '') + (isPadsA ? ' is-pads' : ''));
+    const isDeckA = group === 'Spacing & Radius' || (frontItems.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && frontItems.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
+    const isDialsA = frontItems.length > 1 && frontItems.every((v) => v.control === 'radial');
+    const bodyA = el('div', 'mini-body' + (isDialsA ? ' is-dials' : '') + (isPadsA ? ' is-pads' : '') + (isDeckA ? ' is-deck' : ''));
     frontItems.forEach((v) => bodyA.appendChild(ctlRow(v, { compact: true })));
     faceA.appendChild(bodyA);
 
     const faceB = el('div', 'flip-face is-back');
     const isPadsB = backItems.length > 1 && backItems.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad'));
-    const bodyB = el('div', 'mini-body' + (backItems.length > 1 && backItems.every((v) => v.control === 'radial') ? ' is-dials' : '') + (isPadsB ? ' is-pads' : ''));
+    const isDeckB = (backItems.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && backItems.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
+    const isDialsB = backItems.length > 1 && backItems.every((v) => v.control === 'radial');
+    const bodyB = el('div', 'mini-body' + (isDialsB ? ' is-dials' : '') + (isPadsB ? ' is-pads' : '') + (isDeckB ? ' is-deck' : ''));
     backItems.forEach((v) => bodyB.appendChild(ctlRow(v, { compact: true })));
     faceB.appendChild(bodyB);
     faceB.setAttribute('inert', '');
@@ -1080,7 +1084,8 @@
     if (!bare) card.appendChild(el('div', 'mini-head', '<span>' + esc(g.name) + '</span>'));
     const isDials = lead.length > 1 && lead.every((v) => v.control === 'radial');
     const isPads = g.name === 'Fades' || (lead.length > 1 && lead.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad')));
-    const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : ''));
+    const isDeck = g.name === 'Spacing & Radius' || (lead.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && lead.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
+    const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : '') + (isDeck ? ' is-deck' : ''));
     lead.forEach((v) => body.appendChild(ctlRow(v, { compact: !bare })));
     card.appendChild(body);
     return card;

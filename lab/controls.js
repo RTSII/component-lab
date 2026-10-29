@@ -100,7 +100,7 @@
       lab.addEventListener('dblclick', () => setValue(v.id, v.default));
       const out = el('span', 'ctl-val', esc(fmt(v, P[v.id])));
       const isTempoDeck = (v.master === 'speed' || v.id === 'SPEED' || v.control === 'tempo' || v.variant === 'tempo') && (hasPro('accordion') || v.control === 'tempo' || v.variant === 'tempo');
-      const isVertFader = !isTempoDeck && (v.control === 'fader' || v.variant === 'fader' || v.variant === 'volume');
+      const isVertFader = !isTempoDeck && (v.control === 'fader' || v.variant === 'fader' || v.variant === 'volume' || v.variant === 'channel');
       const isFxUnit = (v.id === 'GLOW_STRENGTH' || (v.category === 'surface' && v.group === 'Glow') || v.control === 'fx' || (v.variant === 'fx' && v.control !== 'swatch-role')) && (hasPro('accordion') || v.control === 'fx' || v.variant === 'fx');
       const isPadSwitch = v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad' || v.variant === 'button' || v.group === 'Fades');
       const isPadBtn = !isPadSwitch && (v.control === 'pad' || v.variant === 'pad' || v.variant === 'button');
@@ -184,6 +184,13 @@
         s.value = String(P[v.id]);
         s.addEventListener('change', () => setValue(v.id, s.value));
         row.appendChild(s);
+      }
+      if (v.variant === 'master' || v.variant === 'gain' || v.id === 'RADIUS_MAX') {
+        row.appendChild(el('div', 'xdj-deck-sub', 'MASTER'));
+      } else if (v.id === 'TRAVEL' || (isVertFader && (v.deckCh === 1 || v.variant === 'channel'))) {
+        row.appendChild(el('div', 'xdj-deck-sub', v.id === 'WAVE' ? 'CH 2' : 'CH 1'));
+      } else if (v.id === 'WAVE' || (isVertFader && v.deckCh === 2)) {
+        row.appendChild(el('div', 'xdj-deck-sub', 'CH 2'));
       }
       return row;
     }
@@ -468,15 +475,18 @@
           ? min + (cl / 0.5) * (defVal - min)
           : defVal + ((cl - 0.5) / 0.5) * (max - defVal);
       };
-      const defPct = hasCenterDetent ? 50 : Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
+      const isBipolar = min < 0 && max > 0;
+      const defPct = isBipolar ? 50 : (hasCenterDetent ? 50 : Math.min(100, Math.max(0, ((defVal - min) / span) * 100)));
       let ticksHtml = '';
       for (let i = 0; i <= 8; i++) {
         const p = i * 12.5;
-        ticksHtml += '<span class="xdj-tick' + (i === 0 || i === 4 || i === 8 ? ' is-major' : '') + '" style="top:' + p + '%"><i></i><i></i></span>';
+        const isCenter = (isBipolar && i === 4);
+        ticksHtml += '<span class="xdj-tick' + (isCenter ? ' is-zero is-major' : (i === 0 || i === 4 || i === 8 ? ' is-major' : '')) + '" style="top:' + p + '%"><i></i><i></i></span>';
       }
       wrap.innerHTML =
         '<div class="xdj-fader is-channel" tabindex="0" role="slider" aria-label="' + esc(v.label) + '" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' +
           '<div class="xdj-scale">' + ticksHtml + '</div>' +
+          (isBipolar ? '<span class="xdj-zero-led" style="top:50%"></span>' : '') +
           '<span class="xdj-detent-mark" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
           '<div class="xdj-slot"><div class="xdj-fill"></div></div>' +
           '<div class="xdj-cap"><span class="xdj-cap-grip"></span><span class="xdj-cap-line"></span><span class="xdj-cap-grip"></span></div>' +
@@ -484,6 +494,7 @@
       const fader = wrap.querySelector('.xdj-fader');
       const cap = wrap.querySelector('.xdj-cap');
       const fill = wrap.querySelector('.xdj-fill');
+      const zeroLed = wrap.querySelector('.xdj-zero-led');
       const put = (raw) => {
         let val = Math.min(max, Math.max(min, Math.round(raw / step) * step));
         val = +val.toFixed(decimals(step));
@@ -496,8 +507,20 @@
         const norm = Math.min(1, Math.max(0, (cur - min) / span));
         const topPct = (1 - norm) * 100;
         cap.style.top = topPct.toFixed(2) + '%';
-        fill.style.top = topPct.toFixed(2) + '%';
-        fill.style.height = (norm * 100).toFixed(2) + '%';
+        if (isBipolar) {
+          const zeroPct = ((max - 0) / span) * 100;
+          if (topPct <= zeroPct) {
+            fill.style.top = topPct.toFixed(2) + '%';
+            fill.style.height = (zeroPct - topPct).toFixed(2) + '%';
+          } else {
+            fill.style.top = zeroPct + '%';
+            fill.style.height = (topPct - zeroPct).toFixed(2) + '%';
+          }
+          if (zeroLed) zeroLed.classList.toggle('is-on', Math.abs(cur) < 0.001);
+        } else {
+          fill.style.top = topPct.toFixed(2) + '%';
+          fill.style.height = (norm * 100).toFixed(2) + '%';
+        }
         fader.setAttribute('aria-valuenow', cur);
         fader.setAttribute('aria-valuetext', fmt(v, cur));
       };
@@ -518,6 +541,22 @@
         fader.addEventListener('pointermove', mv);
         fader.addEventListener('pointerup', up);
         fader.addEventListener('pointercancel', up);
+      });
+      fader.addEventListener('keydown', (e) => {
+        const cur = Number(getP()[v.id]);
+        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+          e.preventDefault(); put(cur + step * (e.shiftKey ? 10 : 1));
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+          e.preventDefault(); put(cur - step * (e.shiftKey ? 10 : 1));
+        } else if (e.key === 'PageUp') {
+          e.preventDefault(); put(cur + step * 10);
+        } else if (e.key === 'PageDown') {
+          e.preventDefault(); put(cur - step * 10);
+        } else if (e.key === 'Home') {
+          e.preventDefault(); put(min);
+        } else if (e.key === 'End') {
+          e.preventDefault(); put(max);
+        }
       });
       fader.addEventListener('dblclick', () => put(defVal));
       wrap._paint = paint;
