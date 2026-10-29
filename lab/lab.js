@@ -1000,15 +1000,15 @@
     return gs.sort((a, b) => rank(a) - rank(b));
   }
   function buildFlipCard(spec) {
-    const { frontTitle, frontItems, backTitle, backItems, backBadgeLabel, group } = spec;
+    const { frontTitle, frontItems, backTitle, backItems, group } = spec;
     const card = el('div', 'mini is-flip');
     if (group) card.dataset.group = group;
-    const head = el('div', 'mini-head is-flip-head');
+    const head = el('button', 'mini-head is-flip-head');
+    head.type = 'button';
+    head.setAttribute('aria-expanded', 'false');
     const titleEl = el('span', 'mini-flip-title', esc(frontTitle));
-    const flipBtn = el('button', 'flip-btn', svg('flip', 'flip-ico') + '<span class="flip-btn-txt"></span><span class="adv-n flip-btn-n"></span>');
-    flipBtn.type = 'button';
-    flipBtn.setAttribute('aria-pressed', 'false');
-    head.append(titleEl, flipBtn);
+    const badge = el('span', 'flip-badge', svg('flip', 'flip-ico') + '<span class="flip-circle"></span>');
+    head.append(titleEl, badge);
     card.appendChild(head);
 
     const stage = el('div', 'flip-stage');
@@ -1031,12 +1031,13 @@
     let flipped = false;
     const syncFlipUi = () => {
       card.classList.toggle('is-flipped', flipped);
-      flipBtn.classList.toggle('is-on', flipped);
-      flipBtn.setAttribute('aria-pressed', flipped ? 'true' : 'false');
+      head.classList.toggle('is-on', flipped);
+      head.setAttribute('aria-expanded', flipped ? 'true' : 'false');
       titleEl.textContent = flipped ? backTitle : frontTitle;
-      flipBtn.querySelector('.flip-btn-txt').textContent = flipped ? frontTitle : (backBadgeLabel || 'Advanced');
-      flipBtn.querySelector('.flip-btn-n').textContent = flipped ? frontItems.length : backItems.length;
-      flipBtn.title = flipped ? 'Flip back to ' + frontTitle + ' controls' : 'Flip card to ' + backTitle + ' (' + backItems.length + ')';
+      const count = flipped ? frontItems.length : backItems.length;
+      badge.querySelector('.flip-circle').textContent = count;
+      badge.classList.toggle('is-on', flipped);
+      head.title = flipped ? 'Flip to ' + frontTitle + ' (' + frontItems.length + ' controls)' : 'Flip to ' + backTitle + ' (' + backItems.length + ' controls)';
       if (flipped) {
         faceA.setAttribute('inert', '');
         faceB.removeAttribute('inert');
@@ -1047,11 +1048,11 @@
       const activeFace = flipped ? faceB : faceA;
       requestAnimationFrame(() => activeFace.querySelectorAll('.seg').forEach((sg) => syncSeg(sg, null, sg.dataset.value, true)));
     };
-    flipBtn.addEventListener('click', () => {
+    head.addEventListener('click', () => {
       flipped = !flipped;
       syncFlipUi();
       if (M.level() === 'full') {
-        titleEl.animate([{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: M.easeOut });
+        titleEl.animate([{ opacity: 0, transform: 'translateY(2px)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: M.easeOut });
       }
     });
     syncFlipUi();

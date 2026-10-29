@@ -706,10 +706,23 @@ html.no-motion *, html.no-motion *::before, html.no-motion *::after { transition
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   gap: 8px;
   text-align: left;
-  padding-bottom: 2px;
+  padding: 3px 5px 6px;
+  margin: -3px -5px 0;
+  border: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: background 0.15s;
+}
+.mini-head.is-flip-head:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+.mini-head.is-flip-head:focus-visible {
+  outline: 1px solid var(--lab-accent);
 }
 .mini-flip-title {
   font-size: 10.5px;
@@ -720,52 +733,61 @@ html.no-motion *, html.no-motion *::before, html.no-motion *::after { transition
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.18s;
 }
+.mini-head.is-flip-head:hover .mini-flip-title { color: var(--lab-fg); }
 .mini.is-flip.is-flipped .mini-flip-title { color: #cdf7ff; }
-.flip-btn {
+.flip-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 21px;
-  padding: 0 7px 0 6px;
+  height: 20px;
+  padding: 0 4px 0 5px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: var(--lab-muted);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
   flex: none;
-  transition: color 0.18s, border-color 0.18s, background 0.18s, transform 0.15s var(--ease-out);
+  transition: color 0.18s, border-color 0.18s, background 0.18s;
 }
-.flip-btn:hover {
+.mini-head.is-flip-head:hover .flip-badge {
   color: var(--lab-fg);
   border-color: rgba(110, 231, 255, 0.42);
   background: rgba(110, 231, 255, 0.09);
 }
-.flip-btn:active { transform: scale(0.95); }
-.flip-btn.is-on {
+.flip-badge.is-on {
   color: #cdf7ff;
   border-color: rgba(110, 231, 255, 0.5);
   background: rgba(110, 231, 255, 0.14);
 }
 .flip-ico {
-  width: 12px !important;
-  height: 12px !important;
+  width: 11px !important;
+  height: 11px !important;
   color: var(--lab-accent);
   transition: transform 0.42s var(--spring);
 }
-.flip-btn:hover .flip-ico { transform: rotate(180deg); }
-.flip-btn.is-on .flip-ico { transform: rotate(180deg); }
-.flip-btn-n {
-  font: 10px var(--mono);
-  padding: 0 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+.mini-head.is-flip-head:hover .flip-ico { transform: rotate(180deg); }
+.flip-badge.is-on .flip-ico { transform: rotate(180deg); }
+.flip-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font: 700 9.5px/1 var(--mono);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--lab-dim);
+  transition: background 0.18s, color 0.18s;
 }
-.flip-btn.is-on .flip-btn-n { background: rgba(110, 231, 255, 0.22); color: #ffffff; }
+.mini-head.is-flip-head:hover .flip-circle {
+  background: rgba(110, 231, 255, 0.24);
+  color: #ffffff;
+}
+.flip-badge.is-on .flip-circle {
+  background: var(--lab-accent);
+  color: #06090e;
+}
 .flip-stage { perspective: 900px; width: 100%; }
 .flip-rotor {
   display: grid;
