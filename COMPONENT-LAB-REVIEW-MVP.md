@@ -567,7 +567,7 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 
 
 
-#### 13. Pro Side Menu Default Load State & Dock Anchor Point Settings (Nested Icon | Slim Menu | Full Expanded)
+#### 12. Pro Side Menu Default Load State & Dock Anchor Point Settings (Nested Icon | Slim Menu | Full Expanded)
 - **Pro Default Load/Save State (`ui.proDock: 'slim'`):**
   - Pro mode defaults on cold load to a collapsed, thin vertical dock capsule (`slim`), anchored to the screen edge (taking only 48px width).
   - Maximizes the component testing stage (`freeRect()` allocates `innerWidth - 78px` instead of `392px`), keeping all rail category icons, tools, and actions immediately accessible.
@@ -582,7 +582,7 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Dedicated Tuck Tool (`#railTools [data-tool="tuck"]`):** Pro users can collapse the slim menu to nested icon with one click using the collapse tool on the rail.
 - **Smooth 6-Way Morphing:** Animated transitions across all states with `.dock.is-morphing` and `.is-closing`.
 
-#### 12. Pioneer XDJ-XZ 3-Column Geometry Deck (Layout › Spacing & Radius)
+#### 13. Pioneer XDJ-XZ 3-Column Geometry Deck (Layout › Spacing & Radius)
 - **Combined Console Deck (.mini-body.is-deck):**
   - Unifies the previously separate SPACING and RADIUS subcards into a single high-efficiency Pioneer XDJ-XZ 3-Column Geometry Deck (components/helix/manifest.json, lab/controls.js, lab/lab.js, lab/lab.css).
   - Saves ~60px of vertical height (reducing card height from ~220px across two cards down to a single ~160px card), while grouping all three spatial positioning parameters into an intuitive pro-audio mixer layout.
@@ -598,7 +598,7 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Dual-Sided 3D Card Flip to Advanced Radius Options:**
   - Card header features clickable 3D flip badge (flip 2) that smoothly flips 180° to reveal the advanced radius controls (RADIUS_FRAC and RADIUS_PAD) rendered as two side-by-side Pioneer EQ rotary dials (.is-dials).
 
-#### 13. Pioneer XDJ-XZ 2-Column Size Deck & Inline Compact Select (Layout › Size)
+#### 14. Pioneer XDJ-XZ 2-Column Size Deck & Inline Compact Select (Layout › Size)
 - **Consolidated Size Subcard (.mini-body.is-mixed-deck):**
   - Unifies the previously split card count dropdown, `Card width` slider, and `Back scale` depth slider into a single high-density console card.
   - Eliminates the 3D flip mechanism on the `Size` card completely by folding `Back scale` (`SCALE_MIN`) onto the front face beside `Card width` (`CARD_W`).
