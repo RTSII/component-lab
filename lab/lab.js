@@ -92,6 +92,7 @@
     dockStages: true,       // stage 1 (the lanyard pass) in the card -> rail -> pass progression
     dockFlick: true,        // flick the pass / the dock's inner edge to step stages
     dockHide: true,         // strong flick of the pass away hides the dock for this session
+    dockHover: true,        // hover the slim rail: it grows to the card, folds back when the cursor leaves
     helpIcon: true          // ? help card: full how-to in Pro; Basic sees "what Pro adds"
   };
   // ---- dock stages (like the toolbar's nested progression) ----
@@ -107,7 +108,7 @@
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
@@ -129,6 +130,8 @@
   let navStack = [{ type: 'cat', cat: 'color' }];
   let dockState = 'closed', dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
   let dockHidden = false, lastFrom = 'closed';
+  // hoverOpen: the card was grown from the slim rail by hover (folds back on leave, never saved)
+  let hoverOpen = false, dockPress = false, overDock = false;
   let railPill = null, modePill = null, viewPill = null;
   let newDraft = { kind: 'card', palette: 'project', name: '' };
   let pageRO = null;
@@ -708,14 +711,16 @@
     lastFrom = fromState;
     dockState = targetState;
     dockOpen = (targetState === 'open');
+    const viaHover = opts.how === 'hover';
+    hoverOpen = targetState === 'open' && viaHover;
     if (targetState === 'open') {
-      pinned = opts.how !== 'hover';
-      ui.open = true;
+      pinned = !viaHover;
+      if (!viaHover) ui.open = true;
     } else {
       pinned = false;
-      ui.open = false;
+      if (!viaHover) ui.open = false;
     }
-    saveUi();
+    if (!viaHover) saveUi();   // hover expand / fold never changes what is saved
 
     applyDockLayout();
 
@@ -725,6 +730,7 @@
       $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
       dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
       syncAvatar();
+      syncHint();   // the toolbar's left tab shows while no rail pad is on screen
       if (targetState === 'closed') {
         M.contentIn($('dockTrigger').firstChild);
       }
@@ -770,6 +776,7 @@
     dock.dataset.state = targetState;
     dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
     syncAvatar();
+    syncHint();
     dock.classList.remove('is-closing');
     $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
 
@@ -816,7 +823,7 @@
   function openDock(how) {
     if (dockHidden) showDock(true);
     if (dockState === 'open') {
-      if (how !== 'hover') pinned = true;
+      if (how !== 'hover' && !hoverOpen) pinned = true;   // a hover-opened card stays in hover mode
       return;
     }
     setDockState('open', { how });
@@ -881,16 +888,44 @@
     } else if (lv === 'fade') dock.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 });
     if (!quiet) Log.push('dock back');
   }
-  // the small handle on the edge where a hidden dock was: always a way back
+  // Nested tabs, always a way back in the opposite direction:
+  //   right (#dockHint): the small handle on the edge where a hidden (flicked-away) dock was.
+  //   left  (#tbHint):   the stage toolbar's own nested tab, while it is ON but flicked away and no rail
+  //                      pad is on screen (dock at the VIP badge or hidden). Click = it flies back top-left.
+  // Each one springs in from its screen edge when needed and slides back out when its thing returns.
+  function showTab(h, on) {
+    if ((h.dataset.on === 'true') === on) return;
+    h.dataset.on = on ? 'true' : 'false';
+    h.getAnimations().forEach((a) => a.cancel());
+    const e = h.dataset.edge, off = e === 'left' ? 'translateX(-115%)' : e === 'bottom' ? 'translateY(115%)' : 'translateX(115%)';
+    const lv = M.level();
+    if (on) {
+      h.hidden = false;
+      if (lv === 'full') h.animate([{ transform: off }, { transform: 'translate(0,0) scale(1.06)', offset: 0.7 }, { transform: 'none' }], { duration: 460, delay: 80, easing: M.springSoft, fill: 'backwards' });
+      else if (lv === 'fade') h.animate([{ opacity: 0 }], { duration: 150 });
+      return;
+    }
+    if (lv === 'off' || h.hidden) { h.hidden = true; return; }
+    const a = h.animate([{ transform: 'none', opacity: 1 }, { transform: lv === 'full' ? off : 'none', opacity: 0 }], { duration: lv === 'full' ? 220 : 120, easing: 'cubic-bezier(0.5, 0, 0.75, 0.3)', fill: 'forwards' });
+    a.finished.then(() => { if (h.dataset.on !== 'true') h.hidden = true; a.cancel(); }, () => {});
+  }
+  const railPadOnScreen = () => !dockHidden && dockStage() >= 2 && !!document.querySelector('#railTools .tb-sw');
   function syncHint() {
     const h = $('dockHint');
-    if (!h) return;
-    h.hidden = !dockHidden;
-    const tb = ui.tbOut !== false && !TB.shown;
-    h.title = 'Bring back the VIP badge' + (tb ? ' and the flicked-away stage toolbar (top-left)' : '') + ' (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
-    h.setAttribute('aria-label', h.title);
-    h.dataset.edge = dockEdge();
-    h.dataset.anchor = ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor;
+    if (h) {
+      const tb = ui.tbOut !== false && !TB.shown;
+      h.title = 'Bring back the VIP badge' + (tb ? ' and the flicked-away stage toolbar (top-left)' : '') + ' (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
+      h.setAttribute('aria-label', h.title);
+      h.dataset.edge = dockEdge();
+      h.dataset.anchor = ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor;
+      showTab(h, dockHidden);
+    }
+    const t = $('tbHint');
+    if (t) {
+      t.dataset.edge = (dockEdge() === 'left') ? 'right' : 'left';   // the toolbar moves off a left dock's side
+      t.dataset.anchor = 'top';
+      showTab(t, ui.tbOut !== false && !TB.shown && !railPadOnScreen());
+    }
   }
   // Basic <-> Pro: Basic has no pass stage and no hiding, so bring the dock back to a visible stage.
   function dockModeChanged() {
@@ -906,26 +941,29 @@
     syncHint();
     syncAvatar();
   }
-  // The round avatar at the top of the rail (the pass's photo): steps the dock through its stages and
-  // keeps going the way it was travelling: card -> slim rail -> VIP badge, then the badge (click it)
-  // -> rail -> card. Basic: card <-> rail. Shift+click goes the other way. At stage 1 the badge itself
-  // carries the same photo, so a version of it is visible at every stage.
+  // The round avatar at the top of the rail (the pass's photo). Click: from the expanded card it
+  // collapses straight to the VIP badge (skips the slim rail); from the slim rail it expands to the card.
+  // Shift+click: card -> slim rail, slim rail -> VIP badge. Basic (no badge): card <-> rail.
+  // A card that hover opened from the slim rail: click keeps it open (pins it) instead of collapsing.
+  // At stage 1 the badge itself carries the same photo, so a version of it is visible at every stage.
   const STAGE_NAMES = ['the VIP badge', 'the slim rail', 'the full card'];
   function avatarNext(rev) {
     const n = dockStage(), lo = minStage();
-    let d = n >= 3 ? -1 : n <= lo ? 1 : (DOCK_STAGES.indexOf(lastFrom) + 1 < n ? 1 : -1);
-    if (rev) d = -d;
-    return Math.max(lo, Math.min(3, n + d));
+    if (n >= 3) return rev ? 2 : lo;
+    if (n === 2) return rev && lo < 2 ? lo : 3;
+    return 3;
   }
   function syncAvatar() {
     const b = $('railAvatar');
     if (!b) return;
-    const to = avatarNext(false), up = to > dockStage();
-    const label = (up ? 'Expand to ' : 'Collapse to ') + STAGE_NAMES[to - 1];
-    b.setAttribute('aria-label', label + ' (Shift+click: other way)');
+    const keep = hoverOpen && dockStage() === 3;
+    const to = avatarNext(false), up = to > dockStage(), alt = avatarNext(true);
+    const label = keep ? 'Keep the full card open' : (up ? 'Expand to ' : 'Collapse to ') + STAGE_NAMES[to - 1];
+    const altTxt = alt !== to ? ' (Shift+click: ' + STAGE_NAMES[alt - 1] + ')' : '';
+    b.setAttribute('aria-label', label + altTxt);
     const tip = b.querySelector('.rail-tip');
     if (tip) tip.textContent = label;
-    b.dataset.dir = up ? 'up' : 'down';
+    b.dataset.dir = keep || up ? 'up' : 'down';
   }
   function paintAvatar() {
     const b = $('railAvatar');
@@ -1745,17 +1783,18 @@
       return '<p class="help-h">Dock</p><ul>'
         + li('Stages: <b>3</b> card + rail \u00b7 <b>2</b> thin rail \u00b7 <b>1</b> the all-access pass')
         + li('The pass: click, ' + k('Enter') + ' or ' + k(KEYS.dock.label) + ' = next stage \u00b7 Shift+click = full card')
-        + li('Round avatar at the top of the rail: steps card \u2192 rail \u2192 badge and back (Shift+click: other way) \u00b7 \u2715 folds the card one stage \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
+        + li('Round avatar at the top of the rail: from the card, click collapses straight to the badge; from the slim rail, click expands to the card (Shift+click: card \u2192 slim rail, slim rail \u2192 badge) \u00b7 \u2715 folds the card one stage \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
         + (proOn('dockFlick') ? li('Flick (' + esc(fl) + '): the pass or the dock\u2019s inner edge toward the stage grows it; the edge toward the screen edge shrinks it. Gentle = one stage, strong = to the end') : '')
         + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: the arrow tab on that edge or ' + k(KEYS.dock.label) + ' brings back the badge AND a flicked-away toolbar (top-left), or reload'
           : 'Flick-to-hide is off (Settings \u203a Dock)')
-        + li('Stage toolbar (top-left): any flick while it is closed sends it away; an open toolbar ignores flicks')
+        + (proOn('dockHover') ? li(ui.dockHover !== false ? 'Slim rail: rest the cursor on it and it grows to the card; move away and it folds back (not while you hold a control or a picker is open). Tap its empty space on touch. Click the avatar on a hover-opened card to keep it open' : 'Hover to expand the slim rail is off (Settings \u203a Dock)') : '')
+        + li('Stage toolbar (top-left): any flick while it is closed sends it away; an open toolbar ignores flicks. With no rail pad on screen (VIP badge or hidden dock) it nests in its own tab on the left edge: click the tab to bring it back')
         + li('Toolbar pad on the rail, two-stage: flicked away or moved \u2192 click puts it back top-left; home \u2192 click turns it OFF; OFF \u2192 click turns it ON (LED lit = ON, pulsing = flicked away)')
         + li('Sections: start all closed (Settings \u203a Pro sections: All closed / First open / Remember). Responsive: one open at a time, moved to the top')
         + '</ul><p class="help-h">Shortcuts</p><ul>'
         + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
         + '</ul><p class="help-h">Settings</p><ul>'
-        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
+        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), hover to expand slim rail, flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
         + '</ul>';
     }
     function basicItems() {
@@ -1766,7 +1805,7 @@
         + (f.dockHide ? li('Flick the pass away to hide the dock (' + esc(KEYS.dock.label) + ' or the edge handle brings it back)') : '')
         + li('Every control, in collapsible sections')
         + '</ul><p class="help-h">Now</p><ul>'
-        + li('\u2715 folds the card to the rail; a rail icon opens it') + li('Toolbar pad on the rail: ON / OFF (LED lit = ON)') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
+        + li('\u2715 or the round avatar folds the card to the rail; the avatar or a rail icon opens it') + li('Toolbar pad on the rail: ON / OFF (LED lit = ON)') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
         + '</ul><button type="button" class="help-pro">Switch to Pro</button>';
     }
     function fill() {
@@ -2232,6 +2271,10 @@
         toast('Dock state on load: ' + (val === 'icon' ? 'the VIP badge (collapsed)' : val === 'slim' ? 'the slim rail' : 'expanded (card + rail)') + '.');
       }, { equal: true });
       inner.appendChild(setRow('Dock state', pds, 'How Pro opens: Expanded = card + rail, Slim rail = the vertical icon rail, VIP badge = collapsed to the lanyard pass. With VIP badge, the X folds the card straight to the badge.'));
+    }
+    if (proOn('dockHover')) {
+      inner.appendChild(switchRow('Hover to expand slim rail', () => ui.dockHover !== false, (on) => { ui.dockHover = on; saveUi(); Log.push('dock hover ' + (on ? 'on' : 'off')); },
+        'Rest the cursor on the slim rail and it grows to the full card; move away and it folds back to the slim rail. It stays open while you hold or drag a control, type, or have a picker or menu open. Touch: tap the rail\u2019s empty space to expand, tap outside to fold. Never changes the saved Dock state.'));
     }
     if (proOn('dockHide')) {
       inner.appendChild(switchRow('Allow flick-to-hide', () => ui.dockFlickHide !== false, (on) => { ui.dockFlickHide = on; saveUi(); },
@@ -2747,8 +2790,22 @@
       if (tip) tip.textContent = label;
       syncHint();   // the edge tab's tooltip names the toolbar only while it is flicked away
     }
+    // Where the toolbar nests: the rail pad when it is on screen, otherwise its own tab on the screen
+    // edge (#tbHint, measured even before it slides in), otherwise the VIP badge.
     function homeRect() {
-      const r = railBtn && railBtn.isConnected && (dockOpen || (dock && dock.dataset.state === 'slim')) ? railBtn.getBoundingClientRect() : $('dockTrigger').getBoundingClientRect();
+      if (railBtn && railBtn.isConnected && !dockHidden && (dockOpen || (dock && dock.dataset.state === 'slim'))) {
+        const r = railBtn.getBoundingClientRect();
+        if (r.width) return r;
+      }
+      const th = $('tbHint');
+      if (th) {
+        const was = th.hidden;
+        if (was) { th.style.visibility = 'hidden'; th.hidden = false; }
+        const r = th.getBoundingClientRect();
+        if (was) { th.hidden = true; th.style.visibility = ''; }
+        if (r.width) return r;
+      }
+      const r = $('dockTrigger').getBoundingClientRect();
       return r.width ? r : null;
     }
     function flyOut(from, power, v, closed) {
@@ -3213,6 +3270,13 @@
     paintAvatar();
     if (window.Pass && Pass.onChange) Pass.onChange(paintAvatar);
     $('railAvatar').addEventListener('click', (e) => {
+      if (hoverOpen && dockStage() === 3 && !e.shiftKey) {   // hover-opened card: click pins it open
+        hoverOpen = false; pinned = true; clearTimeout(leaveTimer);
+        ui.open = true; saveUi();
+        syncAvatar();
+        Log.push('dock kept open');
+        return;
+      }
       const to = avatarNext(e.shiftKey);
       setStage(to);
       if (to === 1) $('dockTrigger').focus({ preventScroll: true });
@@ -3365,14 +3429,68 @@
     hint.title = 'Show the controls (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
     document.body.appendChild(hint);
     hint.addEventListener('click', () => { showDock(); setStage(minStage()); trig.focus({ preventScroll: true }); });
-    dock.addEventListener('mouseenter', () => clearTimeout(leaveTimer));
-    dock.addEventListener('mouseleave', () => {
-      if (!dockOpen || pinned || Arc.isOpen || Pop.isOpen || dock.contains(document.activeElement)) return;
+    // the stage toolbar's nested tab (left edge): only while it is ON, flicked away, and no rail pad shows
+    const tbHint = el('button', 'dock-hint tb-hint glass', svg('toolbar'));
+    tbHint.id = 'tbHint';
+    tbHint.type = 'button';
+    tbHint.hidden = true;
+    tbHint.title = 'Bring back the stage toolbar (top-left)';
+    tbHint.setAttribute('aria-label', tbHint.title);
+    document.body.appendChild(tbHint);
+    tbHint.addEventListener('click', () => { if (TB.restore()) Log.push('toolbar back (its tab)'); });
+    syncHint();
+    // Slim rail hover (Pro, Settings > Dock > Hover to expand slim rail, default ON): rest the cursor on
+    // the slim rail and it grows to the card; move away and it folds back to the slim rail. Small
+    // enter / leave delays so it is not twitchy; it never folds while a control is held or dragged,
+    // a text field / select has focus, or the colour arc, popover or help card is open. Never saved:
+    // the Dock state setting stays what it was. Touch: tap the rail's empty space to expand
+    // (a rail icon opens its page as usual); tap outside folds it back.
+    const hoverOn = () => proOn('dockHover') && ui.dockHover !== false && !dockHidden;
+    const HOVER_IN = 240, HOVER_OUT = 420;
+    const dockBusy = () => {
+      if (dockPress || Arc.isOpen || Pop.isOpen || Help.isOpen) return true;
+      const a = document.activeElement;
+      return !!(a && dock.contains(a) && (a.tagName === 'SELECT' || a.tagName === 'TEXTAREA' || a.isContentEditable || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes(a.type))));
+    };
+    function scheduleHoverFold(ms) {
       clearTimeout(leaveTimer);
-      leaveTimer = setTimeout(() => { if (!pinned && !Arc.isOpen && !dock.contains(document.activeElement)) closeDock(); }, 500);
+      leaveTimer = setTimeout(function check() {
+        if (!hoverOpen || overDock || dockHidden || dockState !== 'open') return;
+        if (dockBusy()) { leaveTimer = setTimeout(check, 300); return; }
+        setStage(2, { how: 'hover' });
+        Log.push('dock hover \u2192 slim rail');
+      }, ms);
+    }
+    dock.addEventListener('pointerenter', (e) => {
+      overDock = true;
+      clearTimeout(leaveTimer);
+      clearTimeout(hoverTimer);
+      if (e.pointerType === 'touch' || !hoverOn() || dockStage() !== 2) return;
+      hoverTimer = setTimeout(() => {
+        if (!overDock || dockPress || !hoverOn() || dockStage() !== 2) return;
+        setStage(3, { how: 'hover' });
+        Log.push('dock hover \u2192 card');
+      }, HOVER_IN);
     });
-    dock.addEventListener('pointerdown', () => { if (dockOpen) pinned = true; });
-    dock.addEventListener('focusin', () => { if (dockOpen) pinned = true; });
+    dock.addEventListener('pointerleave', (e) => {
+      overDock = false;
+      clearTimeout(hoverTimer);
+      if (e.pointerType !== 'touch' && hoverOpen) scheduleHoverFold(HOVER_OUT);
+    });
+    dock.addEventListener('pointerdown', () => { dockPress = true; clearTimeout(hoverTimer); if (dockOpen && !hoverOpen) pinned = true; });
+    const pressEnd = () => {
+      if (!dockPress) return;
+      dockPress = false;
+      if (hoverOpen && !overDock) scheduleHoverFold(HOVER_OUT);   // let go of a drag outside the card
+    };
+    document.addEventListener('pointerup', pressEnd, true);
+    document.addEventListener('pointercancel', pressEnd, true);
+    dock.addEventListener('focusin', () => { if (dockOpen && !hoverOpen) pinned = true; });
+    // tap / click on the slim rail's empty space expands it (touch has no hover)
+    dock.addEventListener('click', (e) => {
+      if (!hoverOn() || dockStage() !== 2 || e.target.closest('button, a, input, select, textarea, [role="button"], [role="switch"]')) return;
+      setStage(3);
+    });
 
     document.addEventListener('pointerdown', (e) => {
       const t = e.target;
@@ -3381,8 +3499,8 @@
       TB.outside(t);
       if (Help.isOpen && !Help.contains(t)) Help.hide();
       // outside click: the card folds to the rail (one stage)
-      if (!dockOpen || dock.contains(t) || Arc.contains(t) || Help.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame') || t.closest('#dockHint')) return;
-      setStage(2);
+      if (!dockOpen || dock.contains(t) || Arc.contains(t) || Help.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame') || t.closest('#dockHint') || t.closest('#tbHint')) return;
+      setStage(2, hoverOpen ? { how: 'hover' } : undefined);
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {

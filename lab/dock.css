@@ -29,6 +29,12 @@
 .dock-hint[data-edge="left"] .ico { transform: scaleX(-1); }
 .dock-hint[data-edge="bottom"] { top: auto; bottom: 0; right: 50%; margin-right: -22px; width: 44px; height: 16px; border-radius: 10px 10px 0 0; border-right: 1px solid var(--lab-line); border-bottom: 0; }
 .dock-hint[data-edge="bottom"] .ico { transform: rotate(90deg); }
+/* the stage toolbar's own nested tab (lab.js #tbHint): shows on the left edge (right, with a left-anchored dock)
+   while the toolbar is ON but flicked away and no rail pad is on screen; it springs in and slides out */
+.dock-hint.tb-hint { top: 18px; color: #00f0ff; }
+.dock-hint.tb-hint[data-anchor] { top: 18px; bottom: auto; margin-top: 0; }
+.dock-hint.tb-hint .ico { transform: none; }
+.dock-hint.tb-hint:hover, .dock-hint.tb-hint:focus-visible { color: #fff; }
 
 /* ---------- help (?) card in the header ---------- */
 .help-btn .ico { width: 17px; height: 17px; }
