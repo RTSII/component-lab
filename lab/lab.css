@@ -121,7 +121,7 @@ body:has(.dock[data-state="open"][data-anchor$="left"]:not([data-pos="bottom"]))
 /* ---------- dock ---------- */
 .dock {
   position: fixed; z-index: 20; display: flex;
-  width: var(--trig-w, 52px); height: var(--trig-h, 52px); border-radius: var(--trig-r, 26px);
+  width: 52px; height: 52px; border-radius: 26px;
   background: var(--glass);
   -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--lab-line);
