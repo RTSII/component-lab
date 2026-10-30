@@ -2257,13 +2257,13 @@
       inner.appendChild(resetPosBtn);
     }
     if (hasPro('toolbarAdvanced')) {
-      inner.appendChild(el('p', 'note tb-gestures', 'Gestures on the toolbar: click opens/closes all groups · Shift+click or \u2190/\u2192 one group · drag & release calmly to drop at a custom spot · short horizontal flick opens/closes · strong throw launches an arcade exit to the rail.'));
+      inner.appendChild(el('p', 'note tb-gestures', 'Gestures on the toolbar: click opens/closes all groups · Shift+click or \u2190/\u2192 one group · drag & release calmly to drop at a custom spot · while CLOSED, a short horizontal flick opens it and a strong throw launches an arcade exit to the rail · while OPEN, flicks are ignored (a release just drops it).'));
       const tbs = el('div', 'seg seg-sm');
       tbs.dataset.tb = 'start';
       buildSeg(tbs, [{ value: 'closed', label: 'Closed' }, { value: 'open', label: 'Open' }, { value: 'remember', label: 'Remember' }], ui.tbStart, (val) => { ui.tbStart = val; saveUi(); Log.push('toolbar start ' + val); }, { equal: true });
       inner.appendChild(setRow('Start state', tbs, 'How the toolbar opens when the lab loads. Remember reopens the groups you had open.'));
       inner.appendChild(switchRow('Outside click closes it', () => ui.tbAutoClose, (on) => { ui.tbAutoClose = on; saveUi(); }));
-      inner.appendChild(switchRow('Flick physics', () => ui.flick, (on) => { ui.flick = on; M.flickOn = on; saveUi(); fs.querySelectorAll('.seg-btn').forEach((b) => { b.disabled = !on; }); }, 'Flick the rail toolbar button toward the stage to throw the toolbar out; flick or throw the toolbar to launch it back.'));
+      inner.appendChild(switchRow('Flick physics', () => ui.flick, (on) => { ui.flick = on; M.flickOn = on; saveUi(); fs.querySelectorAll('.seg-btn').forEach((b) => { b.disabled = !on; }); }, 'Throw the closed toolbar to launch it back to the rail. An open toolbar ignores flicks. The rail toolbar pad is click-only (flicks only count with the dock nested at the VIP badge).'));
       const fs = el('div', 'seg seg-sm');
       fs.dataset.tb = 'flick';
       buildSeg(fs, [{ value: 'light', label: 'Light' }, { value: 'normal', label: 'Normal' }, { value: 'heavy', label: 'Heavy' }], ui.flickStrength, (val) => { ui.flickStrength = val; M.flickStrength = val; saveUi(); Log.push('flick ' + val); }, { equal: true });
@@ -2635,8 +2635,8 @@
       const any = isOpen();
       icon().setAttribute('aria-expanded', any ? 'true' : 'false');
       icon().title = any
-        ? 'Close toolbar (Esc) · drag to move · flick to launch'
-        : 'Open toolbar · Shift+click or \u2192 opens one group · drag to move';
+        ? 'Close toolbar (Esc) · drag to move (flicks are ignored while open)'
+        : 'Open toolbar · Shift+click or \u2192 opens one group · drag to move · flick to open or throw away';
       syncRailBtn();
       syncSettingsSwitch();
       ui.tbLast = [...open];
@@ -2879,7 +2879,10 @@
       railBtn = b;
       syncRailBtn();
       const LIM = 22;
+      // Flicks on the pad only count while the dock is nested at the VIP badge (stage 1). The pad lives on
+      // the rail (stages 2 and 3), so in practice it is click-only there: no false flicks while you use the rail.
       M.Flick(b, {
+        enabled: () => dockStage() === 1,
         onMove(d, full) { if (full) b.style.transform = 'translateX(' + M.rubber(d, LIM).toFixed(1) + 'px)'; },
         onRelease({ d, v, dir, power }) {
           M.snapBack(b, M.rubber(d, LIM));
@@ -3002,9 +3005,12 @@
           b.style.transform = '';
           const dist = Math.hypot(dx, dy);
           const g = growDir();
+          // An OPEN toolbar ignores flicks entirely (no throw-away, no flick open/close): a release just
+          // drops it where you let go. Flicks only work while it is closed (nested into its icon).
+          const flickable = M.flickOn && !isOpen();
 
-          // 1. Short horizontal flick near origin: quick expand/collapse gesture!
-          if (M.flickOn && dist < 75 && power >= 1 && axis === 'x') {
+          // 1. Short horizontal flick near origin (closed toolbar): quick open gesture
+          if (flickable && dist < 75 && power >= 1 && axis === 'x') {
             applyCustomPos();
             if (dir === g) {
               openN(power >= 2 ? Infinity : 1);
@@ -3016,8 +3022,8 @@
             }
           }
 
-          // 2. Strong throw in any direction: arcade physics exit trajectory to the rail!
-          if (M.flickOn && power >= 2) {
+          // 2. Strong throw in any direction (closed toolbar only): arcade physics exit trajectory to the rail
+          if (flickable && power >= 2) {
             dismiss(vx || dx / 200, vy || dy / 200);
             return;
           }
