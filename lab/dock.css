@@ -44,3 +44,18 @@
 .help-pro:hover { background: rgba(110, 231, 255, 0.22); }
 
 @media (prefers-reduced-motion: reduce) { .dock-hint, .dock-edge::after { transition-duration: 0.01ms !important; } }
+
+/* ---------- rail avatar: the pass's photo as a round stage button (top of the rail) ----------
+   Click steps card -> slim rail -> VIP badge and back; Shift+click the other way. Restyle hook: .rail-avatar / .ra-face. */
+.dock .rail .rail-avatar { flex: none; width: 36px; height: 36px; margin: 0 0 5px; border-radius: 50%; }
+.dock .rail .rail-avatar:hover { background: transparent; }
+.rail-avatar .ra-face { --pa: var(--pass-accent, #00e5ff); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; color: var(--pa);
+  background: radial-gradient(circle at 38% 32%, #1b2231 0%, #0a0d14 78%);
+  box-shadow: 0 0 0 1.5px var(--pa), 0 0 12px -3px color-mix(in srgb, var(--pa) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s var(--spring), box-shadow 0.2s; }
+.rail-avatar .ra-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rail-avatar .ra-face svg { width: 70%; height: 70%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.rail-avatar .ra-face b { font: 700 11px/1 var(--pass-display, var(--mono)); text-shadow: 0 0 8px var(--pa); }
+.rail-avatar:hover .ra-face, .rail-avatar:focus-visible .ra-face { transform: scale(1.07); box-shadow: 0 0 0 2px var(--pa), 0 0 16px -2px var(--pa), inset 0 1px 0 rgba(255, 255, 255, 0.16); }
+.rail-avatar:active .ra-face { transform: scale(0.93); }
+@media (prefers-reduced-motion: reduce) { .rail-avatar .ra-face { transition-duration: 0.01ms; } }

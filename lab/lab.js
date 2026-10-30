@@ -125,7 +125,7 @@
   let projectPalette = [], presets = [], kindsInfo = null;
   let navStack = [{ type: 'cat', cat: 'color' }];
   let dockState = 'closed', dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
-  let dockHidden = false;
+  let dockHidden = false, lastFrom = 'closed';
   let railPill = null, modePill = null, viewPill = null;
   let newDraft = { kind: 'card', palette: 'project', name: '' };
   let pageRO = null;
@@ -702,6 +702,7 @@
     card.querySelector('.card-main').getAnimations().forEach((a) => a.cancel());
     $('rail').getAnimations().forEach((a) => a.cancel());
 
+    lastFrom = fromState;
     dockState = targetState;
     dockOpen = (targetState === 'open');
     if (targetState === 'open') {
@@ -720,6 +721,7 @@
       dock.classList.remove('is-morphing', 'is-closing');
       $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
       dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
+      syncAvatar();
       if (targetState === 'closed') {
         M.contentIn($('dockTrigger').firstChild);
       }
@@ -764,6 +766,7 @@
     // Target is 'open' or 'slim'
     dock.dataset.state = targetState;
     dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
+    syncAvatar();
     dock.classList.remove('is-closing');
     $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
 
@@ -892,6 +895,35 @@
     dock.classList.toggle('has-stages', proOn('dockStages'));
     dock.classList.toggle('has-flick', proOn('dockFlick'));
     syncHint();
+    syncAvatar();
+  }
+  // The round avatar at the top of the rail (the pass's photo): steps the dock through its stages and
+  // keeps going the way it was travelling: card -> slim rail -> VIP badge, then the badge (click it)
+  // -> rail -> card. Basic: card <-> rail. Shift+click goes the other way. At stage 1 the badge itself
+  // carries the same photo, so a version of it is visible at every stage.
+  const STAGE_NAMES = ['the VIP badge', 'the slim rail', 'the full card'];
+  function avatarNext(rev) {
+    const n = dockStage(), lo = minStage();
+    let d = n >= 3 ? -1 : n <= lo ? 1 : (DOCK_STAGES.indexOf(lastFrom) + 1 < n ? 1 : -1);
+    if (rev) d = -d;
+    return Math.max(lo, Math.min(3, n + d));
+  }
+  function syncAvatar() {
+    const b = $('railAvatar');
+    if (!b) return;
+    const to = avatarNext(false), up = to > dockStage();
+    const label = (up ? 'Expand to ' : 'Collapse to ') + STAGE_NAMES[to - 1];
+    b.setAttribute('aria-label', label + ' (Shift+click: other way)');
+    const tip = b.querySelector('.rail-tip');
+    if (tip) tip.textContent = label;
+    b.dataset.dir = up ? 'up' : 'down';
+  }
+  function paintAvatar() {
+    const b = $('railAvatar');
+    if (!b) return;
+    const face = window.Pass && Pass.faceHtml ? Pass.faceHtml() : svg('sliders');
+    b.innerHTML = '<span class="ra-face">' + face + '</span><span class="rail-tip"></span>';
+    syncAvatar();
   }
 
   // ---------- rail ----------
@@ -945,9 +977,6 @@
       if (t.id === 'toolbar') TB.railButton(tool('toolbar', svg('toolbar'), 'Stage toolbar (click, or flick toward the stage)', () => TB.railClick()));
     });
     tool('settings', svg('gear'), 'Settings', () => { openDock('click'); go({ type: 'settings' }); });
-    if (proOn('dockStages')) {
-      tool('tuck', svg('collapse'), 'Fold to the pass (stage 1)', () => { setStage(1); $('dockTrigger').focus({ preventScroll: true }); });
-    }
     requestAnimationFrame(() => syncRail(true));
   }
   function railKey(spec) {
@@ -957,7 +986,7 @@
     return spec.type;
   }
   function railIndex(spec) {
-    const order = railCats().map((c) => c.id).concat(orderedTools().filter((t) => !toolHidden().includes(t.id)).map((t) => t.id), ['settings', 'tuck']);
+    const order = railCats().map((c) => c.id).concat(orderedTools().filter((t) => !toolHidden().includes(t.id)).map((t) => t.id), ['settings']);
     const i = order.indexOf(railKey(spec));
     return i < 0 ? 0 : i;
   }
@@ -1667,7 +1696,7 @@
       return '<p class="help-h">Dock</p><ul>'
         + li('Stages: <b>3</b> card + rail \u00b7 <b>2</b> thin rail \u00b7 <b>1</b> the all-access pass')
         + li('The pass: click, ' + k('Enter') + ' or ' + k(KEYS.dock.label) + ' = next stage \u00b7 Shift+click = full card')
-        + li('\u2715 folds the card one stage \u00b7 the rail\u2019s fold tool goes to the pass \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
+        + li('Round avatar at the top of the rail: steps card \u2192 rail \u2192 badge and back (Shift+click: other way) \u00b7 \u2715 folds the card one stage \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
         + (proOn('dockFlick') ? li('Flick (' + esc(fl) + '): the pass or the dock\u2019s inner edge toward the stage grows it; the edge toward the screen edge shrinks it. Gentle = one stage, strong = to the end') : '')
         + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: ' + k(KEYS.dock.label) + ', the edge handle, or reload'
           : 'Flick-to-hide is off (Settings \u203a Dock)')
@@ -3081,6 +3110,16 @@
     viewPill = buildSeg($('viewSeg'), VIEWS.map((x) => ({ value: x.id, label: x.w ? String(x.w) : x.label })), ui.view, (val) => setView(val));
     modePill = buildSeg($('modeSeg'), [{ value: 'basic', label: 'Basic' }, { value: 'pro', label: 'Pro' }], mode, (val) => setMode(val), { equal: true });
     if (window.Pass) Pass.mount($('dockTrigger')); else $('dockTrigger').innerHTML = svg('sliders');
+    paintAvatar();
+    if (window.Pass && Pass.onChange) Pass.onChange(paintAvatar);
+    $('railAvatar').addEventListener('click', (e) => {
+      const to = avatarNext(e.shiftKey);
+      setStage(to);
+      if (to === 1) $('dockTrigger').focus({ preventScroll: true });
+      else requestAnimationFrame(syncAvatar);
+    });
+    $('railAvatar').addEventListener('pointerenter', syncAvatar);
+    $('railAvatar').addEventListener('focus', syncAvatar);
     $('dockClose').innerHTML = svg('close');
     $('backBtn').innerHTML = svg('back');
     [['copyBtn', 'diff', copyChanges], ['fullBtn', 'code', copyFull], ['undoBtn', 'undo', () => Hist.undo()], ['resetBtn', 'reset', resetAll]].forEach(([id, icon, fn]) => {

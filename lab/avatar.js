@@ -6,6 +6,7 @@
 //   Pass.miniHtml()      the 54 x 84 lanyard pass (also used as the travel ghost when the dock morphs)
 //   Pass.fullHtml()      the large pass for the Settings preview
 //   Pass.mount(button)   renders into #dockTrigger, tracks the pointer, re-renders on change
+//   Pass.faceHtml()      just the photo-window picture (the rail's round avatar button uses it)
 //   Pass.set(patch)      update + save the profile ({ name, role, tier, accent, type, glyph, chars, image })
 //   Pass.fileToDataUrl(file)  centre-crop to 160 x 160 and return a small JPEG data URL
 (function () {
@@ -142,7 +143,7 @@
   }
 
   window.Pass = {
-    TIERS, ACCENTS, DESIGNS, miniHtml, fullHtml, mount, set, reset, fileToDataUrl,
+    TIERS, ACCENTS, DESIGNS, miniHtml, fullHtml, faceHtml: face, mount, set, reset, fileToDataUrl,
     get profile() { return Object.assign({}, profile); },
     onChange(fn) { listeners.push(fn); }
   };
