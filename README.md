@@ -82,7 +82,9 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 - The sandbox is primary: it always uses the full window. The dock (card, slim rail, VIP badge) and the floating toolbar only float over it and never resize or move it.
 
 ### Sandbox Screen (locked card)
-- The sandbox card (`#stageFit`, the thin dotted frame) is the **screen**: one box, no extra bezel or frame drawn. Its border is **locked**: 1552×714 at (24,20) on 1600×770 and 1318×712 at (24,20) on 1366×768, at every dock stage.
+- The sandbox card (`#stageFit`) is the **screen**: one box, no extra bezel or frame drawn. It looks like an opaque tablet / touch-display work area: **one solid colour** (`--screen-bg`, the lab's existing stage tone) with **no dots, grid, dotted viewport frame or tag**; only a faint inner hairline (`--screen-edge`, drawn as an inset shadow so the box never changes) and rounded corners (`--screen-radius`).
+- The **margin** around it is a flat, darker solid tone (`--margin-bg`), no frame lines, glow or square-within-square. **Settings › Viewport › Margin tone**: Deep / Dark (default) / Light.
+- **Liquid glass dock:** the expanded dock's outer panel (card + rail shell, its border and the blank space between cards) is translucent with a backdrop blur and a light top edge, so the screen shows through (`--glass-opacity`, `--glass-blur`). The section cards inside (Color, Surface, … rows, accordions, mini cards) stay **opaque** on `--card-solid`. **Settings › Dock › Dock glass** (Pro): Clear / Frosted (default) / Solid. Look only: no control value changes. Its border is **locked**: 1552×714 at (24,20) on 1600×770 and 1318×712 at (24,20) on 1366×768, at every dock stage.
 - The narrow margin around it is just where the controls live (top-left toolbar, right-hand dock / VIP badge, edge tabs); they float over the stage and never resize or move the screen.
 - **Only the contents zoom** inside the card, and zoomed-in content is clipped at the card edge. The zoom pad sits centred at the top of the card.
 

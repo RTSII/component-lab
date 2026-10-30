@@ -95,3 +95,34 @@
 .dock.is-morphing.is-sliding { justify-content: flex-end; }
 .dock.is-sliding .card { flex: none; }
 .dock[data-state="slim"].is-sliding .card-main { flex: none; }
+
+/* ---------- liquid glass: the expanded dock's outer panel (card + rail shell, its border and the blank space
+   between the section cards) is translucent so the sandbox screen shows through. The section cards inside
+   (Color, Surface, ... rows, accordions, mini cards) stay OPAQUE on --card-solid, same tints as before.
+   Tune: --glass-opacity / --glass-blur (lab.css :root), Settings > Dock > Dock glass. ---------- */
+.dock:is([data-state="open"], [data-state="slim"]) {
+  background: rgba(15, 18, 25, var(--glass-opacity));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 22px 60px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+.dock:is([data-state="open"], [data-state="slim"]) :is(.head-kicker, .page-title, .page-meta, .cmp-pick) { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+:root[data-glass="clear"] { --glass-opacity: 0.3; --glass-blur: 12px; }
+:root[data-glass="solid"] { --glass-opacity: 0.92; --glass-blur: 20px; }
+
+.dock .card .nav-row { background: color-mix(in srgb, #fff 4%, var(--card-solid)); }
+.dock .card .nav-row:hover { background: color-mix(in srgb, #fff 7%, var(--card-solid)); }
+.dock .card .acc { background: color-mix(in srgb, #fff 2%, var(--card-solid)); }
+.dock .card .acc.is-open { background: color-mix(in srgb, #fff 3.5%, var(--card-solid)); }
+.dock .card .mini { background: color-mix(in srgb, #fff 2.5%, var(--card-solid)); }
+.dock .card .acc-interact .mini:first-of-type { background: color-mix(in srgb, #6ee7ff 3.5%, var(--card-solid)); }
+.dock .card :is(.summary, .order-row) { background: color-mix(in srgb, #fff 3%, var(--card-solid)); }
+.dock .card :is(.preset, .anchor-grid, .swatch-trigger) { background: color-mix(in srgb, #fff 4%, var(--card-solid)); }
+.dock .card .snap-slot { background: color-mix(in srgb, #fff 2%, var(--card-solid)); }
+.dock .card .snap-slot:hover { background: color-mix(in srgb, #fff 6%, var(--card-solid)); }
+.dock .card :is(.swatch-trigger:hover, .swatch-trigger.is-open) { background: color-mix(in srgb, #fff 8%, var(--card-solid)); }
+.dock .card .preset:hover { background: color-mix(in srgb, #fff 9%, var(--card-solid)); }
+.dock .card .order-row.is-drag { background: color-mix(in srgb, #6ee7ff 10%, var(--card-solid)); }
+.dock .card .mini.is-flip.is-flipped { background: color-mix(in srgb, #6ee7ff 3%, var(--card-solid)); }
+.dock .card .mini.is-bare { background: none; }

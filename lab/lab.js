@@ -123,6 +123,9 @@
   if (!['closed', 'first', 'remember'].includes(ui.accCollapse)) ui.accCollapse = 'closed';
   const saveUi = () => store.set('ui', ui);
   M.enabled = ui.motion !== false;
+  // screen look (CSS only, never a control value): margin tone + expanded-dock glass as data-* on <html> (lab.css / dock.css)
+  const applyLook = () => { const r = document.documentElement; r.dataset.margin = ui.marginTone || 'dark'; r.dataset.glass = ui.glass || 'frosted'; };
+  applyLook();
 
   let def = null, inst = null, man = null, vars = [], byId = {}, P = {};
   let offset = 0, playing = true, lastT = 0, loadSeq = 0, pendingResolve = null;
@@ -2008,7 +2011,8 @@
       return li('Pad at the top-centre of the sandbox card (the locked screen; only its contents zoom, clipped at the card edge): \u2212 / + zoom (25% to 400%), the readout shows the view zoom, the frame icon resets to 100% and centres')
         + li('Toggle back: click the readout or press ' + k(KEYS.zoomToggle.label) + ' to switch 100% \u21c4 your last zoom')
         + li(k(KEYS.zoomIn.label) + ' / ' + k('=') + ' in \u00b7 ' + k('-') + ' out \u00b7 Ctrl+wheel or a pinch zooms at the cursor \u00b7 drag empty space or middle-drag to pan when zoomed in')
-        + li('Screen only: the component\u2019s values, export and URL never change; it still reacts to hover, click, drag and keys at any zoom. Session only; ?reset = 100%. Hide the icons: Settings \u203a Viewport');
+        + li('Screen only: the component\u2019s values, export and URL never change; it still reacts to hover, click, drag and keys at any zoom. Session only; ?reset = 100%. Hide the icons: Settings \u203a Viewport')
+        + li('The screen is one solid colour (no dots, grid or frame lines) on a flat darker margin where the toolbar and dock sit; Settings \u203a Viewport \u203a Margin tone');
     }
     function proItems() {
       const fl = ui.flick === false ? 'off (Settings \u203a Toolbar)' : (ui.flickStrength || 'normal');
@@ -2028,7 +2032,7 @@
         + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
         + '</ul><p class="help-h">Sandbox zoom (view only)</p><ul>' + zoomItems()
         + '</ul><p class="help-h">Settings</p><ul>'
-        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), hover to expand slim rail, flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
+        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), hover to expand slim rail, dock glass (Clear / Frosted / Solid: the outer panel is see-through, the section cards stay opaque), flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
         + '</ul>';
     }
     function basicItems() {
@@ -2511,6 +2515,11 @@
       inner.appendChild(switchRow('Hover to expand slim rail', () => ui.dockHover !== false, (on) => { ui.dockHover = on; saveUi(); Log.push('dock hover ' + (on ? 'on' : 'off')); },
         'Rest the cursor on the slim rail and it grows to the full card; move away and it folds back to the slim rail. It stays open while you hold or drag a control, type, or have a picker or menu open. Touch: tap the rail\u2019s empty space to expand, tap outside to fold. Never changes the saved Dock state.'));
     }
+    if (proOn('dockStages')) {
+      const gls = el('div', 'seg seg-sm');
+      buildSeg(gls, [{ value: 'clear', label: 'Clear' }, { value: 'frosted', label: 'Frosted' }, { value: 'solid', label: 'Solid' }], ui.glass || 'frosted', (val) => { ui.glass = val; saveUi(); applyLook(); }, { equal: true });
+      inner.appendChild(setRow('Dock glass', gls, 'The expanded dock\u2019s outer panel is liquid glass so the sandbox shows through (Clear = most see-through, Solid = the old near-opaque panel). The section cards inside always stay opaque. Look only: no control value changes.'));
+    }
     if (proOn('dockHide')) {
       inner.appendChild(switchRow('Allow flick-to-hide', () => ui.dockFlickHide !== false, (on) => { ui.dockFlickHide = on; saveUi(); },
         'A strong flick of the pass away from the stage hides the dock until reload (never saved). ' + KEYS.dock.label + ' (or ' + KEYS.dock.alt + '), the edge handle, switching to Basic, or a reload brings it back.'));
@@ -2561,6 +2570,9 @@
     inner.appendChild(setRow('Sandbox frame', vps, '1600\u00d7770 is the default: the HP laptop (Chrome on a 1600\u00d7900 screen). 1366\u00d7768 and Fit are extra checks.'));
     inner.appendChild(switchRow('Show zoom controls', () => ui.zoomCtl !== false, (on) => { ui.zoomCtl = on; saveUi(); Zoom.sync(); },
       'View zoom for the sandbox (top-centre of the screen): \u2212 / readout / + / fit. Screen only: the component\u2019s values, export and URL never change. Keys + \u2212 0, Ctrl+wheel or pinch to zoom, drag empty space (or middle-drag) to pan. Remembered for this session; ?reset = 100%.'));
+    const mts = el('div', 'seg seg-sm');
+    buildSeg(mts, [{ value: 'deep', label: 'Deep' }, { value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }], ui.marginTone || 'dark', (val) => { ui.marginTone = val; saveUi(); applyLook(); }, { equal: true });
+    inner.appendChild(setRow('Margin tone', mts, 'The flat border around the screen, where the toolbar and dock sit. The screen itself stays one solid colour with no dots or grid; its size never changes.'));
 
     section(inner, 'Toolbar');
     const tbShowRow = switchRow('Show toolbar icon', () => TB.shown, (on) => TB.setOut(on), 'The floating toolbar over the stage. Grab anywhere on its shell to drag & drop it for this session, or throw it hard to launch an arcade exit!');
@@ -3807,6 +3819,7 @@
           tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
+        delete ui.marginTone; delete ui.glass; applyLook();   // screen look back to defaults (dark margin, frosted glass)
         mode = 'basic';
         Zoom.clear();   // view zoom back to 100%
         store.set('uiVer', 6);   // fresh defaults already match the latest migrations; don't re-run them on the next load
