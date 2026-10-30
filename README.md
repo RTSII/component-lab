@@ -148,6 +148,19 @@ but **New component** and **Save to disk** need `serve.py`.
 - Values are saved per component in the browser (localStorage) and in the URL
   hash, for example `http://127.0.0.1:5179/#c=helix&SPEED=1.5&CARD_OPACITY=0.6`.
 
+## Profile pass (closed dock)
+
+The round button is now a small backstage / DJ-access pass (56 x 76): slot punch, photo window,
+tier tag (VIP, CREW, DJ, ALL...), barcode, status LED and a holo sheen that follows the pointer.
+It is the closed state of the same dock: click or hover opens the card, and the pass morphs into it
+exactly as the round button did (size comes from `--trig-w / --trig-h / --trig-r` in `lab/pass.css`).
+
+Settings › **Profile pass** has a live preview of the full pass and sets: name, role, access level,
+accent (project tokens: blue, pink, violet, green, amber) and the picture: a **Design** (vinyl,
+jog wheel, cans, equalizer, waveform, faders, chip, bolt), up to 3 **Characters**, or an uploaded
+**Photo** (centre-cropped to 160 x 160 and kept in this browser's localStorage under
+`componentLab:v2:profile`). Files: `lab/avatar.js` (module `Pass`), `lab/pass.css`.
+
 ## Toolbar
 
 A floating layer over the stage (fixed, top left; it moves to the top right
@@ -321,6 +334,8 @@ index.html               the page
 lab/lab.js               dock, pages, controls, stepper, state
 lab/motion.js            shared curves, content in/out, sliding pages, velocity pill
 lab/scan.js              auto-manifest + palette extraction
+lab/avatar.js            profile pass (closed dock button + Settings > Profile)
+lab/pass.css             pass styling and closed-dock size
 lab/lab.css              lab chrome
 project/tokens.css       the app's colour tokens (palette source only)
 components/helix/        helix + manifest
