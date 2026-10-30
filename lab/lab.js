@@ -37,6 +37,8 @@
     toolbar: '<rect x="2.8" y="7" width="18.4" height="10" rx="5"/><path d="M10.4 9.6l2.6 2.4-2.6 2.4"/>',
     gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/>',
     close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+    help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><circle cx="12" cy="16.9" r="0.9" class="fill"/>',
+    handle: '<path d="M14.5 6l-6 6 6 6"/>',
     back: '<path d="M14.5 6l-6 6 6 6"/>',
     chev: '<path d="M9.5 6l6 6-6 6"/>',
     star: '<path d="M12 4.2l2.4 4.9 5.4.7-3.9 3.8.9 5.4L12 16.4 7.2 19l.9-5.4-3.9-3.8 5.4-.7z"/>',
@@ -85,11 +87,27 @@
     railCustomize: true,    // Drag-reorder / hide rail categories & action tools
     toolbarAdvanced: true,  // Toolbar start state & flick strength tuning
     manifestTools: true,    // Interaction scan diagnostics + Save/Export/Re-scan manifest.json
-    snapshots: true         // Named A / B / C snapshot slots per component
+    snapshots: true,        // Named A / B / C snapshot slots per component
+    // Dock (one switch each; set to false to give it to Basic too):
+    dockStages: true,       // stage 1 (the lanyard pass) in the card -> rail -> pass progression
+    dockFlick: true,        // flick the pass / the dock's inner edge to step stages
+    dockHide: true,         // strong flick of the pass away hides the dock for this session
+    helpIcon: true          // ? help card: full how-to in Pro; Basic sees "what Pro adds"
+  };
+  // ---- dock stages (like the toolbar's nested progression) ----
+  // Stage n -> dock data-state, smallest first: 1 = the lanyard pass, 2 = thin rail, 3 = card + rail.
+  // Basic keeps 2 and 3 only (the X folds the card to the rail).
+  const DOCK_STAGES = ['closed', 'slim', 'open'];
+  // Shortcuts: the help card text is generated from this.
+  const KEYS = {
+    dock: { label: 'Alt+D', alt: 'Shift+D', test: (e) => (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyD') },
+    dockAlt: { test: (e) => (e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyD') },
+    down: { label: 'Esc' },
+    pause: { label: 'Space' }
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal' }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
@@ -105,6 +123,7 @@
   let projectPalette = [], presets = [], kindsInfo = null;
   let navStack = [{ type: 'cat', cat: 'color' }];
   let dockState = 'closed', dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
+  let dockHidden = false;
   let railPill = null, modePill = null, viewPill = null;
   let newDraft = { kind: 'card', palette: 'project', name: '' };
   let pageRO = null;
@@ -532,7 +551,7 @@
     const W = innerWidth, H = innerHeight;
     const r = { x: 0, y: 0, w: W, h: H };
     const curState = (dock && dock.dataset.state) || dockState;
-    if (!curState || curState === 'closed') return r;
+    if (!curState || curState === 'closed' || dockHidden) return r;
     const [row, col] = (ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor).split('-');
     const isSlim = curState === 'slim';
     const cw = isSlim ? (RAIL_W + 2 * MARGIN) : (cardWidth() + 2 * MARGIN);
@@ -672,6 +691,7 @@
     if (fromState === 'open' && targetState !== 'open') {
       Arc.close(true);
       Pop.hide();
+      Help.hide();
     }
 
     const prevRect = (dock && dock.offsetWidth && dock.offsetHeight) ? dock.getBoundingClientRect() : null;
@@ -697,6 +717,7 @@
       dock.dataset.state = targetState;
       dock.classList.remove('is-morphing', 'is-closing');
       $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
+      dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
       if (targetState === 'closed') {
         M.contentIn($('dockTrigger').firstChild);
       }
@@ -740,6 +761,7 @@
 
     // Target is 'open' or 'slim'
     dock.dataset.state = targetState;
+    dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
     dock.classList.remove('is-closing');
     $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
 
@@ -784,21 +806,90 @@
     });
   }
   function openDock(how) {
+    if (dockHidden) showDock(true);
     if (dockState === 'open') {
       if (how !== 'hover') pinned = true;
       return;
     }
     setDockState('open', { how });
   }
+  // X / Esc / outside click: one stage down. Pro with Settings > Dock "Pass" folds the card
+  // straight to the pass; forceIcon (Pro only) does the same.
   function closeDock(forceIcon) {
-    if (dockState === 'closed') return;
-    const force = (forceIcon === true);
-    const preferSlim = (mode === 'pro' && (ui.proDock || 'slim') !== 'icon');
-    if (dockState === 'open' && preferSlim && !force) {
-      setDockState('slim');
-    } else {
-      setDockState('closed');
+    const n = dockStage();
+    if (n <= minStage()) return;
+    const toPass = minStage() === 1 && n === 3 && (forceIcon === true || (ui.proDock || 'slim') === 'icon');
+    setStage(toPass ? 1 : n - 1);
+  }
+
+  // ---------- dock stages: 1 lanyard pass (Pro) · 2 thin rail · 3 card + rail ----------
+  const proOn = (f) => !PRO_FEATURES[f] || mode === 'pro';
+  const minStage = () => (proOn('dockStages') ? 1 : 2);
+  const dockStage = () => Math.max(1, DOCK_STAGES.indexOf((dock && dock.dataset.state) || dockState) + 1);
+  function dockEdge() {
+    if (ui.dockPos === 'bottom') return 'bottom';
+    return /left$/.test(ui.anchor) ? 'left' : 'right';
+  }
+  // [sign, axis]: a flick that way points at the stage (= grow)
+  const towardStage = () => ({ right: [-1, 'x'], left: [1, 'x'], bottom: [-1, 'y'] })[dockEdge()];
+  function setStage(n, opts) {
+    n = Math.max(minStage(), Math.min(3, n));
+    if (dockHidden) showDock(true);
+    if (n === 3) { openDock((opts && opts.how) || 'click'); return; }
+    setDockState(DOCK_STAGES[n - 1], opts);
+  }
+  function stepDock(d) { setStage(dockStage() + d); }
+  // Pro: a strong flick of the pass away from the stage hides the dock for this session (never saved).
+  // Always recoverable: Alt+D / Shift+D, the edge handle where it was, switching to Basic, or a reload.
+  function hideDock(vx, vy, how) {
+    if (dockHidden || !proOn('dockHide')) return;
+    if (dockStage() !== minStage()) setDockState(DOCK_STAGES[minStage() - 1], { instant: true });
+    dockHidden = true;
+    const done = () => { if (!dockHidden) return; dock.hidden = true; dock.getAnimations().forEach((a) => a.cancel()); dock.style.transform = ''; syncHint(); layoutStage(); };
+    Log.push('dock hidden (' + KEYS.dock.label + ' or the edge handle brings it back)' + (how ? ' \u00b7 ' + how : ''));
+    toast('Dock hidden. ' + KEYS.dock.label + ' or the edge handle brings it back.');
+    const lv = M.level();
+    if (lv !== 'full' || !(vx || vy)) {
+      if (lv === 'fade') dock.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, fill: 'forwards' }).finished.then(done, done); else done();
+      return;
     }
+    const m = Math.hypot(vx, vy) || 1, k = Math.min(420, 180 + m * 120);
+    dock.animate([{ transform: dock.style.transform || 'none', opacity: 1 }, { transform: 'translate(' + (vx / m) * k + 'px,' + (vy / m) * k + 'px) rotate(' + (vx > 0 ? 18 : -18) + 'deg) scale(0.8)', opacity: 0 }],
+      { duration: 360, easing: 'cubic-bezier(0.2, 0.6, 0.35, 1)', fill: 'forwards' }).finished.then(done, done);
+  }
+  function showDock(quiet) {
+    if (!dockHidden) return;
+    dockHidden = false;
+    dock.hidden = false;
+    dock.getAnimations().forEach((a) => a.cancel());
+    syncHint();
+    layoutStage();
+    const lv = M.level();
+    if (lv === 'full') {
+      const e = dockEdge(), o = e === 'right' ? 'translateX(70px)' : e === 'left' ? 'translateX(-70px)' : 'translateY(70px)';
+      dock.animate([{ transform: o + ' scale(0.7)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 460, easing: M.springSoft });
+    } else if (lv === 'fade') dock.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 });
+    if (!quiet) Log.push('dock back');
+  }
+  // the small handle on the edge where a hidden dock was: always a way back
+  function syncHint() {
+    const h = $('dockHint');
+    if (!h) return;
+    h.hidden = !dockHidden;
+    h.dataset.edge = dockEdge();
+    h.dataset.anchor = ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor;
+  }
+  // Basic <-> Pro: Basic has no pass stage and no hiding, so bring the dock back to a visible stage.
+  function dockModeChanged() {
+    if (!proOn('dockHide') && dockHidden) showDock(true);
+    if (dockStage() < minStage()) setDockState(DOCK_STAGES[minStage() - 1]);
+    syncDockTools();
+  }
+  function syncDockTools() {
+    dock.dataset.pro = mode === 'pro' ? 'true' : 'false';
+    dock.classList.toggle('has-stages', proOn('dockStages'));
+    dock.classList.toggle('has-flick', proOn('dockFlick'));
+    syncHint();
   }
 
   // ---------- rail ----------
@@ -852,8 +943,8 @@
       if (t.id === 'toolbar') TB.railButton(tool('toolbar', svg('toolbar'), 'Stage toolbar (click, or flick toward the stage)', () => TB.railClick()));
     });
     tool('settings', svg('gear'), 'Settings', () => { openDock('click'); go({ type: 'settings' }); });
-    if (mode === 'pro') {
-      tool('tuck', svg('collapse'), 'Collapse to nested icon', () => setDockState('closed'));
+    if (proOn('dockStages')) {
+      tool('tuck', svg('collapse'), 'Fold to the pass (stage 1)', () => { setStage(1); $('dockTrigger').focus({ preventScroll: true }); });
     }
     requestAnimationFrame(() => syncRail(true));
   }
@@ -897,9 +988,7 @@
     if (cur.type === 'cat' && !visibleCats().some((c) => c.id === cur.cat)) navStack = [{ type: 'cat', cat: railCats()[0].id }];
     else navStack = [cur];
     renderPage(0);
-    if (m === 'basic' && (dockState === 'slim' || (dock && dock.dataset.state === 'slim'))) {
-      setDockState('open');
-    }
+    dockModeChanged();
     toast(mode === 'pro' ? 'Pro: every control. Star one to feature it in Basic.' : 'Basic: the ' + basicVars().length + ' featured controls.');
   }
 
@@ -1561,11 +1650,94 @@
     return { show, hide, sync, toggle() { if (open) hide(); else show(); }, get isOpen() { return open; }, contains(t) { return $('accPop').contains(t) || $('moreBtn').contains(t); } };
   })();
   function syncPop() { Pop.sync(); }
+  // ---------- help (?) in the card header ----------
+  // Hover, focus or tap shows a compact card; click pins it; Esc or an outside click closes it.
+  // Pro: how the dock stages, the pass and the shortcuts work. Basic: what Pro adds + Switch to Pro.
+  // Text is built from KEYS / PRO_FEATURES / Settings, so it can't drift from the code.
+  const Help = (() => {
+    let open = false, stuck = false, t = 0, quiet = false;
+    const btn = () => $('helpBtn'), pop = () => $('helpPop');
+    const li = (h) => '<li>' + h + '</li>';
+    const k = (x) => '<kbd>' + esc(x) + '</kbd>';
+    function proItems() {
+      const fl = ui.flick === false ? 'off (Settings \u203a Toolbar)' : (ui.flickStrength || 'normal');
+      const hide = proOn('dockHide') && ui.dockFlickHide !== false;
+      return '<p class="help-h">Dock</p><ul>'
+        + li('Stages: <b>3</b> card + rail \u00b7 <b>2</b> thin rail \u00b7 <b>1</b> the all-access pass')
+        + li('The pass: click, ' + k('Enter') + ' or ' + k(KEYS.dock.label) + ' = next stage \u00b7 Shift+click = full card')
+        + li('\u2715 folds the card one stage \u00b7 the rail\u2019s fold tool goes to the pass \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
+        + (proOn('dockFlick') ? li('Flick (' + esc(fl) + '): the pass or the dock\u2019s inner edge toward the stage grows it; the edge toward the screen edge shrinks it. Gentle = one stage, strong = to the end') : '')
+        + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: ' + k(KEYS.dock.label) + ', the edge handle, or reload'
+          : 'Flick-to-hide is off (Settings \u203a Dock)')
+        + '</ul><p class="help-h">Shortcuts</p><ul>'
+        + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
+        + '</ul><p class="help-h">Settings</p><ul>'
+        + li('Gear on the rail \u203a Dock: start stage, flick-to-hide \u00b7 Profile pass: name, role, access level')
+        + '</ul>';
+    }
+    function basicItems() {
+      const f = PRO_FEATURES;
+      return '<p class="help-h">Pro adds</p><ul>'
+        + (f.dockStages ? li('A third stage: the dock folds to the all-access pass') : '')
+        + (f.dockFlick ? li('Flick the pass or the dock edge to step stages') : '')
+        + (f.dockHide ? li('Flick the pass away to hide the dock (' + esc(KEYS.dock.label) + ' or the edge handle brings it back)') : '')
+        + li('Every control, in collapsible sections')
+        + '</ul><p class="help-h">Now</p><ul>'
+        + li('\u2715 folds the card to the rail; a rail icon opens it') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
+        + '</ul><button type="button" class="help-pro">Switch to Pro</button>';
+    }
+    function fill() {
+      const pro = mode === 'pro' || !PRO_FEATURES.helpIcon;
+      pop().innerHTML = pro ? proItems() : basicItems();
+      pop().dataset.kind = pro ? 'pro' : 'basic';
+      const sw = pop().querySelector('.help-pro');
+      if (sw) sw.addEventListener('click', () => { setMode('pro'); fill(); place(); });
+    }
+    // never cover the footer: the card scrolls inside if space is short
+    function place() {
+      const p = pop(), foot = $('cardFoot').getBoundingClientRect(), top = p.getBoundingClientRect().top;
+      p.style.maxHeight = Math.max(120, Math.floor((foot.height ? foot.top : innerHeight - 16) - top - 8)) + 'px';
+    }
+    function show(pin) {
+      clearTimeout(t);
+      if (pin) stuck = true;
+      if (open) return;
+      open = true;
+      fill();
+      pop().hidden = false;
+      btn().setAttribute('aria-expanded', 'true');
+      place();
+      if (M.level() === 'full') pop().animate([{ opacity: 0, transform: 'translateY(-4px) scale(0.98)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: M.easeOut });
+    }
+    function hide(focusBtn) {
+      clearTimeout(t);
+      if (!open) return;
+      open = false; stuck = false;
+      pop().hidden = true;
+      btn().setAttribute('aria-expanded', 'false');
+      if (focusBtn) { quiet = true; btn().focus({ preventScroll: true }); quiet = false; }
+    }
+    function init() {
+      const b = btn(), p = pop();
+      b.innerHTML = svg('help');
+      b.addEventListener('mouseenter', () => { clearTimeout(t); if (!open) t = setTimeout(() => show(false), 160); });
+      const leave = () => { clearTimeout(t); if (open && !stuck) t = setTimeout(() => hide(false), 260); };
+      b.addEventListener('mouseleave', leave);
+      p.addEventListener('mouseenter', () => clearTimeout(t));
+      p.addEventListener('mouseleave', leave);
+      b.addEventListener('click', () => { if (open && stuck) hide(false); else show(true); });
+      b.addEventListener('focus', () => { if (!quiet && b.matches(':focus-visible')) show(false); });
+      b.addEventListener('blur', () => { setTimeout(() => { if (open && !stuck && !p.contains(document.activeElement)) hide(false); }, 0); });
+    }
+    return { init, show, hide, fill, get isOpen() { return open; }, contains: (x) => !!x && !!btn() && (pop().contains(x) || btn().contains(x)) };
+  })();
+
   function syncHeadTools() {
     const showMore = hasPro('sectionMenu');
     $('moreBtn').classList.toggle('is-hidden', !showMore);
     $('moreBtn').tabIndex = showMore ? 0 : -1;
     if (!showMore) Pop.hide();
+    if (Help.isOpen) Help.fill();
   }
 
   function quickVar() {
@@ -1963,19 +2135,24 @@
     const anchorRow = setRow('Anchor', grid, 'The card stays pinned here and grows away from it.');
     inner.appendChild(anchorRow);
 
-    if (mode === 'pro') {
+    if (proOn('dockStages')) {
       const pds = el('div', 'seg seg-sm');
       pds.dataset.pro = 'dock';
       buildSeg(pds, [
-        { value: 'icon', label: 'Nested icon' },
-        { value: 'slim', label: 'Slim menu' },
-        { value: 'full', label: 'Full expanded' }
+        { value: 'icon', label: '1 Pass' },
+        { value: 'slim', label: '2 Rail' },
+        { value: 'full', label: '3 Card' }
       ], ui.proDock || 'slim', (val) => {
         ui.proDock = val;
         saveUi();
-        toast('Pro side menu: ' + (val === 'icon' ? 'nested icon' : val === 'slim' ? 'slim vertical menu' : 'full expanded menu') + ' on load & anchor.');
+        Log.push('dock start ' + val);
+        toast('Dock start stage: ' + (val === 'icon' ? 'the pass' : val === 'slim' ? 'the thin rail' : 'the full card') + ' on load.');
       }, { equal: true });
-      inner.appendChild(setRow('Side menu', pds, 'Pro default load and anchor state: nested icon, slim vertical rail, or full expanded card.'));
+      inner.appendChild(setRow('Start stage', pds, 'Stage on load: 1 the lanyard pass, 2 the thin rail, 3 card + rail. With 1, the X folds the card straight to the pass.'));
+    }
+    if (proOn('dockHide')) {
+      inner.appendChild(switchRow('Allow flick-to-hide', () => ui.dockFlickHide !== false, (on) => { ui.dockFlickHide = on; saveUi(); },
+        'A strong flick of the pass away from the stage hides the dock until reload (never saved). ' + KEYS.dock.label + ' (or ' + KEYS.dock.alt + '), the edge handle, switching to Basic, or a reload brings it back.'));
     }
 
     section(inner, 'Behaviour');
@@ -2136,7 +2313,7 @@
       Object.assign(ui, {
         dockPos: 'right', anchor: 'top-right', mode: 'basic', motion: true, paletteSource: 'project',
         view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
-        tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal',
+        tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
         railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
       });
       saveUi();
@@ -2921,8 +3098,9 @@
 
     $('backBtn').addEventListener('click', back);
     $('moreBtn').innerHTML = svg('dots');
+    Help.init();
     $('moreBtn').addEventListener('click', (e) => { e.stopPropagation(); Pop.toggle(); });
-    $('dockClose').addEventListener('click', () => closeDock());
+    $('dockClose').addEventListener('click', () => { closeDock(); if (dockStage() === 1) $('dockTrigger').focus({ preventScroll: true }); });
     $('labPlay').addEventListener('click', () => { playing = !playing; syncTime(); writeHash(); });
     $('labScrub').addEventListener('input', (e) => { playing = false; offset = +e.target.value; syncTime(); writeHash(); });
     document.documentElement.classList.toggle('no-motion', !ui.motion);
@@ -2995,9 +3173,57 @@
     }, true);
 
     const trig = $('dockTrigger');
-    trig.addEventListener('click', () => openDock('click'));
-    trig.addEventListener('mouseenter', () => { clearTimeout(hoverTimer); hoverTimer = setTimeout(() => openDock('hover'), 220); });
-    trig.addEventListener('mouseleave', () => clearTimeout(hoverTimer));
+    trig.setAttribute('aria-label', 'All-access pass: open the controls (' + KEYS.dock.label + ')');
+    // Stage 1, the lanyard pass. Hover: lift + holo sheen (pass.css). Click / Enter / Space: next
+    // stage (Shift+click = the full card). Pro flicks (Settings > Toolbar > Flick physics):
+    //   toward the stage: gentle = next stage, strong = full card
+    //   STRONG away from the stage (toward the edge, up or down): hide for this session, when
+    //   Settings > Dock > Allow flick-to-hide is on. Anything gentler springs back.
+    trig.addEventListener('click', (e) => setStage(e.shiftKey ? 3 : dockStage() + 1));
+    const DLIM = 26;
+    M.Flick(trig, {
+      axis: 'xy',
+      enabled: () => proOn('dockFlick') && dockStage() === 1,
+      onMove(dx, full, dy) { if (full) dock.style.transform = 'translate(' + M.rubber(dx, DLIM).toFixed(1) + 'px,' + M.rubber(dy, DLIM).toFixed(1) + 'px)'; },
+      onRelease({ dir, power, axis, dx, dy, vx, vy }) {
+        const [g, ax] = towardStage();
+        const toward = axis === ax && dir === g;
+        if (power >= 2 && !toward && proOn('dockHide') && ui.dockFlickHide !== false) { hideDock(vx || dx / 200, vy || dy / 200, 'flick'); return; }
+        M.snapBack(dock, M.rubber(dx, DLIM), 'xy', M.rubber(dy, DLIM));
+        if (power && toward) setStage(power >= 2 ? 3 : dockStage() + 1);
+      }
+    });
+    // Pro: the dock's inner edge (stages 2 and 3) steps stages: click toggles rail / card,
+    // flick toward the stage grows (strong = card), toward the edge shrinks (strong = the pass).
+    const edgeH = el('button', 'dock-edge');
+    edgeH.id = 'dockEdge';
+    edgeH.type = 'button';
+    edgeH.tabIndex = -1;
+    edgeH.setAttribute('aria-hidden', 'true');
+    edgeH.title = 'Drag or flick: toward the stage grows, toward the edge shrinks. Click toggles rail / card.';
+    dock.appendChild(edgeH);
+    edgeH.addEventListener('click', () => setStage(dockStage() === 3 ? 2 : 3));
+    M.Flick(edgeH, {
+      axis: 'x',
+      enabled: () => proOn('dockFlick') && dockEdge() !== 'bottom',
+      onMove(d, full) { if (full) dock.style.transform = 'translateX(' + M.rubber(d, 22).toFixed(1) + 'px)'; },
+      onRelease({ d, dir, power }) {
+        M.snapBack(dock, M.rubber(d, 22));
+        if (!power) return;
+        const [g] = towardStage();
+        if (dir === g) setStage(power >= 2 ? 3 : dockStage() + 1);
+        else setStage(power >= 2 ? 1 : dockStage() - 1);
+      }
+    });
+    // the way back from a hidden dock: a small handle on that edge
+    const hint = el('button', 'dock-hint glass', svg('handle'));
+    hint.id = 'dockHint';
+    hint.type = 'button';
+    hint.hidden = true;
+    hint.setAttribute('aria-label', 'Show the controls (' + KEYS.dock.label + ')');
+    hint.title = 'Show the controls (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
+    document.body.appendChild(hint);
+    hint.addEventListener('click', () => { showDock(); setStage(minStage()); trig.focus({ preventScroll: true }); });
     dock.addEventListener('mouseenter', () => clearTimeout(leaveTimer));
     dock.addEventListener('mouseleave', () => {
       if (!dockOpen || pinned || Arc.isOpen || Pop.isOpen || dock.contains(document.activeElement)) return;
@@ -3012,18 +3238,37 @@
       if (Arc.isOpen && !Arc.contains(t) && !t.closest('.swatch-trigger')) Arc.close();
       if (Pop.isOpen && !Pop.contains(t)) Pop.hide();
       TB.outside(t);
-      if (!dockOpen || dock.contains(t) || Arc.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame')) return;
-      closeDock();
+      if (Help.isOpen && !Help.contains(t)) Help.hide();
+      // outside click: the card folds to the rail (one stage)
+      if (!dockOpen || dock.contains(t) || Arc.contains(t) || Help.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame') || t.closest('#dockHint')) return;
+      setStage(2);
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (Help.isOpen) { Help.hide(true); return; }
         if (TB.esc()) return;
         if (Pop.isOpen) { Pop.hide(true); return; }
         if (Arc.isOpen) { Arc.close(false, true); return; }
-        if (dockOpen) { closeDock(); trig.focus({ preventScroll: true }); return; }
-        if (dock && dock.dataset.state === 'slim') { setDockState('closed'); trig.focus({ preventScroll: true }); return; }
+        // one stage down (never below Basic's rail; never hides)
+        if (!dockHidden && dockStage() > minStage()) {
+          stepDock(-1);
+          if (dockStage() === 1) trig.focus({ preventScroll: true });
+          return;
+        }
         TB.close();
         return;
+      }
+      {
+        const a = document.activeElement;
+        const texty = a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes(a.type)));
+        // Alt+D (or Shift+D): next stage, wrapping from the card back to the lowest stage;
+        // from a hidden dock, back to the pass. Never while typing.
+        if (!texty && (KEYS.dock.test(e) || KEYS.dockAlt.test(e))) {
+          e.preventDefault();
+          if (dockHidden) { showDock(); setStage(minStage()); trig.focus({ preventScroll: true }); }
+          else setStage(dockStage() >= 3 ? minStage() : dockStage() + 1);
+          return;
+        }
       }
       if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[zy]$/i.test(e.key)) {
         const a = document.activeElement;
@@ -3059,7 +3304,7 @@
         Object.assign(ui, {
           dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project',
           view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
-          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal',
+          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
         mode = 'basic';
@@ -3080,13 +3325,15 @@
       await loadComponent(first, true);
     } finally {
       TB.start();
+      syncDockTools();
       if (mode === 'pro') {
         const pref = ui.proDock || 'slim';
-        const initDock = (pref === 'full') ? 'open' : (pref === 'icon') ? 'closed' : 'slim';
-        setDockState(initDock, { instant: true, how: 'init' });
+        const initDock = (pref === 'full') ? 'open' : (pref === 'icon' && proOn('dockStages')) ? 'closed' : 'slim';
+        setDockState(initDock, { instant: true, how: 'init', force: true });
       } else {
-        const initDock = (ui.open !== false) ? 'open' : 'closed';
-        setDockState(initDock, { instant: true, how: 'init' });
+        // Basic: card, or the thin rail if it was folded last time (no pass stage in Basic)
+        const initDock = (ui.open !== false) ? 'open' : DOCK_STAGES[minStage() - 1];
+        setDockState(initDock, { instant: true, how: 'init', force: true });
       }
       document.documentElement.classList.add('is-ready');
     }
@@ -3099,6 +3346,6 @@
       }
     } catch (_) {}
   }
-  window.__lab = { openDock, closeDock, setDockState, go, push, back, setMode, startNew, get state() { return { dockState, dockOpen, pinned, mode, navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
+  window.__lab = { openDock, closeDock, setDockState, Dock: { setStage, stepDock, hideDock, showDock, get stage() { return dockStage(); }, get hidden() { return dockHidden; }, edge: dockEdge, PRO_FEATURES, KEYS }, go, push, back, setMode, startNew, get state() { return { dockState, dockOpen, pinned, mode, navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Help: { show: () => Help.show(), hide: () => Help.hide(), get isOpen() { return Help.isOpen; } }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
   init();
 })();

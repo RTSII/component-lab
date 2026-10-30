@@ -1,0 +1,46 @@
+/* Component Lab dock stages, hide handle and help card (lab.js DOCK_STAGES / PRO_FEATURES).
+   Stage 1 closed = the lanyard pass (lab/pass.css) · 2 slim = thin rail · 3 open = card + rail.
+   Unscoped like pass.css; selectors here are new or out-specify the scoped lab.css rules.
+   Restyle hooks: --dock-hint-*, and the .dock-edge / .dock-hint / .help-* classes. */
+
+/* a hidden dock (Pro flick-to-hide, session only) */
+.dock[hidden] { display: none !important; }
+
+/* Pro: the dock's inner edge steps stages (drag / flick / click); a thin grip shows on hover */
+.dock-edge { position: absolute; top: 14px; bottom: 14px; left: -5px; width: 10px; border: 0; padding: 0; background: transparent; cursor: ew-resize; z-index: 8; display: none; border-radius: 5px; }
+.dock-edge::after { content: ""; position: absolute; left: 4px; top: 50%; width: 2px; height: 34px; margin-top: -17px; border-radius: 1px; background: var(--lab-line); opacity: 0; transition: opacity 0.2s, background 0.2s; }
+.dock-edge:hover::after, .dock-edge.is-flicking::after { opacity: 1; background: var(--lab-accent, #6ee7ff); }
+.dock.has-flick:is([data-state="open"], [data-state="slim"]):not([data-pos="bottom"]) .dock-edge { display: block; }
+.dock[data-anchor$="left"] .dock-edge { left: auto; right: -5px; }
+.dock.is-morphing .dock-edge { display: none !important; }
+
+/* stage 1: the pass is grabbable when it can be flicked */
+.dock.has-flick[data-state="closed"] .dock-trigger { cursor: grab; }
+.dock.has-flick[data-state="closed"] .dock-trigger.is-flicking { cursor: grabbing; }
+
+/* a hidden dock leaves a small handle on its edge: click it (or Alt+D) to bring the dock back */
+.dock-hint { position: fixed; z-index: 21; width: 18px; height: 44px; padding: 0; border: 1px solid var(--lab-line); border-right: 0; border-radius: 10px 0 0 10px; color: var(--lab-muted); display: grid; place-items: center; opacity: 0.6; transition: opacity 0.2s, width 0.2s var(--spring), color 0.2s; right: 0; top: 24px; cursor: pointer; background: var(--glass, rgba(14, 18, 26, 0.7)); }
+.dock-hint[hidden] { display: none; }
+.dock-hint:hover, .dock-hint:focus-visible { opacity: 1; width: 26px; color: var(--lab-fg); }
+.dock-hint .ico { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dock-hint[data-anchor^="middle"] { top: 50%; margin-top: -22px; }
+.dock-hint[data-anchor^="bottom"] { top: auto; bottom: 24px; }
+.dock-hint[data-edge="left"] { right: auto; left: 0; border-radius: 0 10px 10px 0; border-right: 1px solid var(--lab-line); border-left: 0; }
+.dock-hint[data-edge="left"] .ico { transform: scaleX(-1); }
+.dock-hint[data-edge="bottom"] { top: auto; bottom: 0; right: 50%; margin-right: -22px; width: 44px; height: 16px; border-radius: 10px 10px 0 0; border-right: 1px solid var(--lab-line); border-bottom: 0; }
+.dock-hint[data-edge="bottom"] .ico { transform: rotate(90deg); }
+
+/* ---------- help (?) card in the header ---------- */
+.help-btn .ico { width: 17px; height: 17px; }
+.help-btn[aria-expanded="true"] { color: var(--lab-accent, #6ee7ff); background: rgba(255, 255, 255, 0.07); }
+.help-pop { position: absolute; top: 46px; left: 10px; right: 8px; z-index: 30; padding: 10px 12px 12px; border-radius: 14px; background: rgba(10, 13, 19, 0.97); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; font-size: 11.5px; line-height: 1.45; color: var(--lab-muted); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9); }
+.help-pop[hidden] { display: none; }
+.help-pop .help-h { margin: 6px 0 4px; text-align: center; font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--lab-dim); }
+.help-pop .help-h:first-child { margin-top: 0; }
+.help-pop ul { margin: 0; padding-left: 16px; display: grid; gap: 3px; }
+.help-pop b { color: var(--lab-fg); font-weight: 600; }
+.help-pop kbd { font: 10.5px var(--mono); padding: 0 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); color: var(--lab-fg); }
+.help-pro { display: block; margin: 10px auto 0; padding: 6px 14px; border: 0; border-radius: 9px; background: rgba(110, 231, 255, 0.14); color: var(--lab-accent, #6ee7ff); font: inherit; font-weight: 600; cursor: pointer; }
+.help-pro:hover { background: rgba(110, 231, 255, 0.22); }
+
+@media (prefers-reduced-motion: reduce) { .dock-hint, .dock-edge::after { transition-duration: 0.01ms !important; } }
