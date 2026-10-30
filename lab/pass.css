@@ -1,0 +1,92 @@
+/* Component Lab profile pass: the closed dock is a small backstage / DJ-access pass.
+   --trig-w / --trig-h / --trig-r size the closed dock; lab.js reads them for the open/close morph. */
+:root {
+  --trig-w: 56px; --trig-h: 76px; --trig-r: 15px;
+  --pass-accent: #00e5ff;
+  --pass-display: 'Chakra Petch', var(--ui, system-ui), sans-serif;
+}
+
+/* ---------- the closed dock as a pass ---------- */
+/* lab.css rules sit inside @scope, which wins ties on order; `.dock >` keeps these overrides ahead of them. */
+.dock[data-state="closed"] {
+  border-color: color-mix(in srgb, var(--pass-accent) 42%, transparent);
+  box-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.85), 0 0 18px -6px color-mix(in srgb, var(--pass-accent) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transition: box-shadow 0.3s var(--ease-out), border-color 0.3s;
+}
+.dock[data-state="closed"]:hover { border-color: color-mix(in srgb, var(--pass-accent) 75%, transparent); }
+.dock > .dock-trigger { width: calc(var(--trig-w) - 2px); height: calc(var(--trig-h) - 2px); border-radius: calc(var(--trig-r) - 1px); padding: 0; overflow: hidden; background: transparent; }
+.dock > .dock-trigger:hover { background: transparent; }
+.dock-trigger:active .pass-mini { transform: scale(0.96); }
+.dock-trigger:focus-visible { outline-offset: 3px; }
+
+/* ---------- mini pass (56 x 76) ---------- */
+.pass-mini, .pass-full { --pa: var(--pass-accent); }
+.pass-mini {
+  position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%;
+  padding: 13px 0 5px; border-radius: inherit; overflow: hidden; isolation: isolate;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--pa) 20%, #0c1118) 0%, #090c12 55%, color-mix(in srgb, var(--pa) 10%, #090c12) 100%);
+  transition: transform 0.35s var(--spring, cubic-bezier(0.34, 1.4, 0.64, 1));
+}
+.dock-trigger:hover .pass-mini { transform: translateY(-1px); }
+.pm-slot { position: absolute; left: 50%; top: 5px; width: 16px; height: 3.5px; margin-left: -8px; border-radius: 3px; background: #05070a; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pa) 45%, transparent), 0 0 6px color-mix(in srgb, var(--pa) 35%, transparent); }
+.pm-led { position: absolute; right: 6px; top: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--pa); box-shadow: 0 0 6px var(--pa); animation: pm-blink 2.4s ease-in-out infinite; }
+@keyframes pm-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.pm-photo { position: relative; display: grid; place-items: center; width: 33px; height: 33px; flex: none; border-radius: 9px; overflow: hidden; color: var(--pa);
+  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--pa) 22%, #0e141c), #070a0f);
+  box-shadow: 0 0 0 1.5px var(--pa), 0 0 10px -1px color-mix(in srgb, var(--pa) 60%, transparent); }
+.pm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-photo svg { width: 76%; height: 76%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--pa) 70%, transparent)); }
+.pm-photo b { font: 700 15px/1 var(--pass-display); letter-spacing: 0.02em; text-shadow: 0 0 8px var(--pa); }
+.pm-tier { margin-top: 5px; padding: 1px 5px 0; border-radius: 4px; font: 700 8px/11px var(--pass-display); letter-spacing: 0.14em; color: var(--pa); background: color-mix(in srgb, var(--pa) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pa) 38%, transparent); white-space: nowrap; }
+.pm-bars { display: block; width: 36px; height: 6px; margin-top: auto; opacity: 0.8;
+  background: repeating-linear-gradient(90deg, var(--pa) 0 1px, transparent 1px 2px, var(--pa) 2px 4px, transparent 4px 5px, var(--pa) 5px 6px, transparent 6px 8px); }
+/* holo sheen: a soft highlight under the pointer plus a slow diagonal sweep */
+.pm-sheen { position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; overflow: hidden; mix-blend-mode: screen;
+  background: radial-gradient(circle at var(--mx, 28%) var(--my, 12%), rgba(255, 255, 255, 0.26), transparent 52%); opacity: 0.55; transition: opacity 0.3s; }
+.pm-sheen::after { content: ''; position: absolute; top: -20%; bottom: -20%; width: 40%; left: -60%; transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pa) 38%, rgba(255, 255, 255, 0.5)), transparent); animation: pm-sweep 5.5s var(--settle, ease) infinite; }
+@keyframes pm-sweep { 0%, 62% { left: -60%; } 100% { left: 130%; } }
+.dock-trigger:hover .pm-sheen { opacity: 1; }
+
+/* the morph ghost uses the same pass, sized by the ghost box */
+.travel-ghost .pass-mini { width: 100%; height: 100%; border-radius: var(--trig-r); }
+
+/* ---------- Settings > Profile ---------- */
+.pass-stage { display: grid; place-items: center; padding: 14px 0 6px; border-radius: 14px; background:
+  radial-gradient(circle at center, rgba(255, 255, 255, 0.06) 1px, transparent 1.3px) 0 0 / 14px 14px, rgba(255, 255, 255, 0.02); border: 1px solid var(--lab-line); }
+.pass-full { position: relative; display: flex; flex-direction: column; align-items: center; width: 176px; height: 252px; padding: 12px 12px 10px; border-radius: 16px; overflow: hidden; isolation: isolate;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pa) 22%, #0c1118) 0%, #090c12 52%, color-mix(in srgb, var(--pa) 10%, #090c12) 100%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pa) 50%, transparent), 0 16px 40px -16px rgba(0, 0, 0, 0.9), 0 0 26px -8px color-mix(in srgb, var(--pa) 55%, transparent); }
+.pf-top { align-self: stretch; display: flex; justify-content: space-between; font: 700 8.5px/1 var(--pass-display); letter-spacing: 0.22em; color: color-mix(in srgb, var(--pa) 80%, #fff); opacity: 0.85; }
+.pass-full .pf-slot { top: 22px; width: 30px; height: 6px; margin-left: -15px; }
+.pass-full .pm-led { right: 12px; top: 26px; width: 5px; height: 5px; }
+.pf-photo { width: 88px; height: 88px; margin-top: 22px; border-radius: 16px; box-shadow: 0 0 0 2px var(--pa), 0 0 20px -2px color-mix(in srgb, var(--pa) 60%, transparent); }
+.pf-photo b { font-size: 38px; }
+.pf-name { margin-top: 12px; max-width: 100%; font: 700 19px/1.05 var(--pass-display); letter-spacing: 0.04em; text-transform: uppercase; color: #f2fff5; text-shadow: 0 0 12px color-mix(in srgb, var(--pa) 55%, transparent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-role { margin-top: 3px; max-width: 100%; font: 10px/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--lab-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-tier { margin-top: 9px; padding: 3px 9px 2px; border-radius: 6px; font: 700 10.5px/13px var(--pass-display); letter-spacing: 0.2em; color: var(--pa); background: color-mix(in srgb, var(--pa) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pa) 45%, transparent); }
+.pf-holo { display: block; align-self: stretch; height: 5px; margin-top: 10px; border-radius: 3px; opacity: 0.8;
+  background: linear-gradient(90deg, #ff2a6d, #ffd319, #00ff41, #00e5ff, #b967ff, #ff2a6d); background-size: 200% 100%; animation: pf-holo 6s linear infinite; }
+@keyframes pf-holo { to { background-position: 200% 0; } }
+.pf-foot { white-space: nowrap; align-self: stretch; margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; font: 9.5px/1 var(--mono); letter-spacing: 0.12em; color: var(--lab-muted); }
+.pf-bars { width: 78px; height: 20px; margin: 0; opacity: 0.85; }
+.pass-full .pm-sheen { opacity: 0.45; }
+
+.prof-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.prof-design { display: grid; place-items: center; gap: 2px; padding: 7px 0 5px; border-radius: 10px; border: 1px solid var(--lab-line); background: rgba(255, 255, 255, 0.03); color: var(--lab-muted); font-size: 10px; transition: background 0.15s, color 0.15s, border-color 0.2s; }
+.prof-design svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.prof-design:hover { background: rgba(255, 255, 255, 0.07); color: var(--lab-fg); }
+.prof-design.is-on { color: var(--pass-accent); border-color: color-mix(in srgb, var(--pass-accent) 60%, transparent); background: color-mix(in srgb, var(--pass-accent) 10%, transparent); }
+.prof-accents { display: flex; gap: 8px; }
+.prof-accent { width: 24px; height: 24px; border-radius: 50%; padding: 0; background: var(--c); border: 2px solid rgba(255, 255, 255, 0.14); outline: 2px solid transparent; outline-offset: 2px; transition: transform 0.25s var(--spring), outline-color 0.15s; }
+.prof-accent:hover { transform: scale(1.12); }
+.prof-accent.is-on { outline-color: #fff; }
+.prof-photo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.prof-photo .note { flex-basis: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-led, .pm-sheen::after, .pf-holo { animation: none; }
+  .pass-mini { transition-duration: 0.01ms; }
+}
+html.no-motion .pm-led, html.no-motion .pm-sheen::after, html.no-motion .pf-holo { animation: none; }

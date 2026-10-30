@@ -556,9 +556,9 @@ body {
     position: fixed;
     z-index: 20;
     display: flex;
-    width: 52px;
-    height: 52px;
-    border-radius: 26px;
+    width: var(--trig-w, 52px);
+    height: var(--trig-h, 52px);
+    border-radius: var(--trig-r, 26px);
     background: var(--glass);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);

@@ -653,6 +653,11 @@
     dock.style.setProperty('--card-w', cardWidth() + 'px');
     dock.style.setProperty('--card-maxh', cardMaxH() + 'px');
   }
+  // Closed-dock size comes from --trig-w / --trig-h / --trig-r (lab/pass.css), so the morph follows the pass.
+  function trigBox() {
+    const cs = getComputedStyle(document.documentElement), g = (k, d) => (cs.getPropertyValue(k).trim() || d);
+    return { width: g('--trig-w', '52px'), height: g('--trig-h', '52px'), borderRadius: g('--trig-r', '26px') };
+  }
   function setDockState(targetState, opts) {
     opts = opts || {};
     const fromState = (dock && dock.dataset.state) || dockState || 'closed';
@@ -727,7 +732,7 @@
       layoutStage();
       const a = dock.animate([
         { width: prevRect.width + 'px', height: prevRect.height + 'px', borderRadius: fromState === 'slim' ? '20px' : '22px' },
-        { width: '52px', height: '52px', borderRadius: '26px' }
+        trigBox()
       ], { duration: lv === 'full' ? 280 : 150, easing: M.settle });
       a.finished.catch(() => {}).then(finish);
       return;
@@ -755,11 +760,11 @@
 
     dock.classList.add('is-morphing');
     const toRect = (targetState === 'open' ? card : dock).getBoundingClientRect();
-    const radFrom = fromState === 'closed' ? '26px' : fromState === 'slim' ? '20px' : '22px';
+    const radFrom = fromState === 'closed' ? trigBox().borderRadius : fromState === 'slim' ? '20px' : '22px';
     const radTo = targetState === 'slim' ? '20px' : '22px';
 
     if (targetState === 'open' && fromState === 'closed') {
-      M.travel($('dockTrigger'), $('dockClose'), svg('sliders'));
+      M.travel($('dockTrigger'), $('dockClose'), window.Pass ? Pass.miniHtml() : svg('sliders'));
       M.contentIn(card.querySelector('.card-main'), 60);
       M.contentIn($('rail'), 30);
     } else if (targetState === 'open' && fromState === 'slim') {
@@ -1831,7 +1836,100 @@
     layoutStage();
     requestAnimationFrame(() => { fitPages(null, false); syncRail(true); document.querySelectorAll('.seg').forEach((sg) => syncSeg(sg, null, sg.dataset.value, true)); });
   }
+  // ---------- Settings > Profile: the pass shown on the closed dock ----------
+  function buildProfile(inner) {
+    if (!window.Pass) return;
+    section(inner, 'Profile pass');
+    const stage = el('div', 'pass-stage');
+    const paint = () => { stage.innerHTML = Pass.fullHtml(); };
+    paint();
+    inner.appendChild(stage);
+    const upd = (patch, msg) => { Pass.set(patch); paint(); if (msg) Log.push(msg); };
+    const cur = () => Pass.profile;
+
+    const nameIn = el('input', 'field-in');
+    nameIn.type = 'text'; nameIn.maxLength = 18; nameIn.spellcheck = false; nameIn.value = cur().name; nameIn.setAttribute('aria-label', 'Name on the pass');
+    nameIn.addEventListener('input', () => upd({ name: nameIn.value }));
+    inner.appendChild(setRow('Name', nameIn));
+
+    const roleIn = el('input', 'field-in');
+    roleIn.type = 'text'; roleIn.maxLength = 24; roleIn.spellcheck = false; roleIn.value = cur().role; roleIn.setAttribute('aria-label', 'Role line');
+    roleIn.addEventListener('input', () => upd({ role: roleIn.value }));
+    inner.appendChild(setRow('Role', roleIn));
+
+    const tierSel = el('select', 'lab-select');
+    tierSel.setAttribute('aria-label', 'Access level');
+    Pass.TIERS.forEach((t) => { const o = el('option', null, esc(t.label)); o.value = t.id; tierSel.appendChild(o); });
+    tierSel.value = cur().tier;
+    tierSel.addEventListener('change', () => upd({ tier: tierSel.value }, 'pass tier ' + tierSel.value));
+    inner.appendChild(setRow('Access level', tierSel));
+
+    const acc = el('div', 'prof-accents');
+    Pass.ACCENTS.forEach((c) => {
+      const b = el('button', 'prof-accent' + (c === cur().accent ? ' is-on' : ''));
+      b.type = 'button'; b.style.setProperty('--c', c); b.title = c.toUpperCase(); b.setAttribute('aria-label', 'Accent ' + c);
+      b.addEventListener('click', () => { upd({ accent: c }, 'pass accent ' + c); acc.querySelectorAll('.prof-accent').forEach((x) => x.classList.toggle('is-on', x === b)); drawSource(); });
+      acc.appendChild(b);
+    });
+    inner.appendChild(setRow('Accent', acc));
+
+    const src = el('div', 'seg seg-sm');
+    buildSeg(src, [{ value: 'glyph', label: 'Design' }, { value: 'text', label: 'Characters' }, { value: 'image', label: 'Photo' }], cur().type, (val) => { upd({ type: val }, 'pass picture ' + val); drawSource(); }, { equal: true });
+    inner.appendChild(setRow('Picture', src));
+
+    const box = el('div', 'prof-src');
+    inner.appendChild(box);
+    function drawSource() {
+      const p = cur();
+      box.innerHTML = '';
+      if (p.type === 'glyph') {
+        const g = el('div', 'prof-grid');
+        Pass.DESIGNS.forEach((d) => {
+          const b = el('button', 'prof-design' + (d.id === p.glyph ? ' is-on' : ''), '<svg viewBox="0 0 32 32" aria-hidden="true">' + d.svg + '</svg><span>' + esc(d.label) + '</span>');
+          b.type = 'button'; b.setAttribute('aria-label', d.label);
+          b.addEventListener('click', () => { upd({ glyph: d.id }, 'pass design ' + d.label.toLowerCase()); g.querySelectorAll('.prof-design').forEach((x) => x.classList.toggle('is-on', x === b)); });
+          g.appendChild(b);
+        });
+        box.appendChild(g);
+      } else if (p.type === 'text') {
+        const ch = el('input', 'field-in');
+        ch.type = 'text'; ch.maxLength = 3; ch.spellcheck = false; ch.value = p.chars; ch.placeholder = 'e.g. RS'; ch.setAttribute('aria-label', 'Characters');
+        ch.addEventListener('input', () => upd({ chars: ch.value }));
+        box.append(setRow('Characters (up to 3)', ch));
+      } else {
+        const row = el('div', 'prof-photo');
+        const file = el('input'); file.type = 'file'; file.accept = 'image/*'; file.hidden = true;
+        const pick = el('button', 'btn', p.image ? 'Replace photo' : 'Upload photo');
+        pick.type = 'button';
+        pick.addEventListener('click', () => file.click());
+        file.addEventListener('change', async () => {
+          const f = file.files && file.files[0];
+          if (!f) return;
+          try { const url = await Pass.fileToDataUrl(f); upd({ type: 'image', image: url }, 'pass photo set'); drawSource(); }
+          catch (e) { toast(e.message, 4200); }
+          file.value = '';
+        });
+        row.append(pick, file);
+        if (p.image) {
+          const rm = el('button', 'btn', 'Remove');
+          rm.type = 'button';
+          rm.addEventListener('click', () => { upd({ image: '', type: 'glyph' }, 'pass photo removed'); syncSeg(src, null, 'glyph'); drawSource(); });
+          row.appendChild(rm);
+        }
+        row.appendChild(el('p', 'note', 'Cropped to a square and kept in this browser only (about 10 KB).'));
+        box.appendChild(row);
+      }
+    }
+    drawSource();
+
+    const rs = el('button', 'link-btn', 'Reset profile pass');
+    rs.type = 'button';
+    rs.addEventListener('click', () => { Pass.reset(); renderPage(0); Log.push('profile pass reset'); toast('Profile pass reset.'); });
+    inner.appendChild(rs);
+  }
+
   function buildSettings(inner) {
+    buildProfile(inner);
     section(inner, 'Dock');
     const pos = el('div', 'seg seg-sm');
     buildSeg(pos, [{ value: 'right', label: 'Right' }, { value: 'bottom', label: 'Bottom' }], ui.dockPos, (val) => {
@@ -2803,7 +2901,7 @@
     $('viewSeg').querySelectorAll('.seg-btn').forEach((b) => { const v = VIEWS.find((x) => x.id === b.dataset.value); if (v) { b.title = v.w ? v.w + ' \u00d7 ' + v.h + ' viewport' : 'Fit the frame to the free space'; b.setAttribute('aria-label', b.title); } });
     viewPill = buildSeg($('viewSeg'), VIEWS.map((x) => ({ value: x.id, label: x.w ? String(x.w) : x.label })), ui.view, (val) => setView(val));
     modePill = buildSeg($('modeSeg'), [{ value: 'basic', label: 'Basic' }, { value: 'pro', label: 'Pro' }], mode, (val) => setMode(val), { equal: true });
-    $('dockTrigger').innerHTML = svg('sliders');
+    if (window.Pass) Pass.mount($('dockTrigger')); else $('dockTrigger').innerHTML = svg('sliders');
     $('dockClose').innerHTML = svg('close');
     $('backBtn').innerHTML = svg('back');
     [['copyBtn', 'diff', copyChanges], ['fullBtn', 'code', copyFull], ['undoBtn', 'undo', () => Hist.undo()], ['resetBtn', 'reset', resetAll]].forEach(([id, icon, fn]) => {

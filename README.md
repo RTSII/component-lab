@@ -29,6 +29,16 @@ python serve.py 5180          # use another port if 5179 is busy
 
 ---
 
+## Profile pass (closed dock)
+
+The closed dock is a small backstage / DJ-access badge (56 x 76) instead of a round button: slot punch,
+photo window, tier tag (VIP, CREW, DJ, ALL...), barcode, status LED and a holo sheen that follows the
+pointer. Click or hover opens the card and the badge morphs into it as before (size comes from
+`--trig-w / --trig-h / --trig-r` in `lab/pass.css`). Settings > **Profile pass** has a live preview and sets
+name, role, access level, accent and the picture: a **Design** (vinyl, jog wheel, cans, equalizer,
+waveform, faders, chip, bolt), up to 3 **Characters**, or an uploaded **Photo** (cropped to 160 x 160,
+kept in this browser's localStorage as `componentLab:v2:profile`). Files: `lab/avatar.js`, `lab/pass.css`.
+
 ## Core Workflow: Basic vs. Pro Mode
 
 Component Lab separates everyday visual tuning (**Basic**) from deep parameter inspection, layout organization, and manifest curation (**Pro**). Switch between them anytime using the **`Basic | Pro`** segmented toggle in the card header.
