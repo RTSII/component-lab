@@ -14,6 +14,16 @@
       userPalette, featuredOverrides, store, toast, push, buildSeg, syncSeg
     } = ctx;
 
+    // Same snapping as <input type=range>: steps counted from min, clamped to [min, max].
+    function snapStep(raw, min, max, step) {
+      const st = step || 1;
+      let val = Number(raw);
+      if (!isFinite(val)) val = min;
+      val = min + Math.round((val - min) / st) * st;
+      val = Math.min(max, Math.max(min, val));
+      return +val.toFixed(Math.max(decimals(st), decimals(min)));
+    }
+
     function buildPresets() {
       const wrapEl = el('div', 'presets');
       wrapEl.appendChild(el('div', 'ctl-label sub', 'Palettes from this project'));
@@ -210,31 +220,18 @@
       const defVal = v.default != null ? v.default : 1;
       const step = v.step || 0.05;
       const span = (max - min) || 1;
-      // Center-detent (50% = default 1.00x) piecewise mapping so default sits at the true XDJ-XZ center '0' mark
-      const hasCenterDetent = defVal > min && defVal < max;
-      const valToNorm = (val) => {
-        const c = Math.min(max, Math.max(min, Number(val)));
-        if (!hasCenterDetent) return (c - min) / span;
-        return c <= defVal
-          ? 0.5 * ((c - min) / ((defVal - min) || 1))
-          : 0.5 + 0.5 * ((c - defVal) / ((max - defVal) || 1));
-      };
-      const normToVal = (n) => {
-        const cl = Math.min(1, Math.max(0, n));
-        if (!hasCenterDetent) return min + cl * span;
-        return cl <= 0.5
-          ? min + (cl / 0.5) * (defVal - min)
-          : defVal + ((cl - 0.5) / 0.5) * (max - defVal);
-      };
-      const defPct = hasCenterDetent ? 50 : Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
+      // Linear mapping, exactly like the original range slider: bottom = min, top = max, evenly in between.
+      // (Styling only: the default is NOT forced to the middle; its RESET LED / detent sit where the default really is.)
+      const valToNorm = (val) => (Math.min(max, Math.max(min, Number(val))) - min) / span;
+      const normToVal = (n) => min + Math.min(1, Math.max(0, n)) * span;
+      const defPct = Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
 
-      // Build 19 authentic Pioneer XDJ-XZ silkscreen horizontal fader ticks (9 above center, center 0, 9 below)
+      // 19 XDJ-XZ silkscreen ticks spread evenly over the travel (majors at the ends and the middle of travel)
       let ticksHtml = '';
       for (let i = 0; i <= 18; i++) {
         const p = (i / 18) * 100;
-        const isZero = i === 9;
         const isMajor = i === 0 || i === 9 || i === 18;
-        ticksHtml += '<span class="xdj-tick' + (isZero ? ' is-zero' : isMajor ? ' is-major' : '') + '" style="top:' + p.toFixed(2) + '%"><i></i><i></i></span>';
+        ticksHtml += '<span class="xdj-tick' + (isMajor ? ' is-major' : '') + '" style="top:' + p.toFixed(2) + '%"><i></i><i></i></span>';
       }
 
       const pt = (cx, cy, a, r) => [(cx + r * Math.sin(a * Math.PI / 180)).toFixed(2), (cy - r * Math.cos(a * Math.PI / 180)).toFixed(2)];
@@ -290,7 +287,7 @@
           '<div class="xdj-fader-pole"><span>+</span><small>' + esc(fmt(v, max)) + '</small></div>' +
           '<div class="xdj-fader" tabindex="0" role="slider" aria-label="' + esc(v.label) + ' vertical tempo fader" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' +
             '<div class="xdj-scale">' + ticksHtml + '</div>' +
-            '<span class="xdj-zero-led" title="TEMPO RESET LED (1.0\u00d7)" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
+            '<span class="xdj-zero-led" title="TEMPO RESET LED (default ' + esc(fmt(v, defVal)) + ')" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
             '<span class="xdj-detent-mark" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
             '<div class="xdj-slot">' +
               '<div class="xdj-fill"></div>' +
@@ -319,9 +316,7 @@
       jogRange.setAttribute('d', arc(56, 56, -135, 135, 43));
 
       const put = (raw) => {
-        let val = Math.min(max, Math.max(min, Math.round(raw / step) * step));
-        val = +val.toFixed(decimals(step));
-        setValue(v.id, val, { quiet: true });
+        setValue(v.id, snapStep(raw, min, max, step), { quiet: true });
         paint();
         if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
       };
@@ -363,9 +358,7 @@
       const fromFaderEvent = (e) => {
         const r = fader.getBoundingClientRect();
         const norm = 1 - Math.min(1, Math.max(0, (e.clientY - r.top) / Math.max(20, r.height)));
-        // Subtle magnetic snap right at the 50% (1.00x) center detent unless Shift is held
-        const snapped = (!e.shiftKey && hasCenterDetent && Math.abs(norm - 0.5) < 0.025) ? 0.5 : norm;
-        put(normToVal(snapped));
+        put(normToVal(norm));
       };
       fader.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
@@ -466,35 +459,22 @@
       const defVal = v.default != null ? v.default : min;
       const step = v.step || 0.01;
       const span = (max - min) || 1;
-      // Center-detent (50% = default 1.00x) piecewise mapping so default sits at the true XDJ-XZ center '0' mark
-      const hasCenterDetent = defVal > min && defVal < max;
-      const valToNorm = (val) => {
-        const c = Math.min(max, Math.max(min, Number(val)));
-        if (!hasCenterDetent) return (c - min) / span;
-        return c <= defVal
-          ? 0.5 * ((c - min) / ((defVal - min) || 1))
-          : 0.5 + 0.5 * ((c - defVal) / ((max - defVal) || 1));
-      };
-      const normToVal = (n) => {
-        const cl = Math.min(1, Math.max(0, n));
-        if (!hasCenterDetent) return min + cl * span;
-        return cl <= 0.5
-          ? min + (cl / 0.5) * (defVal - min)
-          : defVal + ((cl - 0.5) / 0.5) * (max - defVal);
-      };
+      // Linear like the original range slider. Marks sit at the TRUE value positions:
+      // the default mark where the default really is, the "0" light where value 0 really is (bipolar ranges only).
       const isBipolar = min < 0 && max > 0;
-      const defPct = isBipolar ? 50 : (hasCenterDetent ? 50 : Math.min(100, Math.max(0, ((defVal - min) / span) * 100)));
+      const defTop = 100 - Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
+      const zeroTop = isBipolar ? (max / span) * 100 : null;   // distance from the top of travel to value 0
       let ticksHtml = '';
       for (let i = 0; i <= 8; i++) {
         const p = i * 12.5;
-        const isCenter = (isBipolar && i === 4);
-        ticksHtml += '<span class="xdj-tick' + (isCenter ? ' is-zero is-major' : (i === 0 || i === 4 || i === 8 ? ' is-major' : '')) + '" style="top:' + p + '%"><i></i><i></i></span>';
+        const isZero = isBipolar && Math.abs(p - zeroTop) < 0.01;
+        ticksHtml += '<span class="xdj-tick' + (isZero ? ' is-zero is-major' : (i === 0 || i === 4 || i === 8 ? ' is-major' : '')) + '" style="top:' + p + '%"><i></i><i></i></span>';
       }
       wrap.innerHTML =
         '<div class="xdj-fader is-channel" tabindex="0" role="slider" aria-label="' + esc(v.label) + '" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' +
           '<div class="xdj-scale">' + ticksHtml + '</div>' +
-          (isBipolar ? '<span class="xdj-zero-led" style="top:50%"></span>' : '') +
-          '<span class="xdj-detent-mark" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
+          (isBipolar ? '<span class="xdj-zero-led" title="0" style="top:' + zeroTop.toFixed(2) + '%"></span>' : '') +
+          '<span class="xdj-detent-mark" title="Default ' + esc(fmt(v, defVal)) + '" style="top:' + defTop.toFixed(2) + '%"></span>' +
           '<div class="xdj-slot"><div class="xdj-fill"></div></div>' +
           '<div class="xdj-cap"><span class="xdj-cap-grip"></span><span class="xdj-cap-line"></span><span class="xdj-cap-grip"></span></div>' +
         '</div>';
@@ -503,9 +483,7 @@
       const fill = wrap.querySelector('.xdj-fill');
       const zeroLed = wrap.querySelector('.xdj-zero-led');
       const put = (raw) => {
-        let val = Math.min(max, Math.max(min, Math.round(raw / step) * step));
-        val = +val.toFixed(decimals(step));
-        setValue(v.id, val, { quiet: true });
+        setValue(v.id, snapStep(raw, min, max, step), { quiet: true });
         paint();
         if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
       };
@@ -515,7 +493,7 @@
         const topPct = (1 - norm) * 100;
         cap.style.top = topPct.toFixed(2) + '%';
         if (isBipolar) {
-          const zeroPct = ((max - 0) / span) * 100;
+          const zeroPct = zeroTop;
           if (topPct <= zeroPct) {
             fill.style.top = topPct.toFixed(2) + '%';
             fill.style.height = (zeroPct - topPct).toFixed(2) + '%';
@@ -523,7 +501,7 @@
             fill.style.top = zeroPct + '%';
             fill.style.height = (topPct - zeroPct).toFixed(2) + '%';
           }
-          if (zeroLed) zeroLed.classList.toggle('is-on', Math.abs(cur) < 0.001);
+          if (zeroLed) zeroLed.classList.toggle('is-on', Math.abs(cur) < Math.max(1e-6, step / 2));
         } else {
           fill.style.top = topPct.toFixed(2) + '%';
           fill.style.height = (norm * 100).toFixed(2) + '%';
@@ -617,6 +595,13 @@
         paint();
       });
 
+      // Original switch rows reset on a label double-click; the pad keeps that (double-click = default).
+      pad.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.star-btn, .star')) return;
+        setValue(v.id, v.default);
+        paint();
+      });
+
       pad._paint = paint;
       paint();
       return pad;
@@ -684,8 +669,7 @@
       });
 
       const put = (val) => {
-        val = Math.min(max, Math.max(min, Math.round(val / step) * step));
-        val = +val.toFixed(decimals(step));
+        val = snapStep(val, min, max, step);
         if (val > 0) lastNonZero = val;
         setValue(v.id, val, { quiet: true });
         paint();
@@ -819,9 +803,7 @@
         d.setAttribute('aria-valuetext', fmt(v, cur));
       };
       const put = (val) => {
-        const st = v.step || 1;
-        val = Math.min(v.max, Math.max(v.min, Math.round(val / st) * st));
-        setValue(v.id, +val.toFixed(decimals(st)), { quiet: true });
+        setValue(v.id, snapStep(val, v.min, v.max, v.step || 1), { quiet: true });
         paint();
         if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
         d.dispatchEvent(new Event('input', { bubbles: true }));
