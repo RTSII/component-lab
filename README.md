@@ -81,8 +81,16 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
   - **`1366×768` & `Fit`:** Available under **Settings › Viewport** for secondary laptop/responsive checks.
 - The sandbox is primary: it always uses the full window. The dock (card, slim rail, VIP badge) and the floating toolbar only float over it and never resize or move it.
 
+### Cockpit Screen & Bezel
+- The sandbox is a **cockpit display screen** (fighter-jet MFD): `#stageFit` is the glass screen (rounded edge, thin cyan screen edge, dark frame, soft vignette and glare) and the existing margin around it (24px sides, 20px top, 36px bottom) is the **bezel**.
+- **Paint only:** the screen keeps the exact same box as before (1552×714 at 1600×770, 1318×712 at 1366×768) at every dock stage, bezel on or off. The dock and toolbar still float over it and never resize or move it.
+- **Bezel keys** (bottom edge, centred): pause / play (lit = playing) · zoom − · 100% and centre · zoom + · next sandbox frame (1600 → 1366 → Fit). The pips on the left/right edges and either side of the keys are decorative.
+- Zoomed-in content is clipped at the screen edge, like a real display.
+- The viewport frame inside the screen is now a faint solid edge (was dotted).
+- Restyle via the `--screen-*` variables at the top of `lab/lab.css`. Turn it off: **Settings › Viewport › Cockpit screen bezel** (on by default; off = the plain stage).
+
 ### Sandbox View Zoom (magnifier)
-- Small Pioneer-style pad over the stage, **bottom-left** (moves bottom-right when the dock is anchored left): **− zoom out · readout (e.g. `125%`) · + zoom in · frame icon = reset to 100% and centre**.
+- Small Pioneer-style pad **centred at the top of the screen**, inside the work area (clear of the top-left toolbar and the right-hand dock at 1600×770 and 1366×768): **− zoom out · readout (e.g. `125%`) · + zoom in · frame icon = reset to 100% and centre**.
 - **View only:** it scales the sandbox content on screen (`#stageScaler` transform). Control values, `manifest.json`, Copy changes / full file output, the URL hash and the stage box itself never change. 100% = the normal fit / viewport ratio.
 - **Toggle back:** click the readout (or press `0`) to switch **100% ⇄ your last zoom** (and its pan), back and forth.
 - **Steps:** 25%, 33%, 50%, 67%, 75%, 90%, 100%, 110%, 125%, 150%, 175%, 200%, 250%, 300%, 400%.

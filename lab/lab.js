@@ -41,6 +41,7 @@
     handle: '<path d="M14.5 6l-6 6 6 6"/>',
     zoomIn: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>',
     zoomOut: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5"/>',
+    monitor: '<rect x="3.5" y="5" width="17" height="11" rx="1.6"/><path d="M9 19.5h6M12 16v3.5"/>',
     zoomFit: '<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/><rect x="9" y="9" width="6" height="6" rx="1"/>',
     back: '<path d="M14.5 6l-6 6 6 6"/>',
     chev: '<path d="M9.5 6l6 6-6 6"/>',
@@ -112,7 +113,7 @@
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true, bezel: true }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
@@ -574,6 +575,10 @@
     const box = { x: r.x + side, y: r.y + topPad, w: Math.max(80, r.w - 2 * side), h: Math.max(80, r.h - topPad - bottomPad) };
     const fit = $('stageFit');
     Object.assign(fit.style, { left: box.x + 'px', top: box.y + 'px', width: box.w + 'px', height: box.h + 'px' });
+    // the screen's bezel margins (CSS --scr-*): the bezel buttons and the zoom pad sit from these; the box never changes for them
+    const stg = $('stage');
+    stg.style.setProperty('--scr-l', box.x + 'px'); stg.style.setProperty('--scr-t', box.y + 'px');
+    stg.style.setProperty('--scr-r', (innerWidth - box.x - box.w) + 'px'); stg.style.setProperty('--scr-b', (innerHeight - box.y - box.h) + 'px');
     const view = VIEWS.find((x) => x.id === ui.view) || VIEWS[0];
     const f = def.frames[frameKeyFor(ui.view)];
     const bw = view.w || f.w, bh = view.h || f.h;
@@ -595,7 +600,7 @@
   // position of the sandbox (stage) itself. 100% = the normal fit / viewport ratio. Remembered for
   // this browser session only (sessionStorage); ?reset puts it back to 100%. The browser's own
   // Ctrl/Cmd +/-/0 page zoom is left alone.
-  //   icons (bottom-left over the stage): - / readout (click = 100% <-> last zoom) / + / fit
+  //   icons (top-centre, inside the screen): - / readout (click = 100% <-> last zoom) / + / fit
   //   keys: + or = in, - out, 0 = 100% <-> last zoom (not while typing or focused in the component)
   //   Ctrl/Cmd + wheel (or a trackpad pinch) over the stage zooms at the cursor; plain wheel over the icons
   //   pan: drag empty stage space, or middle-mouse drag anywhere on it; touch: two-finger pinch / pan
@@ -697,7 +702,7 @@
       if (act === 'toggle') toggle(); else step(act === 'in' ? 1 : -1);
       return true;
     }
-    const blank = (t) => !t.closest('#labFrame, #stageBar, #tbMenu, #zoomCtl, .stage-note');
+    const blank = (t) => !t.closest('#labFrame, #stageBar, #tbMenu, #zoomCtl, #bezel, .stage-note');
     function build() {
       const stage = $('stage');
       ctl = el('div', 'zoom-ctl glass');
@@ -794,9 +799,55 @@
       setBase(bs) { base = bs; clampPan(); apply(false); },
       clear() { z = 1; px = 0; py = 0; last = null; try { sessionStorage.removeItem(SKEY); } catch (_) { /* ignore */ } },
       // true while this pointerdown started a pan (so the outside-click fold leaves the card alone)
-      claims(t) { return armed || !!(t && t.closest && t.closest('#zoomCtl')); },
+      claims(t) { return armed || !!(t && t.closest && t.closest('#zoomCtl, #bezel')); },
       get level() { return z; }, get pan() { return { x: px, y: py }; }, get last() { return last; }
     };
+  })();
+
+  // ---------- cockpit screen bezel ----------
+  // The sandbox is a cockpit display (MFD): #stageFit is the glass screen, the existing margin around it is
+  // the bezel. Bezel buttons live in that margin only (never over the screen, never moving it); the
+  // dock and toolbar still float over everything. Functional keys: play/pause, zoom -, 100%, zoom +,
+  // sandbox frame; the rest are dim decorative pips. Style: --screen-* in lab.css. Off: Settings > Viewport.
+  const Bezel = (() => {
+    let root = null;
+    const pip = (n) => Array.from({ length: n }, () => '<i class="bz-pip" aria-hidden="true"></i>').join('');
+    const key = (act, ico, title) => '<button class="bz-key" type="button" data-bz="' + act + '" title="' + title + '" aria-label="' + title + '">' + svg(ico) + '</button>';
+    function build() {
+      root = el('div', 'bezel');
+      root.id = 'bezel';
+      root.innerHTML = '<div class="bz-col bz-l">' + pip(5) + '</div><div class="bz-col bz-r">' + pip(5) + '</div>'
+        + '<div class="bz-row bz-b" role="toolbar" aria-label="Screen keys">' + pip(3)
+        + key('play', 'pause', 'Pause / play (' + KEYS.pause.label + ')')
+        + key('out', 'zoomOut', 'Zoom out (' + KEYS.zoomOut.label + ')')
+        + key('fit', 'zoomFit', 'View 100% and centre')
+        + key('in', 'zoomIn', 'Zoom in (' + KEYS.zoomIn.label + ')')
+        + key('view', 'monitor', 'Next sandbox frame (1600 / 1366 / Fit)')
+        + pip(3) + '</div>';
+      $('stage').appendChild(root);
+      root.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-bz]');
+        if (!b) return;
+        const a = b.dataset.bz;
+        if (a === 'play') $('labPlay').click();
+        else if (a === 'in') Zoom.step(1);
+        else if (a === 'out') Zoom.step(-1);
+        else if (a === 'fit') Zoom.reset();
+        else if (a === 'view') { const i = VIEWS.findIndex((x) => x.id === ui.view); setView(VIEWS[(i + 1) % VIEWS.length].id); }
+      });
+      root.addEventListener('dblclick', (e) => e.preventDefault());
+      sync();
+    }
+    function sync() {
+      const on = ui.bezel !== false;
+      document.body.classList.toggle('cockpit', on);
+      if (!root) return;
+      root.hidden = !on;
+      const p = root.querySelector('[data-bz="play"]');
+      p.innerHTML = svg(playing ? 'pause' : 'play');
+      p.classList.toggle('is-lit', playing);
+    }
+    return { build, sync };
   })();
 
   // ---------- time ----------
@@ -812,6 +863,7 @@
     $('labPlay').innerHTML = svg(playing ? 'pause' : 'play');
     $('labPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play');
     $('labScrub').value = wrap(offset);
+    Bezel.sync();
   }
   function tick(t) {
     const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0;
@@ -2003,10 +2055,11 @@
     const li = (h) => '<li>' + h + '</li>';
     const k = (x) => '<kbd>' + esc(x) + '</kbd>';
     function zoomItems() {
-      return li('Icons bottom-left over the stage: \u2212 / + zoom (25% to 400%), the readout shows the view zoom, the frame icon resets to 100% and centres')
+      return li('Pad at the top-centre of the screen: \u2212 / + zoom (25% to 400%), the readout shows the view zoom, the frame icon resets to 100% and centres')
         + li('Toggle back: click the readout or press ' + k(KEYS.zoomToggle.label) + ' to switch 100% \u21c4 your last zoom')
         + li(k(KEYS.zoomIn.label) + ' / ' + k('=') + ' in \u00b7 ' + k('-') + ' out \u00b7 Ctrl+wheel or a pinch zooms at the cursor \u00b7 drag empty space or middle-drag to pan when zoomed in')
-        + li('Screen only: the component\u2019s values, export and URL never change; it still reacts to hover, click, drag and keys at any zoom. Session only; ?reset = 100%. Hide the icons: Settings \u203a Viewport');
+        + li('Screen only: the component\u2019s values, export and URL never change; it still reacts to hover, click, drag and keys at any zoom. Session only; ?reset = 100%. Hide the icons: Settings \u203a Viewport')
+        + li('Bezel keys (bottom edge, around the screen): pause/play \u00b7 zoom \u2212 / 100% / + \u00b7 next sandbox frame; side pips are decorative. Bezel off: Settings \u203a Viewport \u203a Cockpit screen bezel');
     }
     function proItems() {
       const fl = ui.flick === false ? 'off (Settings \u203a Toolbar)' : (ui.flickStrength || 'normal');
@@ -2558,7 +2611,9 @@
     buildSeg(vps, [VIEWS[1], VIEWS[2], VIEWS[0]].map((x) => ({ value: x.id, label: x.label })), ui.view, (val) => setView(val), { equal: true });
     inner.appendChild(setRow('Sandbox frame', vps, '1600\u00d7770 is the default: the HP laptop (Chrome on a 1600\u00d7900 screen). 1366\u00d7768 and Fit are extra checks.'));
     inner.appendChild(switchRow('Show zoom controls', () => ui.zoomCtl !== false, (on) => { ui.zoomCtl = on; saveUi(); Zoom.sync(); },
-      'View zoom for the sandbox (bottom-left): \u2212 / + / readout / fit. Screen only: the component\u2019s values, export and URL never change. Keys + \u2212 0, Ctrl+wheel or pinch to zoom, drag empty space (or middle-drag) to pan. Remembered for this session; ?reset = 100%.'));
+      'View zoom for the sandbox (top-centre of the screen): \u2212 / readout / + / fit. Screen only: the component\u2019s values, export and URL never change. Keys + \u2212 0, Ctrl+wheel or pinch to zoom, drag empty space (or middle-drag) to pan. Remembered for this session; ?reset = 100%.'));
+    inner.appendChild(switchRow('Cockpit screen bezel', () => ui.bezel !== false, (on) => { ui.bezel = on; saveUi(); Bezel.sync(); },
+      'The sandbox as a cockpit display: a glass screen in a dark bezel with small keys in the margin (pause/play, zoom \u2212 / 100% / +, next frame; the rest are decorative). Look only: the screen keeps its exact size and position. Off = the plain stage.'));
 
     section(inner, 'Toolbar');
     const tbShowRow = switchRow('Show toolbar icon', () => TB.shown, (on) => TB.setOut(on), 'The floating toolbar over the stage. Grab anywhere on its shell to drag & drop it for this session, or throw it hard to launch an arcade exit!');
@@ -3498,6 +3553,7 @@
     $('labPicker').addEventListener('change', (e) => loadComponent(e.target.value, false));
     TB.init();
     Zoom.build();
+    Bezel.build();
     $('viewSeg').classList.add('seg-xs');
     $('viewSeg').querySelectorAll('.seg-btn').forEach((b) => { const v = VIEWS.find((x) => x.id === b.dataset.value); if (v) { b.title = v.w ? v.w + ' \u00d7 ' + v.h + ' viewport' : 'Fit the frame to the free space'; b.setAttribute('aria-label', b.title); } });
     viewPill = buildSeg($('viewSeg'), VIEWS.map((x) => ({ value: x.id, label: x.w ? String(x.w) : x.label })), ui.view, (val) => setView(val));
@@ -3800,7 +3856,7 @@
         Object.assign(ui, {
           dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
           view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B',
-          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true,
+          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true, bezel: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
         mode = 'basic';
