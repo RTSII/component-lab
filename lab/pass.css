@@ -1,7 +1,16 @@
-/* Component Lab profile pass: the closed dock is a small backstage / DJ-access pass.
-   --trig-w / --trig-h / --trig-r size the closed dock; lab.js reads them for the open/close morph. */
+/* Component Lab profile pass: the closed dock (stage 1) is a VIP / all-access lanyard pass, the part
+   that hangs from a DJ's lanyard: clip + slot punch at the top, access band, photo window, name and
+   role lines, barcode. Portrait (taller than wide), sized for the top-right corner the round button
+   used: 54 x 84 at 16px from the edges, so it clears the stage toolbar (top left) at 1366x768 and 1600x770.
+   --trig-w / --trig-h / --trig-r size the closed dock; lab.js reads them for the stage morph.
+   Restyle hooks (e.g. a future Pioneer XDJ-XZ skin): --pass-accent, --pass-display, --pass-face,
+   --pass-clip, --pass-strap, --strap-w; every part has its own pm-* class. */
 :root {
-  --trig-w: 56px; --trig-h: 76px; --trig-r: 15px;
+  --trig-w: 54px; --trig-h: 84px; --trig-r: 9px;
+  --pass-face: #090c12;
+  --pass-clip: linear-gradient(180deg, #d9dee6, #8a929e 55%, #5d646e);
+  --pass-strap: var(--pass-accent);
+  --strap-w: 12px;
   --pass-accent: #00e5ff;
   --pass-display: 'Chakra Petch', var(--ui, system-ui), sans-serif;
 }
@@ -19,27 +28,47 @@
 .dock-trigger:active .pass-mini { transform: scale(0.96); }
 .dock-trigger:focus-visible { outline-offset: 3px; }
 
-/* ---------- mini pass (56 x 76) ---------- */
+/* ---------- lanyard strap: from the screen edge down to the clip (top anchors only, closed only) ---------- */
+.dock[data-state="closed"][data-anchor^="top"]:not([data-pos="bottom"]):not(.is-morphing)::before {
+  content: ''; position: absolute; left: 50%; bottom: 100%; width: var(--strap-w); height: 17px; margin-left: calc(var(--strap-w) / -2);
+  pointer-events: none; border-radius: 0 0 2px 2px; opacity: 0.85;
+  background:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 4px),
+    linear-gradient(90deg, color-mix(in srgb, var(--pass-strap) 55%, #000), var(--pass-strap) 50%, color-mix(in srgb, var(--pass-strap) 55%, #000));
+  box-shadow: 0 0 10px -3px var(--pass-strap);
+}
+
+/* ---------- mini lanyard pass (54 x 84) ---------- */
 .pass-mini, .pass-full { --pa: var(--pass-accent); }
 .pass-mini {
   position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%;
-  padding: 13px 0 5px; border-radius: inherit; overflow: hidden; isolation: isolate;
+  padding: 14px 0 5px; border-radius: inherit; overflow: hidden; isolation: isolate;
   background:
-    linear-gradient(160deg, color-mix(in srgb, var(--pa) 20%, #0c1118) 0%, #090c12 55%, color-mix(in srgb, var(--pa) 10%, #090c12) 100%);
+    linear-gradient(165deg, color-mix(in srgb, var(--pa) 18%, #0c1118) 0%, var(--pass-face) 55%, color-mix(in srgb, var(--pa) 9%, var(--pass-face)) 100%);
   transition: transform 0.35s var(--spring, cubic-bezier(0.34, 1.4, 0.64, 1));
 }
-.dock-trigger:hover .pass-mini { transform: translateY(-1px); }
-.pm-slot { position: absolute; left: 50%; top: 5px; width: 16px; height: 3.5px; margin-left: -8px; border-radius: 3px; background: #05070a; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pa) 45%, transparent), 0 0 6px color-mix(in srgb, var(--pa) 35%, transparent); }
-.pm-led { position: absolute; right: 6px; top: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--pa); box-shadow: 0 0 6px var(--pa); animation: pm-blink 2.4s ease-in-out infinite; }
+.dock-trigger:hover .pass-mini { transform: translateY(1px); }
+/* metal clip at the top edge + the slot punch under it */
+.pm-clip { position: absolute; left: 50%; top: 0; width: 14px; height: 5px; margin-left: -7px; border-radius: 0 0 3px 3px; background: var(--pass-clip); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); z-index: 1; }
+.pm-slot { position: absolute; left: 50%; top: 7px; width: 16px; height: 3.5px; margin-left: -8px; border-radius: 3px; background: #05070a; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pa) 45%, transparent), 0 0 6px color-mix(in srgb, var(--pa) 35%, transparent); }
+.pm-led { position: absolute; right: 5px; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: var(--pa); box-shadow: 0 0 6px var(--pa); animation: pm-blink 2.4s ease-in-out infinite; }
 @keyframes pm-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-.pm-photo { position: relative; display: grid; place-items: center; width: 33px; height: 33px; flex: none; border-radius: 9px; overflow: hidden; color: var(--pa);
+/* access band ("ALL ACCESS" etc.), full width like a printed stripe */
+.pm-band { align-self: stretch; display: block; height: 10px; overflow: hidden; text-align: center; white-space: nowrap;
+  font: 700 6px/10px var(--pass-display); letter-spacing: 0.08em; color: #05070a; background: var(--pa);
+  box-shadow: 0 0 8px -2px var(--pa); }
+.pm-band.is-long { font-size: 5.2px; letter-spacing: 0.04em; }
+.pm-photo { position: relative; display: grid; place-items: center; width: 24px; height: 24px; margin-top: 4px; flex: none; border-radius: 6px; overflow: hidden; color: var(--pa);
   background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--pa) 22%, #0e141c), #070a0f);
-  box-shadow: 0 0 0 1.5px var(--pa), 0 0 10px -1px color-mix(in srgb, var(--pa) 60%, transparent); }
+  box-shadow: 0 0 0 1.2px var(--pa), 0 0 8px -1px color-mix(in srgb, var(--pa) 60%, transparent); }
 .pm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pm-photo svg { width: 76%; height: 76%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--pa) 70%, transparent)); }
-.pm-photo b { font: 700 15px/1 var(--pass-display); letter-spacing: 0.02em; text-shadow: 0 0 8px var(--pa); }
-.pm-tier { margin-top: 5px; padding: 1px 5px 0; border-radius: 4px; font: 700 8px/11px var(--pass-display); letter-spacing: 0.14em; color: var(--pa); background: color-mix(in srgb, var(--pa) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pa) 38%, transparent); white-space: nowrap; }
-.pm-bars { display: block; width: 36px; height: 6px; margin-top: auto; opacity: 0.8;
+.pm-photo svg { width: 78%; height: 78%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--pa) 70%, transparent)); }
+.pm-photo b { font: 700 11px/1 var(--pass-display); letter-spacing: 0.02em; text-shadow: 0 0 8px var(--pa); }
+/* name + role lines (placeholder text until set in Settings > Profile pass) */
+.pm-name, .pm-role { display: block; max-width: calc(100% - 8px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; text-transform: uppercase; }
+.pm-name { margin-top: 3px; font: 700 7.5px/9px var(--pass-display); letter-spacing: 0.04em; color: #f2fff5; }
+.pm-role { font: 5.5px/7px var(--mono, ui-monospace, monospace); letter-spacing: 0.08em; color: var(--lab-muted, #9aa3b2); }
+.pm-bars { display: block; width: 38px; height: 5px; margin-top: auto; opacity: 0.8;
   background: repeating-linear-gradient(90deg, var(--pa) 0 1px, transparent 1px 2px, var(--pa) 2px 4px, transparent 4px 5px, var(--pa) 5px 6px, transparent 6px 8px); }
 /* holo sheen: a soft highlight under the pointer plus a slow diagonal sweep */
 .pm-sheen { position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit; overflow: hidden; mix-blend-mode: screen;
@@ -59,6 +88,7 @@
   background: linear-gradient(160deg, color-mix(in srgb, var(--pa) 22%, #0c1118) 0%, #090c12 52%, color-mix(in srgb, var(--pa) 10%, #090c12) 100%);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--pa) 50%, transparent), 0 16px 40px -16px rgba(0, 0, 0, 0.9), 0 0 26px -8px color-mix(in srgb, var(--pa) 55%, transparent); }
 .pf-top { align-self: stretch; display: flex; justify-content: space-between; font: 700 8.5px/1 var(--pass-display); letter-spacing: 0.22em; color: color-mix(in srgb, var(--pa) 80%, #fff); opacity: 0.85; }
+.pass-full .pm-clip { width: 30px; height: 9px; margin-left: -15px; border-radius: 0 0 5px 5px; }
 .pass-full .pf-slot { top: 22px; width: 30px; height: 6px; margin-left: -15px; }
 .pass-full .pm-led { right: 12px; top: 26px; width: 5px; height: 5px; }
 .pf-photo { width: 88px; height: 88px; margin-top: 22px; border-radius: 16px; box-shadow: 0 0 0 2px var(--pa), 0 0 20px -2px color-mix(in srgb, var(--pa) 60%, transparent); }
@@ -89,4 +119,6 @@
   .pm-led, .pm-sheen::after, .pf-holo { animation: none; }
   .pass-mini { transition-duration: 0.01ms; }
 }
+/* a flick / drag of the pass: tilt a little like a badge swinging on its strap */
+.dock-trigger.is-flicking .pass-mini { transform: rotate(-3deg); }
 html.no-motion .pm-led, html.no-motion .pm-sheen::after, html.no-motion .pf-holo { animation: none; }

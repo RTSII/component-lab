@@ -1,8 +1,9 @@
-// Component Lab profile pass. The closed dock is a small backstage / DJ-access pass instead of a round
-// button: slot punch, photo window, tier tag, barcode, status LED and a holo sheen that follows the
-// pointer. The same markup renders the large preview in Settings > Profile. No dependencies.
+// Component Lab profile pass. The closed dock (stage 1) is a VIP / all-access lanyard pass instead of a
+// round button: clip and slot punch, access band, photo window, name and role lines, barcode, status
+// LED and a holo sheen that follows the pointer. The same profile renders the large preview in
+// Settings > Profile pass. No dependencies.
 //
-//   Pass.miniHtml()      the 56 x 76 pass (also used as the travel ghost when the dock morphs)
+//   Pass.miniHtml()      the 54 x 84 lanyard pass (also used as the travel ghost when the dock morphs)
 //   Pass.fullHtml()      the large pass for the Settings preview
 //   Pass.mount(button)   renders into #dockTrigger, tracks the pointer, re-renders on change
 //   Pass.set(patch)      update + save the profile ({ name, role, tier, accent, type, glyph, chars, image })
@@ -39,7 +40,7 @@
   const design = (id) => DESIGNS.find((d) => d.id === id) || DESIGNS[0];
   const tier = (id) => TIERS.find((t) => t.id === id) || TIERS[1];
 
-  const DEFAULTS = { name: 'Rob', role: 'Lab crew', tier: 'vip', accent: '#00e5ff', type: 'glyph', glyph: 'vinyl', chars: 'R', image: '', serial: 0 };
+  const DEFAULTS = { name: 'DJ Name', role: 'Artist', tier: 'all', accent: '#00e5ff', type: 'glyph', glyph: 'vinyl', chars: 'R', image: '', serial: 0 };
 
   function load() {
     let p = {};
@@ -65,9 +66,11 @@
   function miniHtml() {
     const t = tier(profile.tier);
     return '<span class="pass-mini" style="' + accentStyle() + '">'
-      + '<i class="pm-slot"></i><i class="pm-led"></i>'
+      + '<i class="pm-clip"></i><i class="pm-slot"></i><i class="pm-led"></i>'
+      + '<span class="pm-band' + (t.line.length > 10 ? ' is-long' : '') + '">' + esc(t.line) + '</span>'
       + '<span class="pm-photo">' + face() + '</span>'
-      + '<span class="pm-tier">' + esc(t.short) + '</span>'
+      + '<span class="pm-name">' + esc(profile.name || 'DJ Name') + '</span>'
+      + '<span class="pm-role">' + esc(profile.role || '') + '</span>'
       + '<i class="pm-bars"></i>'
       + '<i class="pm-sheen"></i></span>';
   }
@@ -77,7 +80,7 @@
     const serial = String(profile.serial).padStart(4, '0');
     return '<div class="pass-full" style="' + accentStyle() + '">'
       + '<div class="pf-top"><span>COMPONENT LAB</span><span class="pf-year">2026</span></div>'
-      + '<i class="pm-slot pf-slot"></i><i class="pm-led"></i>'
+      + '<i class="pm-clip"></i><i class="pm-slot pf-slot"></i><i class="pm-led"></i>'
       + '<div class="pm-photo pf-photo">' + face() + '</div>'
       + '<div class="pf-name">' + esc(profile.name || 'Unnamed') + '</div>'
       + '<div class="pf-role">' + esc(profile.role || '') + '</div>'
@@ -90,7 +93,7 @@
   function paintHost() {
     if (!host) return;
     host.innerHTML = miniHtml();
-    host.title = 'Controls · ' + (profile.name || 'Profile') + ' · ' + tier(profile.tier).label;
+    host.title = (profile.name || 'Profile') + ' · ' + tier(profile.tier).line + '\nClick or Alt+D: open the controls · Shift+click: full card';
     document.documentElement.style.setProperty('--pass-accent', profile.accent);
   }
 
