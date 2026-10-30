@@ -100,8 +100,8 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
     `Esc` or an outside click closes it. Pro sees how the dock, pass and shortcuts work; Basic sees what
     Pro adds and a Switch to Pro button. The text is generated from `KEYS` / `PRO_FEATURES`, so it
     stays in sync with the code.
-- **Start stage** (Pro, Settings > Dock > Start stage): `1 Pass`, `2 Rail` (default) or `3 Card` on load.
-  With `1 Pass`, the X folds the card straight to the pass.
+- **Dock state** (Pro, Settings > Dock > Dock state): `Expanded` (card + rail, default), `Slim rail` or `VIP badge` (collapsed) on load. Saved values are unchanged (`full` / `slim` / `icon`); an old saved `slim` default moves to `full` once (uiVer 5).
+  With `VIP badge`, the X folds the card straight to the badge.
 - **Keys:** `Esc` = one stage down (closes the help card, colour arc or popover first; never hides the
   dock). `Alt+D` / `Shift+D` = next stage (wraps). Clicking the stage backdrop folds the card to the rail.
   Clicking or tabbing inside the card pins it open.

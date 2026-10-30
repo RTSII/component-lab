@@ -107,10 +107,12 @@
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
+  // v5: Pro now opens fully expanded (card + rail). 'slim' was the old saved default, so move it to 'full'; 'icon' stays.
+  if (store.get('uiVer', 0) < 5) { if (!ui.proDock || ui.proDock === 'slim') ui.proDock = 'full'; store.set('uiVer', 5); store.set('ui', ui); }
   const saveUi = () => store.set('ui', ui);
   M.enabled = ui.motion !== false;
 
@@ -818,7 +820,7 @@
   function closeDock(forceIcon) {
     const n = dockStage();
     if (n <= minStage()) return;
-    const toPass = minStage() === 1 && n === 3 && (forceIcon === true || (ui.proDock || 'slim') === 'icon');
+    const toPass = minStage() === 1 && n === 3 && (forceIcon === true || (ui.proDock || 'full') === 'icon');
     setStage(toPass ? 1 : n - 1);
   }
 
@@ -1672,7 +1674,7 @@
         + '</ul><p class="help-h">Shortcuts</p><ul>'
         + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
         + '</ul><p class="help-h">Settings</p><ul>'
-        + li('Gear on the rail \u203a Dock: start stage, flick-to-hide \u00b7 Profile pass: name, role, access level')
+        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), flick-to-hide \u00b7 Profile pass: name, role, access level')
         + '</ul>';
     }
     function basicItems() {
@@ -2139,16 +2141,16 @@
       const pds = el('div', 'seg seg-sm');
       pds.dataset.pro = 'dock';
       buildSeg(pds, [
-        { value: 'icon', label: '1 Pass' },
-        { value: 'slim', label: '2 Rail' },
-        { value: 'full', label: '3 Card' }
-      ], ui.proDock || 'slim', (val) => {
+        { value: 'full', label: 'Expanded' },
+        { value: 'slim', label: 'Slim rail' },
+        { value: 'icon', label: 'VIP badge' }
+      ], ui.proDock || 'full', (val) => {
         ui.proDock = val;
         saveUi();
         Log.push('dock start ' + val);
-        toast('Dock start stage: ' + (val === 'icon' ? 'the pass' : val === 'slim' ? 'the thin rail' : 'the full card') + ' on load.');
+        toast('Dock state on load: ' + (val === 'icon' ? 'the VIP badge (collapsed)' : val === 'slim' ? 'the slim rail' : 'expanded (card + rail)') + '.');
       }, { equal: true });
-      inner.appendChild(setRow('Start stage', pds, 'Stage on load: 1 the lanyard pass, 2 the thin rail, 3 card + rail. With 1, the X folds the card straight to the pass.'));
+      inner.appendChild(setRow('Dock state', pds, 'How Pro opens: Expanded = card + rail, Slim rail = the vertical icon rail, VIP badge = collapsed to the lanyard pass. With VIP badge, the X folds the card straight to the badge.'));
     }
     if (proOn('dockHide')) {
       inner.appendChild(switchRow('Allow flick-to-hide', () => ui.dockFlickHide !== false, (on) => { ui.dockFlickHide = on; saveUi(); },
@@ -2311,7 +2313,7 @@
     resetUiBtn.addEventListener('click', () => {
       store.del('ui');
       Object.assign(ui, {
-        dockPos: 'right', anchor: 'top-right', mode: 'basic', motion: true, paletteSource: 'project',
+        dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
         view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
         tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
         railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
@@ -3302,7 +3304,7 @@
           if (k && k.startsWith(KEY)) localStorage.removeItem(k);
         }
         Object.assign(ui, {
-          dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'slim', motion: true, paletteSource: 'project',
+          dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
           view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
           tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
@@ -3327,7 +3329,7 @@
       TB.start();
       syncDockTools();
       if (mode === 'pro') {
-        const pref = ui.proDock || 'slim';
+        const pref = ui.proDock || 'full';
         const initDock = (pref === 'full') ? 'open' : (pref === 'icon' && proOn('dockStages')) ? 'closed' : 'slim';
         setDockState(initDock, { instant: true, how: 'init', force: true });
       } else {
