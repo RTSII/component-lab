@@ -106,8 +106,9 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
   dock). `Alt+D` / `Shift+D` = next stage (wraps). Clicking the stage backdrop folds the card to the rail.
   Clicking or tabbing inside the card pins it open.
 - **Rail Icons (top to bottom):**
+  0. **Round avatar** (the pass photo): steps the dock card -> slim rail -> VIP badge and back (Shift+click = other way; Basic: card <-> rail). At stage 1 the VIP badge itself shows the same photo; click it to grow again.
   1. **Categories:** `Color`, `Interaction` (shown only when the component has cursor/touch/key behaviour), `Surface`, `Type`, `Motion`, `Rate`, `Layout`.
-  2. **Actions:** **`+`** (New Component modal) and **Toolbar** (shows/throws out the floating stage toolbar).
+  2. **Actions:** **`+`** (New Component modal) and **Toolbar ON/OFF pad** (XDJ-XZ pad style: LED lit = ON, pulsing = ON but flicked/thrown away). Click: OFF -> ON (flies out) · parked -> back out · ON -> OFF (flies home). Flick toward the stage still throws it out (and turns it ON). While ON, the edge tab / `Alt+D` that brings a hidden dock back also brings the toolbar back, and a Basic/Pro switch never leaves it parked. Basic ignores Pro's hidden rail actions, so the pad is always on Basic's rail.
   3. **Settings (Gear):** Always last on the rail and can never be hidden.
 - **Quick Shortcuts & Power Features:**
   - **Click any component title (`#cmpName`)** in the dock header or floating toolbar to switch components even when the floating toolbar is dismissed.

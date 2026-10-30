@@ -59,3 +59,24 @@
 .rail-avatar:hover .ra-face, .rail-avatar:focus-visible .ra-face { transform: scale(1.07); box-shadow: 0 0 0 2px var(--pa), 0 0 16px -2px var(--pa), inset 0 1px 0 rgba(255, 255, 255, 0.16); }
 .rail-avatar:active .ra-face { transform: scale(0.93); }
 @media (prefers-reduced-motion: reduce) { .rail-avatar .ra-face { transition-duration: 0.01ms; } }
+
+/* ---------- stage toolbar ON/OFF pad on the rail (XDJ-XZ pad style, reuses the .xdj-fx-pad look) ----------
+   .is-on = LED lit (ui.tbOut) · .is-away = ON but the toolbar was flicked / thrown away (LED pulses). */
+.dock .rail .rail-btn.tb-sw { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 0 0; border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.09); background: linear-gradient(180deg, #191f2c 0%, #10141e 100%); color: var(--lab-muted);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 5px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s; }
+.dock .rail .rail-btn.tb-sw:hover { border-color: rgba(255, 255, 255, 0.2); color: #fff; }
+.dock .rail .rail-btn.tb-sw:active { box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7); }
+.dock .rail .rail-btn.tb-sw:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--lab-accent), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+.tb-sw .ico { width: 16px; height: 16px; }
+.tb-sw .tbsw-led { position: absolute; top: 3px; left: 50%; width: 14px; height: 2.5px; margin-left: -7px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); transition: background 0.2s, box-shadow 0.2s; }
+.tb-sw .tbsw-txt { font: 700 6.5px/1 var(--mono); letter-spacing: 0.08em; color: var(--lab-dim); }
+.dock .rail .rail-btn.tb-sw.is-on { border-color: rgba(0, 240, 255, 0.75); background: linear-gradient(180deg, rgba(0, 240, 255, 0.16), rgba(0, 240, 255, 0.08)), #10141e; color: #fff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3), inset 0 0 4px rgba(0, 240, 255, 0.2); }
+.tb-sw.is-on .tbsw-led { background: #00f0ff; box-shadow: 0 0 6px #00f0ff; }
+.tb-sw.is-on .tbsw-txt { color: #00f0ff; }
+.dock .rail .rail-btn.tb-sw.is-away { border-color: rgba(0, 240, 255, 0.4); box-shadow: inset 0 0 4px rgba(0, 240, 255, 0.15); }
+.tb-sw.is-away .tbsw-led { animation: tbsw-pulse 1.4s ease-in-out infinite; }
+@keyframes tbsw-pulse { 50% { opacity: 0.3; box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .tb-sw.is-away .tbsw-led { animation: none; opacity: 0.6; } }

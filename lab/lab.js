@@ -869,6 +869,8 @@
     dock.getAnimations().forEach((a) => a.cancel());
     syncHint();
     layoutStage();
+    // the way back brings the stage toolbar back too, when its rail switch is ON
+    if (TB.restore() && !quiet) Log.push('toolbar back with the dock');
     const lv = M.level();
     if (lv === 'full') {
       const e = dockEdge(), o = e === 'right' ? 'translateX(70px)' : e === 'left' ? 'translateX(-70px)' : 'translateY(70px)';
@@ -881,12 +883,16 @@
     const h = $('dockHint');
     if (!h) return;
     h.hidden = !dockHidden;
+    const tb = ui.tbOut !== false;
+    h.title = 'Show the controls' + (tb ? ' and the stage toolbar' : '') + ' (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
+    h.setAttribute('aria-label', h.title);
     h.dataset.edge = dockEdge();
     h.dataset.anchor = ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor;
   }
   // Basic <-> Pro: Basic has no pass stage and no hiding, so bring the dock back to a visible stage.
   function dockModeChanged() {
     if (!proOn('dockHide') && dockHidden) showDock(true);
+    TB.restore();   // a mode switch never leaves a parked toolbar behind (OFF stays off; its switch is on the rail)
     if (dockStage() < minStage()) setDockState(DOCK_STAGES[minStage() - 1]);
     syncDockTools();
   }
@@ -974,7 +980,12 @@
     };
     orderedTools().filter((t) => !toolHidden().includes(t.id)).forEach((t) => {
       if (t.id === 'new') tool('new', svg('plus'), 'New component', () => { openDock('click'); startNew(); });
-      if (t.id === 'toolbar') TB.railButton(tool('toolbar', svg('toolbar'), 'Stage toolbar (click, or flick toward the stage)', () => TB.railClick()));
+      if (t.id === 'toolbar') {
+        // XDJ-style ON/OFF pad (lit LED when ON); TB.syncRailBtn keeps the label and state current
+        const b = tool('toolbar', '<i class="tbsw-led" aria-hidden="true"></i>' + svg('toolbar') + '<span class="tbsw-txt" aria-hidden="true">OFF</span>', 'Stage toolbar ON/OFF', () => TB.railClick());
+        b.classList.add('tb-sw');
+        TB.railButton(b);
+      }
     });
     tool('settings', svg('gear'), 'Settings', () => { openDock('click'); go({ type: 'settings' }); });
     requestAnimationFrame(() => syncRail(true));
@@ -1700,6 +1711,7 @@
         + (proOn('dockFlick') ? li('Flick (' + esc(fl) + '): the pass or the dock\u2019s inner edge toward the stage grows it; the edge toward the screen edge shrinks it. Gentle = one stage, strong = to the end') : '')
         + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: ' + k(KEYS.dock.label) + ', the edge handle, or reload'
           : 'Flick-to-hide is off (Settings \u203a Dock)')
+        + li('Toolbar pad on the rail: ON / OFF (LED lit = ON, pulsing = ON but flicked away). While ON, the edge tab or ' + k(KEYS.dock.label) + ' brings the toolbar back with the dock')
         + '</ul><p class="help-h">Shortcuts</p><ul>'
         + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
         + '</ul><p class="help-h">Settings</p><ul>'
@@ -1714,7 +1726,7 @@
         + (f.dockHide ? li('Flick the pass away to hide the dock (' + esc(KEYS.dock.label) + ' or the edge handle brings it back)') : '')
         + li('Every control, in collapsible sections')
         + '</ul><p class="help-h">Now</p><ul>'
-        + li('\u2715 folds the card to the rail; a rail icon opens it') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
+        + li('\u2715 folds the card to the rail; a rail icon opens it') + li('Toolbar pad on the rail: ON / OFF (LED lit = ON)') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
         + '</ul><button type="button" class="help-pro">Switch to Pro</button>';
     }
     function fill() {
@@ -2548,7 +2560,8 @@
     const idx = (id) => { const i = ord.indexOf(id); return i < 0 ? 100 + RAIL_TOOLS.findIndex((t) => t.id === id) : i; };
     return RAIL_TOOLS.slice().sort((a, b) => idx(a.id) - idx(b.id));
   }
-  const toolHidden = () => (Array.isArray(ui.toolHidden) ? ui.toolHidden : []);
+  // Basic ignores Pro's hidden rail actions, so the toolbar ON/OFF switch can never be lost there.
+  const toolHidden = () => (hasPro('railCustomize') && Array.isArray(ui.toolHidden) ? ui.toolHidden : []);
 
   const TB = (function () {
     const open = new Set();
@@ -2654,26 +2667,39 @@
       if (allOpen()) stepDir = -1; else if (!isOpen()) stepDir = 1;
       return stepDir > 0 ? openN(1) : closeN(1);
     }
+    // The rail's toolbar button is an ON/OFF switch (XDJ pad, LED lit when ON). ON = ui.tbOut.
+    // ON but parked (flicked / thrown away): the LED pulses; a click, the edge tab or Alt+D brings it back.
     function syncRailBtn() {
       if (!railBtn) return;
-      const on = shown && isOpen();
+      const on = ui.tbOut !== false, away = on && !shown;
       railBtn.classList.toggle('is-on', on);
+      railBtn.classList.toggle('is-away', away);
       railBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      const txt = railBtn.querySelector('.tbsw-txt');
+      if (txt) txt.textContent = on ? 'ON' : 'OFF';
+      const label = !on ? 'Stage toolbar: OFF \u00b7 click to turn on'
+        : away ? 'Stage toolbar: ON (parked) \u00b7 click to bring it back'
+        : 'Stage toolbar: ON \u00b7 click to turn off';
+      railBtn.setAttribute('aria-label', label);
+      const tip = railBtn.querySelector('.rail-tip');
+      if (tip) tip.textContent = label;
     }
     function homeRect() {
       const r = railBtn && railBtn.isConnected && (dockOpen || (dock && dock.dataset.state === 'slim')) ? railBtn.getBoundingClientRect() : $('dockTrigger').getBoundingClientRect();
       return r.width ? r : null;
     }
-    function flyOut(from, power, v) {
+    function flyOut(from, power, v, closed) {
       unhideRailToolbar();
-      const n = power >= 2 ? Infinity : 1;
-      if (shown) { openN(n); return; }
+      if (ui.tbOut === false) { ui.tbOut = true; saveUi(); }   // bringing it out always switches it ON
+      const n = closed ? 0 : power >= 2 ? Infinity : 1;
+      if (shown) { openN(n); syncRailBtn(); return; }
       open.clear();
       applyCustomPos();
       paint([], true);
       shown = true;
       bar().dataset.out = 'true';
       syncSettingsSwitch();
+      syncRailBtn();
       Log.push('toolbar out' + (power >= 2 ? ' (strong flick)' : power ? ' (flick)' : ''));
       const lv = M.level(), to = icon().getBoundingClientRect();
       if (lv !== 'full' || !from) {
@@ -2834,7 +2860,21 @@
       }, wait);
     }
 
-    function railClick() { if (!shown) flyOut(railBtn ? railBtn.getBoundingClientRect() : null, 2, 0); else toggle(); }
+    // ON/OFF: OFF -> ON (flies out) · ON but parked -> back out · ON and out -> OFF (flies home).
+    function railClick() {
+      const from = railBtn ? railBtn.getBoundingClientRect() : null;
+      if (!shown) { flyOut(from, 2, 0); return; }
+      ui.tbOut = false; saveUi();
+      flyHome();
+      syncRailBtn();
+      Log.push('toolbar OFF');
+    }
+    // Recovery (the dock's edge tab, Alt+D from a hidden dock, mode switches): only when the switch is ON.
+    function restore() {
+      if (ui.tbOut === false || shown) return false;
+      flyOut(homeRect(), 0, 0, true);
+      return true;
+    }
     function railButton(b) {
       railBtn = b;
       syncRailBtn();
@@ -3028,11 +3068,11 @@
     }
     function refresh() {
       requestAnimationFrame(sizeUnit);
-      if (ui.tbOut !== false && !shown) { shown = true; bar().dataset.out = 'true'; bar().getAnimations().forEach((a) => a.cancel()); }
+      if (ui.tbOut !== false && !shown) { shown = true; bar().dataset.out = 'true'; bar().getAnimations().forEach((a) => a.cancel()); syncRailBtn(); }
       if (shown) paint([], true);
     }
     return {
-      init, start, refresh, toggle, step, openN, closeN, flyOut, flyHome, dismiss, setOut, railClick,
+      init, start, refresh, toggle, step, openN, closeN, flyOut, flyHome, dismiss, setOut, railClick, restore, syncRailBtn,
       resetPos,
       get shown() { return shown; },
       get hasCustomPos() { return !!customPos; },
