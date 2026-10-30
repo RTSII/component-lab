@@ -19,7 +19,10 @@ Lab.register({
   // properties on the frame; the rest are read below.
   //
   // Interaction (category "interact" in manifest.json), the same behaviour as js/home.js v109:
-  //   HOVER      pointer over the helix: play | pause (home.js) | slow | fast
+  //   HOVER      pointer over a card: play | pause (home.js) | slow | fast. "Over a card" is the
+  //              browser's own hit test at the pointer (each card's clipped, transformed, rendered
+  //              shape; hidden back cards are pointer-events: none), so it tracks exactly what is on
+  //              screen at any lab view zoom / pan, never the empty space of the (zoomed) column.
   //   DRAG       vertical drag spins the helix (scrub) | ignore
   //   TOUCH      touch acts like hover (hover) | ignore
   //   KEY_PAUSE  Tab focus on a card brings it to the front and pauses
@@ -146,11 +149,23 @@ Lab.register({
     // ---- interaction (home.js v109 handlers, switchable from the Interaction controls) ----
     const DRAG_PX = 8;
     const HOVER_RATE = { play: 1, pause: 0, slow: 0.35, fast: 1.8 };
-    let hovering = false, hoverTouch = false, dragging = false, dragMoved = false, kbdPause = false;
-    let lastY = 0, startY = 0, rateNow = 1;
+    let inside = false, hoverTouch = false, dragging = false, dragMoved = false, kbdPause = false;
+    let lastY = 0, startY = 0, rateNow = 1, ptrX = 0, ptrY = 0;
 
-    root.addEventListener('pointerenter', (e) => { hovering = true; hoverTouch = e.pointerType === 'touch'; });
-    root.addEventListener('pointerleave', () => { hovering = false; });
+    // Hover = the pointer is on a real card. Client coordinates + elementFromPoint, re-checked every
+    // frame, so it stays exact while cards move under a still pointer and under any view scale /
+    // pan / 3D transform (no offset math to convert). Anything drawn over the card (dock, toolbar)
+    // or clipped away by the stage edge is not the card, so it does not count.
+    const track = (e) => { ptrX = e.clientX; ptrY = e.clientY; };
+    root.addEventListener('pointerenter', (e) => { inside = true; hoverTouch = e.pointerType === 'touch'; track(e); });
+    root.addEventListener('pointermove', track, { passive: true });
+    root.addEventListener('pointerleave', () => { inside = false; });
+    function overCard() {
+      if (!inside) return false;
+      const hit = document.elementFromPoint(ptrX, ptrY);
+      const card = hit && hit.closest && hit.closest('.hx-helix-card');
+      return !!(card && root.contains(card));
+    }
 
     function onPointerMove(e) {
       if (!dragging) return;
@@ -211,6 +226,7 @@ Lab.register({
 
     // Playback multiplier for this frame. Eased (~80ms) so slow / fast do not jolt.
     function rate(P, dt) {
+      const hovering = overCard();
       let target = 1;
       if (dragging) target = 0;
       else if (kbdPause && P.KEY_PAUSE !== false) target = 0;
@@ -223,7 +239,7 @@ Lab.register({
     return {
       render,
       rate,
-      get hovering() { return hovering; },
+      get hovering() { return overCard(); },
       destroy() { if (ro) ro.disconnect(); endDrag(); }
     };
   }

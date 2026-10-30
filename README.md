@@ -94,6 +94,7 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 - **Keys** (not while typing in a field or while focus is inside the component): `+` / `=` in, `-` out, `0` toggle. Ctrl/Cmd + `+`/`-`/`0` stay the browser's own page zoom.
 - **Mouse / touch:** Ctrl/Cmd + wheel (or a trackpad pinch) over the stage zooms at the cursor; plain wheel over the zoom pad steps it. When zoomed in, drag empty stage space (or middle-mouse drag anywhere) to pan. Touch: two-finger pinch zooms and pans; one finger still drives the component.
 - The component keeps reacting to hover, click, drag, wheel and keys at any zoom (the browser maps pointer hits through the CSS transform).
+- Hover is exact at any zoom: the helix pauses only while the pointer is on a real card (the browser's hit test at the pointer, re-checked every frame), not on the empty space of the zoomed column. Drag spins by on-screen distance over the zoomed helix, so it tracks the content. Scan-sourced hover uses the component frame, not the whole viewport box.
 - Remembered for this browser session only (`sessionStorage`); `?reset` puts it back to 100%. Hide the pad: **Settings › Viewport › Show zoom controls** (Basic and Pro).
 
 ### Control Dock & Right Rail

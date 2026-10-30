@@ -3550,11 +3550,13 @@
 
     // Lab-side capture guards for scan-sourced interaction controls (Item 2.3)
     const scaler = $('stageScaler');
-    scaler.addEventListener('pointerenter', (e) => {
+    // scan-sourced hover: the component's own frame (its real box, scaled with the view zoom),
+    // not the whole scaler / viewport box around it
+    frameEl.addEventListener('pointerenter', (e) => {
       scanHovering = true;
       scanHoverTouch = e.pointerType === 'touch';
     });
-    scaler.addEventListener('pointerleave', () => {
+    frameEl.addEventListener('pointerleave', () => {
       scanHovering = false;
       scanHoverTouch = false;
     });
