@@ -88,3 +88,10 @@
 .dock .rail .rail-btn.tb-sw.is-moved { border-color: rgba(0, 240, 255, 0.28); border-style: dashed; }
 @keyframes tbsw-pulse { 50% { opacity: 0.3; box-shadow: none; } }
 @media (prefers-reduced-motion: reduce) { .tb-sw.is-away .tbsw-led { animation: none; opacity: 0.6; } }
+
+/* ---------- card <-> slim rail morph (lab.js setDockState .is-sliding) ----------
+   The rail stays on the dock's moving edge and the card content is clipped behind it, so a fold or grow
+   is one smooth width change for every anchor (no rail pop, no ballooning over the stage). */
+.dock.is-morphing.is-sliding { justify-content: flex-end; }
+.dock.is-sliding .card { flex: none; }
+.dock[data-state="slim"].is-sliding .card-main { flex: none; }

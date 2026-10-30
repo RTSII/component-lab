@@ -130,6 +130,8 @@
   let navStack = [{ type: 'cat', cat: 'color' }];
   let dockState = 'closed', dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
   let dockHidden = false, lastFrom = 'closed';
+  // morphTok: bumps on every dock morph so a cancelled morph's late cleanup never touches the next one
+  let morphTok = 0;
   // hoverOpen: the card was grown from the slim rail by hover (folds back on leave, never saved)
   let hoverOpen = false, dockPress = false, overDock = false;
   let railPill = null, modePill = null, viewPill = null;
@@ -555,23 +557,11 @@
     return Math.round(Math.max(320, Math.min(340, innerWidth * 0.22))) + RAIL_W;
   }
   function cardMaxH() { return ui.dockPos === 'bottom' ? Math.round(innerHeight * 0.5) : innerHeight - 2 * MARGIN; }
+  // The sandbox (stage) is primary: it always uses the full window. The dock (card, slim rail, VIP badge)
+  // and the stage toolbar float OVER it (position: fixed + z-index) and never resize, shift or reflow it,
+  // at any stage or during a morph.
   function freeRect() {
-    const W = innerWidth, H = innerHeight;
-    const r = { x: 0, y: 0, w: W, h: H };
-    const curState = (dock && dock.dataset.state) || dockState;
-    if (!curState || curState === 'closed' || dockHidden) return r;
-    const [row, col] = (ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor).split('-');
-    const isSlim = curState === 'slim';
-    const cw = isSlim ? (RAIL_W + 2 * MARGIN) : (cardWidth() + 2 * MARGIN);
-    const ch = cardMaxH() + 2 * MARGIN;
-    if (ui.dockPos === 'bottom' || col === 'center') {
-      if (row === 'bottom') r.h = H - ch;
-      else if (row === 'top') { r.y = ch; r.h = H - ch; }
-      return r;
-    }
-    if (col === 'right') r.w = W - cw;
-    else if (col === 'left') { r.x = cw; r.w = W - cw; }
-    return r;
+    return { x: 0, y: 0, w: innerWidth, h: innerHeight };
   }
   function layoutStage() {
     if (!def) return;
@@ -703,10 +693,15 @@
     }
 
     const prevRect = (dock && dock.offsetWidth && dock.offsetHeight) ? dock.getBoundingClientRect() : null;
+    const cardMain = card.querySelector('.card-main');
+    const mainW = cardMain.offsetWidth;   // the card's content width now (kept while it folds away)
 
     dock.getAnimations().forEach((a) => a.cancel());
-    card.querySelector('.card-main').getAnimations().forEach((a) => a.cancel());
+    cardMain.getAnimations().forEach((a) => a.cancel());
     $('rail').getAnimations().forEach((a) => a.cancel());
+    const tok = ++morphTok;
+    dock.classList.remove('is-sliding');
+    cardMain.style.width = '';
 
     lastFrom = fromState;
     dockState = targetState;
@@ -725,6 +720,7 @@
     applyDockLayout();
 
     const finish = () => {
+      if (tok !== morphTok) return;   // a newer morph took over
       dock.dataset.state = targetState;
       dock.classList.remove('is-morphing', 'is-closing');
       $('dockTrigger').setAttribute('aria-expanded', targetState === 'open' ? 'true' : 'false');
@@ -768,11 +764,16 @@
         { width: prevRect.width + 'px', height: prevRect.height + 'px', borderRadius: fromState === 'slim' ? '20px' : '22px' },
         trigBox()
       ], { duration: lv === 'full' ? 280 : 150, easing: M.settle });
-      a.finished.catch(() => {}).then(finish);
+      a.finished.then(finish, () => {});
       return;
     }
 
     // Target is 'open' or 'slim'
+    // Card -> slim rail (hover fold, Shift+click, Esc, outside click) is a pure shrink: measure the slim
+    // rail with the card content already gone (not its unconstrained width while it fades, which made the
+    // dock balloon out over the stage and then snap back), keep the fading content at its own width
+    // (no reflow) and pin the rail to the moving edge. The stage never moves (see freeRect).
+    const shrinkToSlim = targetState === 'slim' && fromState === 'open';
     dock.dataset.state = targetState;
     dock.dataset.stage = String(DOCK_STAGES.indexOf(targetState) + 1);
     syncAvatar();
@@ -793,32 +794,40 @@
     } else if (targetState === 'slim') {
       syncRail(true);
     }
-    layoutStage();
 
-    dock.classList.add('is-morphing');
+    // end size, measured before .is-morphing (which keeps the fading card content in the layout)
     const toRect = (targetState === 'open' ? card : dock).getBoundingClientRect();
     const radFrom = fromState === 'closed' ? trigBox().borderRadius : fromState === 'slim' ? '20px' : '22px';
     const radTo = targetState === 'slim' ? '20px' : '22px';
+    const sliding = (fromState === 'open' && targetState === 'slim') || (fromState === 'slim' && targetState === 'open');
+    if (shrinkToSlim && mainW) cardMain.style.width = mainW + 'px';
+    dock.classList.add('is-morphing');
+    if (sliding) dock.classList.add('is-sliding');   // rail rides the moving edge, the card is clipped behind it
 
     if (targetState === 'open' && fromState === 'closed') {
       M.travel($('dockTrigger'), $('dockClose'), window.Pass ? Pass.miniHtml() : svg('sliders'));
-      M.contentIn(card.querySelector('.card-main'), 60);
+      M.contentIn(cardMain, 60);
       M.contentIn($('rail'), 30);
     } else if (targetState === 'open' && fromState === 'slim') {
-      M.contentIn(card.querySelector('.card-main'), 60);
-    } else if (targetState === 'slim' && fromState === 'open') {
-      M.contentOut(card.querySelector('.card-main'));
+      M.contentIn(cardMain, 60);
+    } else if (shrinkToSlim) {
+      M.contentOut(cardMain);
     } else if (targetState === 'slim' && fromState === 'closed') {
       M.contentIn($('rail'), 30);
     }
 
+    // fill: forwards + cancel on finish, so there is never a frame at the dock's natural width
+    // while the end-of-morph classes are still on
     const a = dock.animate([
       { width: prevRect.width + 'px', height: prevRect.height + 'px', borderRadius: radFrom },
       { width: toRect.width + 'px', height: toRect.height + 'px', borderRadius: radTo }
-    ], { duration: lv === 'full' ? 280 : 150, easing: M.settle });
-    a.finished.catch(() => {}).then(() => {
-      dock.classList.remove('is-morphing');
-    });
+    ], { duration: lv === 'full' ? 280 : 150, easing: M.settle, fill: 'forwards' });
+    a.finished.then(() => {
+      if (tok !== morphTok) return;   // a newer morph took over (it cleans up for itself)
+      dock.classList.remove('is-morphing', 'is-sliding');
+      cardMain.style.width = '';
+      a.cancel();
+    }, () => {});
   }
   function openDock(how) {
     if (dockHidden) showDock(true);
