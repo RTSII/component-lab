@@ -78,5 +78,7 @@
 .tb-sw.is-on .tbsw-txt { color: #00f0ff; }
 .dock .rail .rail-btn.tb-sw.is-away { border-color: rgba(0, 240, 255, 0.4); box-shadow: inset 0 0 4px rgba(0, 240, 255, 0.15); }
 .tb-sw.is-away .tbsw-led { animation: tbsw-pulse 1.4s ease-in-out infinite; }
+/* ON but dragged off its top-left corner: first click recalls it home (two-stage pad), so the frame hints at it */
+.dock .rail .rail-btn.tb-sw.is-moved { border-color: rgba(0, 240, 255, 0.28); border-style: dashed; }
 @keyframes tbsw-pulse { 50% { opacity: 0.3; box-shadow: none; } }
 @media (prefers-reduced-motion: reduce) { .tb-sw.is-away .tbsw-led { animation: none; opacity: 0.6; } }

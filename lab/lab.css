@@ -2254,6 +2254,14 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  /* Responsive toggle (one section open, moved to the top): a full-width row under the collapse buttons */
+  .pop-btn.pop-resp {
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
   .pop-variants {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

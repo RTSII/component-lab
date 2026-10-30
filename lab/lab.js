@@ -107,12 +107,15 @@
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
   // v5: Pro now opens fully expanded (card + rail). 'slim' was the old saved default, so move it to 'full'; 'icon' stays.
   if (store.get('uiVer', 0) < 5) { if (!ui.proDock || ui.proDock === 'slim') ui.proDock = 'full'; store.set('uiVer', 5); store.set('ui', ui); }
+  // uiVer 6: Pro sections start ALL CLOSED (new default); 'All open' was retired for 'First open'. Responsive (one open, moved to the top) starts off.
+  if (store.get('uiVer', 0) < 6) { ui.accCollapse = 'closed'; if (typeof ui.accResponsive !== 'boolean') ui.accResponsive = false; store.set('uiVer', 6); store.set('ui', ui); }
+  if (!['closed', 'first', 'remember'].includes(ui.accCollapse)) ui.accCollapse = 'closed';
   const saveUi = () => store.set('ui', ui);
   M.enabled = ui.motion !== false;
 
@@ -883,8 +886,8 @@
     const h = $('dockHint');
     if (!h) return;
     h.hidden = !dockHidden;
-    const tb = ui.tbOut !== false;
-    h.title = 'Show the controls' + (tb ? ' and the stage toolbar' : '') + ' (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
+    const tb = ui.tbOut !== false && !TB.shown;
+    h.title = 'Bring back the VIP badge' + (tb ? ' and the flicked-away stage toolbar (top-left)' : '') + ' (' + KEYS.dock.label + ' or ' + KEYS.dock.alt + ')';
     h.setAttribute('aria-label', h.title);
     h.dataset.edge = dockEdge();
     h.dataset.anchor = ui.dockPos === 'bottom' ? 'bottom-center' : ui.anchor;
@@ -1452,9 +1455,9 @@
     { id: 'D', label: 'Exclusive', hint: 'One open at a time; the others shrink to chips' }
   ];
   const COLLAPSE = [
-    { id: 'remember', label: 'Remember', icon: 'remember', hint: 'Reopen what was open last time' },
-    { id: 'open', label: 'All open', icon: 'expand', hint: 'Every section starts open' },
-    { id: 'closed', label: 'All closed', icon: 'collapse', hint: 'Every section starts closed' }
+    { id: 'closed', label: 'All closed', icon: 'collapse', hint: 'Default. Every section starts closed' },
+    { id: 'first', label: 'First open', icon: 'expand', hint: 'The first section starts open, the rest closed' },
+    { id: 'remember', label: 'Remember', icon: 'remember', hint: 'Reopen what was open last time (per component)' }
   ];
   const Acc = (function () {
     let spyLock = 0;
@@ -1463,15 +1466,30 @@
     const sec = (cat) => { const l = list(); return l ? l.querySelector('.acc[data-cat="' + cat + '"]') : null; };
     const variant = () => (VARIANTS.some((x) => x.id === ui.accVariant) ? ui.accVariant : 'B');
     const openCats = () => secs().filter((x) => x.classList.contains('is-open')).map((x) => x.dataset.cat);
+    // Responsive (Settings > Pro sections): one section open at a time, and the open one moves to the top.
+    // Opening another or closing it puts every section back in its normal order.
+    const responsive = () => ui.accResponsive === true;
+    const single = () => variant() === 'D' || responsive();
     function persist() { if (def && ui.accCollapse === 'remember') store.set('accOpen:' + def.id, openCats()); }
     function initialOpen(focusCat, cats) {
       const nonEmpty = cats.filter((c) => c.n).map((c) => c.id);
       let open;
-      if (ui.accCollapse === 'open') open = nonEmpty.slice();
-      else if (ui.accCollapse === 'closed') open = [];
-      else { const st = store.get('accOpen:' + def.id, null); open = Array.isArray(st) ? st : [focusCat]; }
-      if (variant() === 'D' && open.length > 1) open = [open.includes(focusCat) ? focusCat : open[0]];
+      if (ui.accCollapse === 'first') open = nonEmpty.slice(0, 1);
+      else if (ui.accCollapse === 'remember') { const st = store.get('accOpen:' + def.id, null); open = Array.isArray(st) ? st.filter((id) => nonEmpty.includes(id)) : []; }
+      else open = [];
+      if (single() && open.length > 1) open = [open.includes(focusCat) ? focusCat : open[0]];
       return open;
+    }
+    // Normal order = the rail order the sections were built in (data-idx). Responsive: the open one first.
+    function reorder() {
+      const l = list();
+      if (!l) return false;
+      const all = secs();
+      const nat = all.slice().sort((a, b) => +a.dataset.idx - +b.dataset.idx);
+      const want = responsive() ? nat.filter((b) => b.classList.contains('is-open')).concat(nat.filter((b) => !b.classList.contains('is-open'))) : nat;
+      if (want.every((b, i) => all[i] === b)) return false;
+      want.forEach((b) => l.appendChild(b));
+      return true;
     }
     function build(focusCat, inner) {
       const wrapEl = el('div', 'acc-list');
@@ -1479,9 +1497,10 @@
 
       const snapBar = buildSnapBar();
       if (snapBar) wrapEl.appendChild(snapBar);
-      const cats = visibleCats().map((c) => {
+      const cats = visibleCats().map((c, i) => {
         const box = el('section', 'acc');
         box.dataset.cat = c.id;
+        box.dataset.idx = String(i);
         const head = el('button', 'acc-head', svg(c.icon) + '<span class="acc-label">' + esc(c.label) + '</span><span class="acc-n"></span>' + svg('chev', 'acc-chev'));
         head.type = 'button';
         head.id = 'acc-h-' + c.id;
@@ -1503,6 +1522,7 @@
       });
       const open = initialOpen(focusCat, cats);
       cats.forEach((c) => setState(c.box, open.includes(c.id)));
+      if (responsive()) { const ob = cats.find((c) => open.includes(c.id)), firstAcc = wrapEl.querySelector(':scope > .acc'); if (ob && firstAcc !== ob.box) wrapEl.insertBefore(ob.box, firstAcc); }
       inner.appendChild(wrapEl);
       inner.classList.add('is-acc');
       requestAnimationFrame(() => {
@@ -1557,7 +1577,7 @@
     function apply(want, opts) {
       const all = secs();
       if (!all.length) return;
-      const flip = variant() === 'D' && M.level() === 'full';
+      const flip = (variant() === 'D' || responsive() || all.some((b, i) => b.dataset.idx !== String(i))) && M.level() === 'full';
       const before = flip ? all.map((b) => b.getBoundingClientRect()) : null;
       const changes = [];
       all.forEach((box) => {
@@ -1568,6 +1588,7 @@
         setState(box, on);
         changes.push([box, on, fromH]);
       });
+      reorder();
       if (!(opts && opts.instant)) changes.forEach(([b, on, h]) => animate(b, on, h));
       if (flip) all.forEach((b, i) => {
         const a = b.getBoundingClientRect(), o = before[i];
@@ -1583,9 +1604,10 @@
       if (!box) return;
       const on = force != null ? force : !box.classList.contains('is-open');
       let want = openCats().filter((c) => c !== cat);
-      if (on) want = variant() === 'D' ? [cat] : want.concat([cat]);
+      if (on) want = single() ? [cat] : want.concat([cat]);
       apply(want);
       if (on) { navStack[0] = { type: 'cat', cat }; syncRail(); }
+      if (on && responsive()) scrollTo(cat);
     }
     function scrollTo(cat, instant) {
       const box = sec(cat);
@@ -1621,15 +1643,24 @@
       syncPop();
     }
     function setCollapse(id) {
+      if (!COLLAPSE.some((x) => x.id === id)) return;
       ui.accCollapse = id; saveUi();
-      const all = secs().filter((b) => +b.querySelector('.acc-n').textContent > 0).map((b) => b.dataset.cat);
-      if (id === 'open') apply(variant() === 'D' ? [navStack[0].cat] : all);
+      const nat = secs().slice().sort((a, b) => +a.dataset.idx - +b.dataset.idx).filter((b) => +b.querySelector('.acc-n').textContent > 0).map((b) => b.dataset.cat);
+      if (id === 'first') apply(nat.slice(0, 1));
       else if (id === 'closed') apply([]);
       else persist();
       Log.push('sections ' + COLLAPSE.find((x) => x.id === id).label.toLowerCase());
       syncPop();
     }
-    return { build, toggle, focus, list, setVariant, setCollapse, openCats, variant };
+    function setResponsive(on) {
+      ui.accResponsive = !!on; saveUi();
+      const o = openCats();
+      if (on && o.length > 1) apply([o.includes(navStack[0].cat) ? navStack[0].cat : o[0]]);
+      else apply(o);
+      Log.push('sections responsive ' + (on ? 'on (one open, moved to the top)' : 'off'));
+      syncPop();
+    }
+    return { build, toggle, focus, list, setVariant, setCollapse, setResponsive, openCats, variant, get responsive() { return responsive(); } };
   })();
 
   // ---------- 3-dot quick menu (Pro): collapse mode + motion variant ----------
@@ -1648,6 +1679,12 @@
         row.appendChild(b);
       });
       pop.appendChild(row);
+      const rb = el('button', 'pop-btn pop-resp', svg('up') + '<span>1 open at a time \u00b7 open one on top</span>');
+      rb.type = 'button'; rb.dataset.accResp = '1';
+      rb.title = 'Responsive: only the section you open stays open and moves to the top; closing it or opening another puts the order back';
+      rb.setAttribute('role', 'menuitemcheckbox');
+      rb.addEventListener('click', () => Acc.setResponsive(!ui.accResponsive));
+      pop.appendChild(rb);
       pop.appendChild(el('div', 'pop-label', 'Motion'));
       const grid = el('div', 'pop-row pop-variants');
       VARIANTS.forEach((v) => {
@@ -1664,6 +1701,7 @@
       document.querySelectorAll('[data-collapse]').forEach((b) => { const on = b.dataset.collapse === ui.accCollapse; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
       document.querySelectorAll('[data-variant].pop-btn, .seg[data-acc="variant"] .seg-btn').forEach((b) => { if (!b.dataset.variant) return; const on = b.dataset.variant === ui.accVariant; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
       document.querySelectorAll('.seg[data-acc]').forEach((sg) => { const val = sg.dataset.acc === 'variant' ? ui.accVariant : ui.accCollapse; if (sg.dataset.value !== val) syncSeg(sg, null, val); });
+      document.querySelectorAll('[data-acc-resp]').forEach((b) => { const on = ui.accResponsive === true; if (b.classList.contains('pop-btn')) b.classList.toggle('is-on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
     }
     function show() {
       if (open) return;
@@ -1709,13 +1747,15 @@
         + li('The pass: click, ' + k('Enter') + ' or ' + k(KEYS.dock.label) + ' = next stage \u00b7 Shift+click = full card')
         + li('Round avatar at the top of the rail: steps card \u2192 rail \u2192 badge and back (Shift+click: other way) \u00b7 \u2715 folds the card one stage \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
         + (proOn('dockFlick') ? li('Flick (' + esc(fl) + '): the pass or the dock\u2019s inner edge toward the stage grows it; the edge toward the screen edge shrinks it. Gentle = one stage, strong = to the end') : '')
-        + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: ' + k(KEYS.dock.label) + ', the edge handle, or reload'
+        + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: the arrow tab on that edge or ' + k(KEYS.dock.label) + ' brings back the badge AND a flicked-away toolbar (top-left), or reload'
           : 'Flick-to-hide is off (Settings \u203a Dock)')
-        + li('Toolbar pad on the rail: ON / OFF (LED lit = ON, pulsing = ON but flicked away). While ON, the edge tab or ' + k(KEYS.dock.label) + ' brings the toolbar back with the dock')
+        + li('Stage toolbar (top-left): any flick while it is closed sends it away; an open toolbar ignores flicks')
+        + li('Toolbar pad on the rail, two-stage: flicked away or moved \u2192 click puts it back top-left; home \u2192 click turns it OFF; OFF \u2192 click turns it ON (LED lit = ON, pulsing = flicked away)')
+        + li('Sections: start all closed (Settings \u203a Pro sections: All closed / First open / Remember). Responsive: one open at a time, moved to the top')
         + '</ul><p class="help-h">Shortcuts</p><ul>'
         + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
         + '</ul><p class="help-h">Settings</p><ul>'
-        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), flick-to-hide \u00b7 Profile pass: name, role, access level')
+        + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
         + '</ul>';
     }
     function basicItems() {
@@ -2257,13 +2297,13 @@
       inner.appendChild(resetPosBtn);
     }
     if (hasPro('toolbarAdvanced')) {
-      inner.appendChild(el('p', 'note tb-gestures', 'Gestures on the toolbar: click opens/closes all groups · Shift+click or \u2190/\u2192 one group · drag & release calmly to drop at a custom spot · while CLOSED, a short horizontal flick opens it and a strong throw launches an arcade exit to the rail · while OPEN, flicks are ignored (a release just drops it).'));
+      inner.appendChild(el('p', 'note tb-gestures', 'Gestures on the toolbar: click opens/closes all groups · Shift+click or \u2190/\u2192 one group · drag & release calmly to drop at a custom spot · while CLOSED (nested), ANY flick sends it away (arcade exit to the rail) · while OPEN, flicks are ignored (a release just drops it). Way back: the rail toolbar pad puts it back top-left; with a hidden dock, the edge tab or ' + KEYS.dock.label + ' brings back the badge and the toolbar together.'));
       const tbs = el('div', 'seg seg-sm');
       tbs.dataset.tb = 'start';
       buildSeg(tbs, [{ value: 'closed', label: 'Closed' }, { value: 'open', label: 'Open' }, { value: 'remember', label: 'Remember' }], ui.tbStart, (val) => { ui.tbStart = val; saveUi(); Log.push('toolbar start ' + val); }, { equal: true });
       inner.appendChild(setRow('Start state', tbs, 'How the toolbar opens when the lab loads. Remember reopens the groups you had open.'));
       inner.appendChild(switchRow('Outside click closes it', () => ui.tbAutoClose, (on) => { ui.tbAutoClose = on; saveUi(); }));
-      inner.appendChild(switchRow('Flick physics', () => ui.flick, (on) => { ui.flick = on; M.flickOn = on; saveUi(); fs.querySelectorAll('.seg-btn').forEach((b) => { b.disabled = !on; }); }, 'Throw the closed toolbar to launch it back to the rail. An open toolbar ignores flicks. The rail toolbar pad is click-only (flicks only count with the dock nested at the VIP badge).'));
+      inner.appendChild(switchRow('Flick physics', () => ui.flick, (on) => { ui.flick = on; M.flickOn = on; saveUi(); fs.querySelectorAll('.seg-btn').forEach((b) => { b.disabled = !on; }); }, 'Any flick of the closed toolbar sends it away to the rail. An open toolbar ignores flicks. Off = flicks never send it away. The rail toolbar pad is click-only (two-stage: recall top-left, then OFF).'));
       const fs = el('div', 'seg seg-sm');
       fs.dataset.tb = 'flick';
       buildSeg(fs, [{ value: 'light', label: 'Light' }, { value: 'normal', label: 'Normal' }, { value: 'heavy', label: 'Heavy' }], ui.flickStrength, (val) => { ui.flickStrength = val; M.flickStrength = val; saveUi(); Log.push('flick ' + val); }, { equal: true });
@@ -2276,7 +2316,12 @@
       const col = el('div', 'seg seg-sm');
       col.dataset.acc = 'collapse';
       buildSeg(col, COLLAPSE.map((c) => ({ value: c.id, label: c.label })), ui.accCollapse, (val) => Acc.setCollapse(val), { equal: true });
-      inner.appendChild(setRow('Collapse state', col, 'Remember reopens what you had open, per component.'));
+      inner.appendChild(setRow('Default state', col, 'How the sections open: All closed (default), First open, or Remember (reopens what you had open, per component).'));
+      const respRow = switchRow('Responsive: 1 open at a time', () => ui.accResponsive === true, (on) => Acc.setResponsive(on),
+        'Only the section you open stays open and moves to the top. Opening another or closing it puts every section back in order, closed. Also in the \u22ee menu.');
+      const rsw = respRow.querySelector('.switch');
+      if (rsw) rsw.dataset.accResp = '1';
+      inner.appendChild(respRow);
       const vseg = el('div', 'seg seg-sm');
       vseg.dataset.acc = 'variant';
       buildSeg(vseg, VARIANTS.map((v) => ({ value: v.id, label: v.id + ' ' + v.label })), ui.accVariant, (val) => Acc.setVariant(val), { equal: true });
@@ -2355,7 +2400,7 @@
       store.del('ui');
       Object.assign(ui, {
         dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
-        view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
+        view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B',
         tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
         railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
       });
@@ -2598,7 +2643,20 @@
     function resetPos() {
       customPos = null;
       applyCustomPos();
+      syncRailBtn();
       Log.push('toolbar reset to default corner');
+    }
+    // Stage 1 of the rail pad: a toolbar that was dragged somewhere glides back to the top-left corner.
+    function goHome() {
+      const b = bar(), r0 = b.getBoundingClientRect();
+      customPos = null;
+      applyCustomPos();
+      const r1 = b.getBoundingClientRect();
+      if (M.level() === 'full' && (r0.left !== r1.left || r0.top !== r1.top)) {
+        b.animate([{ transform: 'translate(' + (r0.left - r1.left) + 'px,' + (r0.top - r1.top) + 'px)' }, { transform: 'none' }], { duration: 460, easing: M.springSoft });
+      }
+      syncRailBtn();
+      Log.push('toolbar back to the top-left corner');
     }
     function unhideRailToolbar() {
       if (Array.isArray(ui.toolHidden) && ui.toolHidden.includes('toolbar')) {
@@ -2636,7 +2694,7 @@
       icon().setAttribute('aria-expanded', any ? 'true' : 'false');
       icon().title = any
         ? 'Close toolbar (Esc) · drag to move (flicks are ignored while open)'
-        : 'Open toolbar · Shift+click or \u2192 opens one group · drag to move · flick to open or throw away';
+        : 'Open toolbar · Shift+click or \u2192 opens one group · drag to move · any flick sends it away (the rail pad or the edge tab brings it back)';
       syncRailBtn();
       syncSettingsSwitch();
       ui.tbLast = [...open];
@@ -2667,22 +2725,27 @@
       if (allOpen()) stepDir = -1; else if (!isOpen()) stepDir = 1;
       return stepDir > 0 ? openN(1) : closeN(1);
     }
-    // The rail's toolbar button is an ON/OFF switch (XDJ pad, LED lit when ON). ON = ui.tbOut.
-    // ON but parked (flicked / thrown away): the LED pulses; a click, the edge tab or Alt+D brings it back.
+    // The rail's toolbar button is a two-stage ON/OFF pad (XDJ pad, LED lit when ON). ON = ui.tbOut.
+    // Stage 1 (recall): ON but parked (flicked / thrown away, LED pulses) or dragged off its corner ->
+    // a click puts it back in the top-left corner. Stage 2: ON and home -> a click turns it OFF.
+    // OFF -> a click turns it ON (it flies out to the top-left). The edge tab / Alt+D also recall it.
     function syncRailBtn() {
       if (!railBtn) return;
-      const on = ui.tbOut !== false, away = on && !shown;
+      const on = ui.tbOut !== false, away = on && !shown, moved = on && shown && !!customPos;
       railBtn.classList.toggle('is-on', on);
       railBtn.classList.toggle('is-away', away);
+      railBtn.classList.toggle('is-moved', moved);
       railBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
       const txt = railBtn.querySelector('.tbsw-txt');
       if (txt) txt.textContent = on ? 'ON' : 'OFF';
-      const label = !on ? 'Stage toolbar: OFF \u00b7 click to turn on'
-        : away ? 'Stage toolbar: ON (parked) \u00b7 click to bring it back'
+      const label = !on ? 'Stage toolbar: OFF \u00b7 click to turn on (top-left)'
+        : away ? 'Stage toolbar: ON (flicked away) \u00b7 click to put it back top-left'
+        : moved ? 'Stage toolbar: ON (moved) \u00b7 click to put it back top-left, click again to turn off'
         : 'Stage toolbar: ON \u00b7 click to turn off';
       railBtn.setAttribute('aria-label', label);
       const tip = railBtn.querySelector('.rail-tip');
       if (tip) tip.textContent = label;
+      syncHint();   // the edge tab's tooltip names the toolbar only while it is flicked away
     }
     function homeRect() {
       const r = railBtn && railBtn.isConnected && (dockOpen || (dock && dock.dataset.state === 'slim')) ? railBtn.getBoundingClientRect() : $('dockTrigger').getBoundingClientRect();
@@ -2694,6 +2757,7 @@
       const n = closed ? 0 : power >= 2 ? Infinity : 1;
       if (shown) { openN(n); syncRailBtn(); return; }
       open.clear();
+      customPos = null;   // a toolbar coming back (rail pad, edge tab, Alt+D, Settings) always lands top-left
       applyCustomPos();
       paint([], true);
       shown = true;
@@ -2860,16 +2924,19 @@
       }, wait);
     }
 
-    // ON/OFF: OFF -> ON (flies out) · ON but parked -> back out · ON and out -> OFF (flies home).
+    // Two-stage pad: OFF -> ON (flies out top-left) · ON but flicked away -> back top-left ·
+    // ON but dragged elsewhere -> glides back top-left · ON and home -> OFF (flies home to the rail).
     function railClick() {
       const from = railBtn ? railBtn.getBoundingClientRect() : null;
       if (!shown) { flyOut(from, 2, 0); return; }
+      if (customPos) { goHome(); return; }
       ui.tbOut = false; saveUi();
       flyHome();
       syncRailBtn();
       Log.push('toolbar OFF');
     }
     // Recovery (the dock's edge tab, Alt+D from a hidden dock, mode switches): only when the switch is ON.
+    // It lands in the top-left corner (flyOut clears any old drop position).
     function restore() {
       if (ui.tbOut === false || shown) return false;
       flyOut(homeRect(), 0, 0, true);
@@ -3000,30 +3067,16 @@
             b.style.transform = 'scale(1.06) rotate(' + tilt.toFixed(2) + 'deg)';
           }
         },
-        onRelease({ dir, power, axis, dx, dy, vx, vy }) {
+        onRelease({ power, dx, dy, vx, vy }) {
           b.classList.remove('is-held');
           b.style.transform = '';
-          const dist = Math.hypot(dx, dy);
-          const g = growDir();
           // An OPEN toolbar ignores flicks entirely (no throw-away, no flick open/close): a release just
-          // drops it where you let go. Flicks only work while it is closed (nested into its icon).
+          // drops it where you let go. While it is NESTED (closed into its icon), ANY flick, in any
+          // direction and of any strength, sends it away (arcade exit to the rail). The way back: the rail
+          // pad (puts it back top-left), the edge tab or Alt+D (with a hidden dock), or Settings > Toolbar.
+          // Settings > Toolbar > Flick physics OFF is the only thing that turns this off.
           const flickable = M.flickOn && !isOpen();
-
-          // 1. Short horizontal flick near origin (closed toolbar): quick open gesture
-          if (flickable && dist < 75 && power >= 1 && axis === 'x') {
-            applyCustomPos();
-            if (dir === g) {
-              openN(power >= 2 ? Infinity : 1);
-              return;
-            }
-            if (dir === -g && power === 1 && isOpen()) {
-              closeN(1);
-              return;
-            }
-          }
-
-          // 2. Strong throw in any direction (closed toolbar only): arcade physics exit trajectory to the rail
-          if (flickable && power >= 2) {
+          if (flickable && power >= 1) {
             dismiss(vx || dx / 200, vy || dy / 200);
             return;
           }
@@ -3035,6 +3088,7 @@
           const flip = clampedX > innerWidth * 0.55;
           customPos = { x: clampedX, y: clampedY, flip };
           applyCustomPos();
+          syncRailBtn();
           if (M.level() === 'full') {
             b.animate(
               [{ transform: 'scale(1.06)' }, { transform: 'scale(0.97)' }, { transform: 'scale(1)' }],
@@ -3390,11 +3444,12 @@
         }
         Object.assign(ui, {
           dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
-          view: '1600x770', open: true, accCollapse: 'remember', accVariant: 'B',
+          view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B',
           tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
         mode = 'basic';
+        store.set('uiVer', 6);   // fresh defaults already match the latest migrations; don't re-run them on the next load
         url.searchParams.delete('reset');
         history.replaceState(null, '', url.pathname + url.search + url.hash);
       }
