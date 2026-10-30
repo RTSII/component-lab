@@ -581,6 +581,14 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
 - **Two-Stage Esc Gesture:** Esc while full open collapses to `slim`; Esc while in `slim` collapses to `closed` (nested icon).
 - **Dedicated Tuck Tool (`#railTools [data-tool="tuck"]`):** Pro users can collapse the slim menu to nested icon with one click using the collapse tool on the rail.
 - **Smooth 6-Way Morphing:** Animated transitions across all states with `.dock.is-morphing` and `.is-closing`.
+- **Update 2026-10-30 (branch `feat/icons-dock`): 3-stage dock merged in.** The three states are now
+  stages 1 pass / 2 rail / 3 card (`DOCK_STAGES`). The round nested icon became the 54 x 84 all-access
+  lanyard pass. The setting is now `Settings > Dock > Start stage` (`1 Pass | 2 Rail | 3 Card`, same
+  `ui.proDock` values). Basic now folds to the thin rail (X / Esc / outside click) instead of staying full
+  expanded, and never shows the pass or hides the dock. Pro adds flick stepping, flick-to-hide (session
+  only, `Alt+D` / edge handle / Basic / reload bring it back) and the `?` help card, each behind its own
+  `PRO_FEATURES` switch (`dockStages`, `dockFlick`, `dockHide`, `helpIcon`). Esc steps one stage down;
+  hover no longer auto-opens the card. See README > All-access pass and Control Dock.
 
 #### 13. Pioneer XDJ-XZ 3-Column Geometry Deck (Layout › Spacing & Radius)
 - **Combined Console Deck (.mini-body.is-deck):**

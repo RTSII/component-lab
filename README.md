@@ -29,15 +29,33 @@ python serve.py 5180          # use another port if 5179 is busy
 
 ---
 
-## Profile pass (closed dock)
+## All-access pass (dock stage 1)
 
-The closed dock is a small backstage / DJ-access badge (56 x 76) instead of a round button: slot punch,
-photo window, tier tag (VIP, CREW, DJ, ALL...), barcode, status LED and a holo sheen that follows the
-pointer. Click or hover opens the card and the badge morphs into it as before (size comes from
-`--trig-w / --trig-h / --trig-r` in `lab/pass.css`). Settings > **Profile pass** has a live preview and sets
-name, role, access level, accent and the picture: a **Design** (vinyl, jog wheel, cans, equalizer,
-waveform, faders, chip, bolt), up to 3 **Characters**, or an uploaded **Photo** (cropped to 160 x 160,
-kept in this browser's localStorage as `componentLab:v2:profile`). Files: `lab/avatar.js`, `lab/pass.css`.
+The smallest dock stage is a VIP / all-access lanyard pass instead of a round button: the part of a
+backstage badge that hangs from a DJ's lanyard. Portrait, **54 x 84 px**, pinned 16 px from the top and
+right edges (exactly where the round button sat), with a short lanyard strap running up to the screen
+edge (top anchors only), a metal clip and slot punch, an access band (`ALL ACCESS` by default; also
+GUEST LIST, VIP LOUNGE, BACKSTAGE, CREW / TECH, ARTIST / DJ), a photo window, name and role lines
+(placeholders `DJ NAME` / `ARTIST`), a barcode, a status LED and a holo sheen that follows the pointer.
+It clears the stage toolbar (top left) at both locked viewports, 1600x770 and 1366x768.
+
+| Input | What the pass does |
+|---|---|
+| Hover | lifts slightly, the holo sheen follows the pointer, tooltip names the pass and shortcuts |
+| Click / Enter / Space | next stage (the thin rail); **Shift+click** = straight to the full card |
+| Drag | the dock follows with a rubber band and springs back; the badge tilts like it is swinging |
+| Flick toward the stage | gentle = next stage, strong = full card (Pro, `PRO_FEATURES.dockFlick`) |
+| Strong flick away (edge, up or down) | hides the dock until reload (Pro, `PRO_FEATURES.dockHide` + Settings > Dock > Allow flick-to-hide) |
+| `Alt+D` / `Shift+D` | next stage, wrapping card -> lowest stage; from a hidden dock, brings the pass back |
+
+Settings > **Profile pass** has a live preview and sets name, role, access level, accent and the picture:
+a **Design** (vinyl, jog wheel, cans, equalizer, waveform, faders, chip, bolt), up to 3 **Characters**, or
+an uploaded **Photo** (cropped to 160 x 160, kept in this browser's localStorage as
+`componentLab:v2:profile`). Files: `lab/avatar.js` (markup), `lab/pass.css` (look). Size comes from
+`--trig-w / --trig-h / --trig-r`; the dock morph reads them. Restyle hooks for a future skin (e.g.
+Pioneer XDJ-XZ): `--pass-accent`, `--pass-display`, `--pass-face`, `--pass-clip`, `--pass-strap`,
+`--strap-w`, and one `pm-*` class per part (`pm-clip`, `pm-slot`, `pm-band`, `pm-photo`, `pm-name`,
+`pm-role`, `pm-bars`, `pm-led`, `pm-sheen`).
 
 ## Core Workflow: Basic vs. Pro Mode
 
@@ -63,14 +81,30 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 - The component automatically re-centres in the remaining stage space when the control dock opens on the right or bottom.
 
 ### Control Dock & Right Rail
-- **Opening & Pinning:** Hover or click the round trigger button (`#dockTrigger`) to open the glass card. Clicking or tabbing inside the card pins it open; pressing **`Esc`** or clicking the stage backdrop unpins and closes it (`Esc` closes any open colour arc or popover first).
-- **Pro Side Menu Anchor States (`Settings › Dock › Side menu`):**
-  - **`Slim menu` (Default in Pro):** Collapses the dock to a thin vertical glass rail capsule (`48px` wide) anchored to the screen edge. Stage gets almost full width (`innerWidth - 78px`) while keeping all rail category icons, tools, and actions immediately accessible.
-  - **`Nested icon`:** Collapses to the classic round trigger button (`#dockTrigger`).
-  - **`Full expanded`:** Loads and stays full expanded (`392px`).
-  - **Two-Stage Esc Gesture:** Esc while full open collapses to `slim`; Esc while in `slim` collapses to `closed` (nested icon).
-  - **Tuck Tool (`#railTools [data-tool="tuck"]`):** Pro rail includes a collapse icon tool to tuck the slim menu directly into the nested icon.
-  - **Basic Mode Invariant:** Basic mode remains strictly full expanded with zero extra dock options in Settings. *(Note: Upcoming Mid-tier will receive the added option of collapsing the anchor point to thin `slim`).*
+- **One dock, three stages** (`DOCK_STAGES` in `lab/lab.js`, smallest first):
+  1. **Pass** (`data-state="closed"`, Pro only): the all-access lanyard pass above.
+  2. **Rail** (`data-state="slim"`): the thin vertical icon rail. A rail icon opens the card on that page.
+  3. **Card** (`data-state="open"`): the control card plus the rail.
+- **Basic:** card + thin rail only. The **X** folds the card to the rail; a rail icon or `Alt+D` opens it
+  again. Basic never shows the pass stage and never hides the dock (switching to Basic brings a hidden
+  dock back at the rail).
+- **Pro** (each behind its own switch in `PRO_FEATURES`, set one to `false` to give it to Basic too):
+  - `dockStages`: the pass stage, plus the rail's fold tool (`[data-tool="tuck"]`) that goes straight to it.
+  - `dockFlick`: flick the pass, or drag/flick the dock's inner edge (a thin grip shows on hover):
+    toward the stage grows, toward the screen edge shrinks; gentle = one stage, strong = to the end.
+    Click the edge to toggle rail / card. Uses Settings > Toolbar > Flick physics and strength.
+  - `dockHide`: a strong flick of the pass away from the stage hides the dock **for this session
+    only** (never saved). It always comes back with `Alt+D` / `Shift+D`, the small edge handle left where
+    it was, switching to Basic, or a reload. Turn it off in Settings > Dock > **Allow flick-to-hide**.
+  - `helpIcon`: the **?** in the card header. Hover/focus shows a compact help card, click pins it,
+    `Esc` or an outside click closes it. Pro sees how the dock, pass and shortcuts work; Basic sees what
+    Pro adds and a Switch to Pro button. The text is generated from `KEYS` / `PRO_FEATURES`, so it
+    stays in sync with the code.
+- **Start stage** (Pro, Settings > Dock > Start stage): `1 Pass`, `2 Rail` (default) or `3 Card` on load.
+  With `1 Pass`, the X folds the card straight to the pass.
+- **Keys:** `Esc` = one stage down (closes the help card, colour arc or popover first; never hides the
+  dock). `Alt+D` / `Shift+D` = next stage (wraps). Clicking the stage backdrop folds the card to the rail.
+  Clicking or tabbing inside the card pins it open.
 - **Rail Icons (top to bottom):**
   1. **Categories:** `Color`, `Interaction` (shown only when the component has cursor/touch/key behaviour), `Surface`, `Type`, `Motion`, `Rate`, `Layout`.
   2. **Actions:** **`+`** (New Component modal) and **Toolbar** (shows/throws out the floating stage toolbar).
@@ -225,7 +259,11 @@ lab/
   scan.js                       # Auto-manifest generator & CSS/JS interaction scanner
   controls.js                   # Control rows, click-to-type inputs, radial dials, colour Arc & hold button
   export.js                     # Manifest clean export/save, clipboard summaries, standalone HTML & JSON backup
-  lab.js                        # Core lab state, PRO_FEATURES, dock, floating toolbar & self-test runner
+  lab.js                        # Core lab state, PRO_FEATURES, dock stages, help card, floating toolbar & self-test runner
+  avatar.js                     # All-access lanyard pass markup + profile (Settings > Profile pass)
+  pass.css                      # Pass look (54 x 84) + Settings preview; --pass-* restyle hooks
+  dock.css                      # Dock edge grip, hidden-dock handle, ? help card
+  icons.js                      # Material Icons registry (loaded, not wired in yet; v2 keeps its own icons)
   fonts/                        # Offline Chakra Petch & JetBrains Mono font files + fonts.css
 components/
   registry.js                   # Ordered list of components shown in the lab picker
