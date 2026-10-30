@@ -39,6 +39,9 @@
     close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
     help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><circle cx="12" cy="16.9" r="0.9" class="fill"/>',
     handle: '<path d="M14.5 6l-6 6 6 6"/>',
+    zoomIn: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>',
+    zoomOut: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5"/>',
+    zoomFit: '<path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/><rect x="9" y="9" width="6" height="6" rx="1"/>',
     back: '<path d="M14.5 6l-6 6 6 6"/>',
     chev: '<path d="M9.5 6l6 6-6 6"/>',
     star: '<path d="M12 4.2l2.4 4.9 5.4.7-3.9 3.8.9 5.4L12 16.4 7.2 19l.9-5.4-3.9-3.8 5.4-.7z"/>',
@@ -104,11 +107,12 @@
     dock: { label: 'Alt+D', alt: 'Shift+D', test: (e) => (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyD') },
     dockAlt: { test: (e) => (e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyD') },
     down: { label: 'Esc' },
-    pause: { label: 'Space' }
+    pause: { label: 'Space' },
+    zoomIn: { label: '+' }, zoomOut: { label: '\u2212' }, zoomToggle: { label: '0' }
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true }, store.get('ui', {}));
+  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true }, store.get('ui', {}));
   if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
   if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
   if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
@@ -577,11 +581,223 @@
     const scaler = $('stageScaler');
     scaler.style.width = bw + 'px';
     scaler.style.height = bh + 'px';
-    scaler.style.transform = 'translate(-50%, -50%) scale(' + s.toFixed(4) + ')';
+    Zoom.setBase({ s, box, bw, bh });   // fit scale x the view zoom (view only: never a control value)
     $('vpBox').classList.toggle('is-on', !!view.w);
     $('vpTag').textContent = view.w ? view.w + ' \u00d7 ' + view.h + ' viewport' : '';
-    $('stageNote').textContent = def.title + '  \u00b7  frame ' + f.w + ' \u00d7 ' + f.h + (view.w ? '  in ' + view.label : '') + '  \u00b7  ' + Math.round(s * 100) + '%';
+    stageNoteBase = def.title + '  \u00b7  frame ' + f.w + ' \u00d7 ' + f.h + (view.w ? '  in ' + view.label : '') + '  \u00b7  ' + Math.round(s * 100) + '%';
+    Zoom.note();
   }
+  let stageNoteBase = '';
+
+  // ---------- sandbox view zoom (magnifier) ----------
+  // View only: scales and pans the sandbox CONTENT on screen (#stageScaler transform). It never
+  // touches a control value, the manifest, export / copy output, the URL hash, or the size and
+  // position of the sandbox (stage) itself. 100% = the normal fit / viewport ratio. Remembered for
+  // this browser session only (sessionStorage); ?reset puts it back to 100%. The browser's own
+  // Ctrl/Cmd +/-/0 page zoom is left alone.
+  //   icons (bottom-left over the stage): - / readout (click = 100% <-> last zoom) / + / fit
+  //   keys: + or = in, - out, 0 = 100% <-> last zoom (not while typing or focused in the component)
+  //   Ctrl/Cmd + wheel (or a trackpad pinch) over the stage zooms at the cursor; plain wheel over the icons
+  //   pan: drag empty stage space, or middle-mouse drag anywhere on it; touch: two-finger pinch / pan
+  const Zoom = (() => {
+    const MIN = 0.25, MAX = 4;
+    const STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
+    const SKEY = KEY + 'zoom';
+    const clampZ = (v) => Math.min(MAX, Math.max(MIN, Number(v) || 1));
+    let z = 1, px = 0, py = 0, last = null, ctl = null, read = null;
+    let base = { s: 1, box: { x: 0, y: 0, w: innerWidth, h: innerHeight }, bw: 1, bh: 1 };
+    let pan = null, pinch = null;
+    try {
+      const v = JSON.parse(sessionStorage.getItem(SKEY) || 'null');
+      if (v) { z = clampZ(v.z); px = +v.px || 0; py = +v.py || 0; last = v.last && v.last.z ? { z: clampZ(v.last.z), px: +v.last.px || 0, py: +v.last.py || 0 } : null; }
+    } catch (_) { /* private mode */ }
+    const save = () => { try { sessionStorage.setItem(SKEY, JSON.stringify({ z, px, py, last })); } catch (_) { /* ignore */ } };
+    const is1 = (v) => Math.abs(v - 1) < 0.001;
+    const pct = (v) => Math.round(v * 100) + '%';
+    function clampPan() {
+      const S = base.s * z, b = base.box;
+      const lx = Math.max(0, (S * base.bw - b.w) / 2 + 60), ly = Math.max(0, (S * base.bh - b.h) / 2 + 60);
+      px = Math.max(-lx, Math.min(lx, px));
+      py = Math.max(-ly, Math.min(ly, py));
+    }
+    function apply(live) {
+      const sc = $('stageScaler');
+      if (!sc) return;
+      sc.classList.toggle('is-zoom-live', !!live);
+      sc.style.transform = 'translate(-50%, -50%) translate(' + px.toFixed(1) + 'px, ' + py.toFixed(1) + 'px) scale(' + (base.s * z).toFixed(4) + ')';
+      const st = $('stage');
+      if (st) st.dataset.zoomed = z > 1.001 ? 'in' : (z < 0.999 ? 'out' : '');
+      sync();
+    }
+    function sync() {
+      if (!ctl) return;
+      read.textContent = pct(z);
+      const back = is1(z) ? (last ? 'Back to ' + pct(last.z) : 'At 100%') : 'Back to 100%';
+      read.title = 'View zoom ' + pct(z) + ' (screen only, not the component\u2019s size). Click: ' + back + ' (' + KEYS.zoomToggle.label + ')';
+      read.setAttribute('aria-label', read.title);
+      read.disabled = is1(z) && !last;
+      ctl.querySelector('[data-z="out"]').disabled = z <= MIN + 0.001;
+      ctl.querySelector('[data-z="in"]').disabled = z >= MAX - 0.001;
+      ctl.querySelector('[data-z="fit"]').disabled = is1(z) && !px && !py;
+      ctl.classList.toggle('is-zoomed', !is1(z));
+      ctl.hidden = ui.zoomCtl === false;
+      note();
+    }
+    function note() {
+      const n = $('stageNote');
+      if (n) n.textContent = stageNoteBase + (stageNoteBase && !is1(z) ? '  \u00b7  view ' + pct(z) : '');
+    }
+    // zoom to nz keeping the point under (cx, cy) (client px) still; default = the sandbox centre
+    function set(nz, cx, cy, live) {
+      nz = clampZ(nz);
+      const b = base.box, fx = b.x + b.w / 2, fy = b.y + b.h / 2;
+      const ux = cx == null ? 0 : cx - fx, uy = cy == null ? 0 : cy - fy;
+      const k = nz / z;
+      px = ux - (ux - px) * k;
+      py = uy - (uy - py) * k;
+      z = nz;
+      if (is1(z) && cx == null) { z = 1; }
+      clampPan();
+      apply(live);
+      save();
+    }
+    function step(dir, cx, cy) {
+      const nz = dir > 0 ? STEPS.find((v) => v > z + 0.001) : STEPS.slice().reverse().find((v) => v < z - 0.001);
+      if (nz != null) { set(nz, cx, cy); Log.push('view zoom ' + pct(z)); }
+    }
+    function reset() {
+      if (!is1(z)) last = { z, px, py };
+      z = 1; px = 0; py = 0;
+      apply(false); save();
+      Log.push('view zoom 100%');
+    }
+    // the "toggle back": 100% <-> the last zoom (and where it was panned)
+    function toggle() {
+      if (!is1(z)) { reset(); return; }
+      if (!last) return;
+      const l = last;
+      last = { z: 1, px, py };
+      z = l.z; px = l.px; py = l.py;
+      clampPan(); apply(false); save();
+      Log.push('view zoom back to ' + pct(z));
+    }
+    const texty = (a) => !!(a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes(a.type))));
+    // plain + / = / - / 0 (no Ctrl / Cmd / Alt: those stay the browser's page zoom)
+    function key(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return false;
+      const a = document.activeElement;
+      if (texty(a) || (a && a.closest && a.closest('#labFrame'))) return false;
+      const k = e.key, c = e.code;
+      let act = null;
+      if (k === '+' || k === '=' || c === 'NumpadAdd') act = 'in';
+      else if (k === '-' || k === '_' || c === 'NumpadSubtract') act = 'out';
+      else if (k === '0' || c === 'Numpad0') act = 'toggle';
+      if (!act) return false;
+      e.preventDefault();
+      if (act === 'toggle') toggle(); else step(act === 'in' ? 1 : -1);
+      return true;
+    }
+    const blank = (t) => !t.closest('#labFrame, #stageBar, #tbMenu, #zoomCtl, .stage-note');
+    function build() {
+      const stage = $('stage');
+      ctl = el('div', 'zoom-ctl glass');
+      ctl.id = 'zoomCtl';
+      ctl.setAttribute('role', 'toolbar');
+      ctl.setAttribute('aria-label', 'Sandbox view zoom (screen only)');
+      const b = (z0, ico, title) => { const x = el('button', 'zoom-btn', svg(ico)); x.type = 'button'; x.dataset.z = z0; x.title = title; x.setAttribute('aria-label', title); return x; };
+      read = el('button', 'zoom-read', '100%');
+      read.type = 'button';
+      read.dataset.z = 'toggle';
+      ctl.append(
+        b('out', 'zoomOut', 'Zoom out (' + KEYS.zoomOut.label + ')'),
+        read,
+        b('in', 'zoomIn', 'Zoom in (' + KEYS.zoomIn.label + ')'),
+        b('fit', 'zoomFit', 'Reset view to 100% and centre (click the readout or ' + KEYS.zoomToggle.label + ' to go back)')
+      );
+      stage.appendChild(ctl);
+      ctl.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-z]');
+        if (!t || t.disabled) return;
+        const a = t.dataset.z;
+        if (a === 'in') step(1); else if (a === 'out') step(-1); else if (a === 'toggle') toggle(); else reset();
+      });
+      ctl.addEventListener('dblclick', (e) => e.preventDefault());
+      // Ctrl/Cmd + wheel (trackpad pinch arrives as Ctrl + wheel) over the stage: zoom at the cursor.
+      // Captured on the stage so the component never also scrolls, and the page never browser-zooms.
+      stage.addEventListener('wheel', (e) => {
+        const onCtl = !!e.target.closest('#zoomCtl');
+        if (!(e.ctrlKey || e.metaKey) && !onCtl) return;
+        if (e.target.closest('#stageBar, #tbMenu')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+        if (onCtl) { set(z * Math.exp(-Math.sign(dy) * 0.12)); return; }
+        set(z * Math.exp(-Math.max(-60, Math.min(60, dy)) * 0.0045), e.clientX, e.clientY, true);
+      }, { capture: true, passive: false });
+      // pan: middle-mouse drag anywhere on the stage, or left drag on empty stage space (not the component)
+      stage.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch') return;
+        const mid = e.button === 1, left = e.button === 0 && blank(e.target);
+        if (!mid && !left) return;
+        if (left && z <= 1.001) return;   // nothing to pan at 100% or below (the content fits)
+        if (mid) { e.preventDefault(); e.stopPropagation(); }
+        pan = { id: e.pointerId, x: e.clientX, y: e.clientY, px, py, moved: false };
+        armed = true;
+        try { stage.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+      }, true);
+      stage.addEventListener('pointermove', (e) => {
+        if (!pan || e.pointerId !== pan.id) return;
+        const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+        if (!pan.moved && Math.hypot(dx, dy) < 3) return;
+        pan.moved = true;
+        stage.classList.add('is-panning');
+        px = pan.px + dx; py = pan.py + dy;
+        clampPan(); apply(true);
+      });
+      const endPan = (e) => {
+        if (!pan || (e && e.pointerId !== pan.id)) return;
+        if (pan.moved) save();
+        pan = null;
+        stage.classList.remove('is-panning');
+        setTimeout(() => { armed = false; }, 0);
+      };
+      stage.addEventListener('pointerup', endPan);
+      stage.addEventListener('pointercancel', endPan);
+      stage.addEventListener('lostpointercapture', endPan);
+      stage.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
+      // touch: two fingers pinch (zoom at their midpoint) and pan together; one finger stays the component's
+      const mid2 = (t) => ({ x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2, d: Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1 });
+      stage.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 2 || e.target.closest('#stageBar, #tbMenu, #zoomCtl')) return;
+        const m = mid2(e.touches);
+        pinch = { m, z, px, py };
+      }, { passive: true });
+      stage.addEventListener('touchmove', (e) => {
+        if (!pinch || e.touches.length !== 2) return;
+        e.preventDefault();
+        const m = mid2(e.touches);
+        // restart from the pinch start each move so it never drifts
+        z = pinch.z; px = pinch.px + (m.x - pinch.m.x); py = pinch.py + (m.y - pinch.m.y);
+        const nz = clampZ(pinch.z * m.d / pinch.m.d);
+        const b = base.box, ux = m.x - (b.x + b.w / 2), uy = m.y - (b.y + b.h / 2), k = nz / z;
+        px = ux - (ux - px) * k; py = uy - (uy - py) * k; z = nz;
+        clampPan(); apply(true);
+      }, { passive: false });
+      const endPinch = (e) => { if (pinch && e.touches.length < 2) { pinch = null; save(); Log.push('view zoom ' + pct(z)); } };
+      stage.addEventListener('touchend', endPinch);
+      stage.addEventListener('touchcancel', endPinch);
+      sync();
+    }
+    let armed = false;
+    return {
+      build, key, set, step, reset, toggle, sync, note,
+      setBase(bs) { base = bs; clampPan(); apply(false); },
+      clear() { z = 1; px = 0; py = 0; last = null; try { sessionStorage.removeItem(SKEY); } catch (_) { /* ignore */ } },
+      // true while this pointerdown started a pan (so the outside-click fold leaves the card alone)
+      claims(t) { return armed || !!(t && t.closest && t.closest('#zoomCtl')); },
+      get level() { return z; }, get pan() { return { x: px, y: py }; }, get last() { return last; }
+    };
+  })();
 
   // ---------- time ----------
   const wrap = (v) => ((v % 1) + 1) % 1;
@@ -1786,6 +2002,12 @@
     const btn = () => $('helpBtn'), pop = () => $('helpPop');
     const li = (h) => '<li>' + h + '</li>';
     const k = (x) => '<kbd>' + esc(x) + '</kbd>';
+    function zoomItems() {
+      return li('Icons bottom-left over the stage: \u2212 / + zoom (25% to 400%), the readout shows the view zoom, the frame icon resets to 100% and centres')
+        + li('Toggle back: click the readout or press ' + k(KEYS.zoomToggle.label) + ' to switch 100% \u21c4 your last zoom')
+        + li(k(KEYS.zoomIn.label) + ' / ' + k('=') + ' in \u00b7 ' + k('-') + ' out \u00b7 Ctrl+wheel or a pinch zooms at the cursor \u00b7 drag empty space or middle-drag to pan when zoomed in')
+        + li('Screen only: the component\u2019s values, export and URL never change; it still reacts to hover, click, drag and keys at any zoom. Session only; ?reset = 100%. Hide the icons: Settings \u203a Viewport');
+    }
     function proItems() {
       const fl = ui.flick === false ? 'off (Settings \u203a Toolbar)' : (ui.flickStrength || 'normal');
       const hide = proOn('dockHide') && ui.dockFlickHide !== false;
@@ -1802,6 +2024,7 @@
         + li('Sections: start all closed (Settings \u203a Pro sections: All closed / First open / Remember). Responsive: one open at a time, moved to the top')
         + '</ul><p class="help-h">Shortcuts</p><ul>'
         + li(k(KEYS.pause.label) + ' pause / play \u00b7 Ctrl+Z / Ctrl+Y undo / redo in the card')
+        + '</ul><p class="help-h">Sandbox zoom (view only)</p><ul>' + zoomItems()
         + '</ul><p class="help-h">Settings</p><ul>'
         + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), hover to expand slim rail, flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
         + '</ul>';
@@ -1815,6 +2038,7 @@
         + li('Every control, in collapsible sections')
         + '</ul><p class="help-h">Now</p><ul>'
         + li('\u2715 or the round avatar folds the card to the rail; the avatar or a rail icon opens it') + li('Toolbar pad on the rail: ON / OFF (LED lit = ON)') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
+        + '</ul><p class="help-h">Sandbox zoom (view only)</p><ul>' + zoomItems()
         + '</ul><button type="button" class="help-pro">Switch to Pro</button>';
     }
     function fill() {
@@ -2333,6 +2557,8 @@
     vps.dataset.set = 'viewport';
     buildSeg(vps, [VIEWS[1], VIEWS[2], VIEWS[0]].map((x) => ({ value: x.id, label: x.label })), ui.view, (val) => setView(val), { equal: true });
     inner.appendChild(setRow('Sandbox frame', vps, '1600\u00d7770 is the default: the HP laptop (Chrome on a 1600\u00d7900 screen). 1366\u00d7768 and Fit are extra checks.'));
+    inner.appendChild(switchRow('Show zoom controls', () => ui.zoomCtl !== false, (on) => { ui.zoomCtl = on; saveUi(); Zoom.sync(); },
+      'View zoom for the sandbox (bottom-left): \u2212 / + / readout / fit. Screen only: the component\u2019s values, export and URL never change. Keys + \u2212 0, Ctrl+wheel or pinch to zoom, drag empty space (or middle-drag) to pan. Remembered for this session; ?reset = 100%.'));
 
     section(inner, 'Toolbar');
     const tbShowRow = switchRow('Show toolbar icon', () => TB.shown, (on) => TB.setOut(on), 'The floating toolbar over the stage. Grab anywhere on its shell to drag & drop it for this session, or throw it hard to launch an arcade exit!');
@@ -3271,6 +3497,7 @@
     buildPicker();
     $('labPicker').addEventListener('change', (e) => loadComponent(e.target.value, false));
     TB.init();
+    Zoom.build();
     $('viewSeg').classList.add('seg-xs');
     $('viewSeg').querySelectorAll('.seg-btn').forEach((b) => { const v = VIEWS.find((x) => x.id === b.dataset.value); if (v) { b.title = v.w ? v.w + ' \u00d7 ' + v.h + ' viewport' : 'Fit the frame to the free space'; b.setAttribute('aria-label', b.title); } });
     viewPill = buildSeg($('viewSeg'), VIEWS.map((x) => ({ value: x.id, label: x.w ? String(x.w) : x.label })), ui.view, (val) => setView(val));
@@ -3508,7 +3735,7 @@
       TB.outside(t);
       if (Help.isOpen && !Help.contains(t)) Help.hide();
       // outside click: the card folds to the rail (one stage)
-      if (!dockOpen || dock.contains(t) || Arc.contains(t) || Help.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame') || t.closest('#dockHint') || t.closest('#tbHint')) return;
+      if (!dockOpen || dock.contains(t) || Arc.contains(t) || Help.contains(t) || t.closest('#stageBar') || t.closest('#tbMenu') || t.closest('#toast') || t.closest('#labFrame') || t.closest('#dockHint') || t.closest('#tbHint') || Zoom.claims(t)) return;
       setStage(2, hoverOpen ? { how: 'hover' } : undefined);
     });
     document.addEventListener('keydown', (e) => {
@@ -3548,6 +3775,7 @@
         }
         return;
       }
+      if (Zoom.key(e)) return;   // sandbox view zoom: + / = / - / 0 (never Ctrl / Cmd: that stays the browser's page zoom)
       const tag = (e.target.tagName || '').toLowerCase();
       if (e.key === ' ' && !['input', 'textarea', 'select', 'button'].includes(tag) && def && def.animated) { e.preventDefault(); playing = !playing; syncTime(); writeHash(); }
     });
@@ -3572,10 +3800,11 @@
         Object.assign(ui, {
           dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
           view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B',
-          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
+          tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
         mode = 'basic';
+        Zoom.clear();   // view zoom back to 100%
         store.set('uiVer', 6);   // fresh defaults already match the latest migrations; don't re-run them on the next load
         url.searchParams.delete('reset');
         history.replaceState(null, '', url.pathname + url.search + url.hash);

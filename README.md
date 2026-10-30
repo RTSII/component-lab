@@ -79,7 +79,17 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 - The stage previews components inside a scaled sandbox frame:
   - **`1600×770` (Default):** Tuned for Rob's HP laptop (Chrome window on a `1600×900` display).
   - **`1366×768` & `Fit`:** Available under **Settings › Viewport** for secondary laptop/responsive checks.
-- The component automatically re-centres in the remaining stage space when the control dock opens on the right or bottom.
+- The sandbox is primary: it always uses the full window. The dock (card, slim rail, VIP badge) and the floating toolbar only float over it and never resize or move it.
+
+### Sandbox View Zoom (magnifier)
+- Small Pioneer-style pad over the stage, **bottom-left** (moves bottom-right when the dock is anchored left): **− zoom out · readout (e.g. `125%`) · + zoom in · frame icon = reset to 100% and centre**.
+- **View only:** it scales the sandbox content on screen (`#stageScaler` transform). Control values, `manifest.json`, Copy changes / full file output, the URL hash and the stage box itself never change. 100% = the normal fit / viewport ratio.
+- **Toggle back:** click the readout (or press `0`) to switch **100% ⇄ your last zoom** (and its pan), back and forth.
+- **Steps:** 25%, 33%, 50%, 67%, 75%, 90%, 100%, 110%, 125%, 150%, 175%, 200%, 250%, 300%, 400%.
+- **Keys** (not while typing in a field or while focus is inside the component): `+` / `=` in, `-` out, `0` toggle. Ctrl/Cmd + `+`/`-`/`0` stay the browser's own page zoom.
+- **Mouse / touch:** Ctrl/Cmd + wheel (or a trackpad pinch) over the stage zooms at the cursor; plain wheel over the zoom pad steps it. When zoomed in, drag empty stage space (or middle-mouse drag anywhere) to pan. Touch: two-finger pinch zooms and pans; one finger still drives the component.
+- The component keeps reacting to hover, click, drag, wheel and keys at any zoom (the browser maps pointer hits through the CSS transform).
+- Remembered for this browser session only (`sessionStorage`); `?reset` puts it back to 100%. Hide the pad: **Settings › Viewport › Show zoom controls** (Basic and Pro).
 
 ### Control Dock & Right Rail
 - **One dock, three stages** (`DOCK_STAGES` in `lab/lab.js`, smallest first):
