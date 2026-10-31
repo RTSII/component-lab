@@ -115,9 +115,11 @@ def create(name, kind="card", palette=None, title=None, category=None, tags=None
             "source": {"origin": "original" if license == "original" else "open-source", "author": "Rob", "url": None, "vaultId": None, "note": ""}})
         man["frames"] = k.get("frames", man.get("frames"))
         c = man.setdefault("core", {})
+        core_ids = {cc["id"] for cc in core.get("controls", [])}
+        c["hide"] = [h for h in (k.get("hide") or []) if h in core_ids and h not in (c.get("freePicks") or [])]
         ov = {}
         featured = set(k.get("featured", []))
-        resolved_ids = [cc["id"] for cc in core.get("controls", [])] + list(c.get("opt") or [])
+        resolved_ids = [cc["id"] for cc in core.get("controls", []) if cc["id"] not in c["hide"]] + list(c.get("opt") or [])
         for cid in resolved_ids:
             if cid in featured:
                 ov.setdefault(cid, {})["featured"] = True

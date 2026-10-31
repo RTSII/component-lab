@@ -1,0 +1,88 @@
+/* Glow button (P1 proof component). Core@1 custom properties (set by the lab from manifest "css" keys):
+   --c-border --c-fill --c-text --c-glow --c-accent | --fill-op --border-op --glow-k --radius --blur
+   --type-k --fw --track --pad --lift --speed --ease --idle. Extras: --shine-angle. */
+.lab-frame {
+  --c-border: #00e5ff; --c-fill: #04121f; --c-text: #d8f3ff; --c-glow: #00e5ff; --c-accent: #00e5ff;
+  --fill-op: 0.86; --border-op: 0.6; --glow-k: 1.2; --radius: 12px; --blur: 0px;
+  --type-k: 0.94; --fw: 700; --track: 0.02em; --pad: 20px; --lift: 4px;
+  --speed: 1; --ease: cubic-bezier(0.22, 1, 0.36, 1); --idle: running;
+  --shine-angle: 115deg;
+  --fs: calc(18px * var(--type-k));
+}
+/* Centred by default on both axes */
+.gb-host {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+.gb {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(var(--pad) * 0.4);
+  padding: calc(var(--pad) * 0.6) calc(var(--pad) * 1.4);
+  font: inherit; font-size: var(--fs); font-weight: var(--fw); letter-spacing: var(--track); line-height: 1;
+  color: var(--c-text);
+  background: rgb(from var(--c-fill) r g b / var(--fill-op));
+  border: 1px solid rgb(from var(--c-border) r g b / var(--border-op));
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--blur));
+  box-shadow: 0 0 calc(16px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.38),
+    inset 0 0 calc(10px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.16);
+  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform calc(260ms / var(--speed)) var(--ease), box-shadow calc(260ms / var(--speed)) var(--ease),
+    border-color calc(260ms / var(--speed)) var(--ease);
+}
+.gb-label { position: relative; z-index: 1; }
+.gb-icon { position: relative; z-index: 1; display: inline-grid; color: var(--c-accent); }
+.gb-icon svg { width: 1.05em; height: 1.05em; display: block; }
+.gb-host[data-icon="none"] .gb-icon { display: none; }
+.gb-host[data-case="upper"] .gb-label { text-transform: uppercase; letter-spacing: calc(var(--track) + 0.08em); }
+
+/* sheen: a soft light band that sweeps across on hover / focus (BTN_SHEEN, angle BTN_SHEEN_ANGLE) */
+.gb-sheen {
+  position: absolute; inset: -2px; z-index: 0; pointer-events: none;
+  background: linear-gradient(var(--shine-angle), transparent 35%, rgb(from var(--c-glow) r g b / 0.32) 50%, transparent 65%);
+  background-size: 250% 100%; background-position: 120% 0; opacity: 0;
+}
+.gb-host[data-sheen="off"] .gb-sheen { display: none; }
+
+/* pulse ring: an idle halo (BTN_PULSE), runs only while IDLE is on */
+.gb::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 0 rgb(from var(--c-glow) r g b / 0.5);
+}
+.gb-host[data-pulse="on"] .gb::after { animation: gb-pulse calc(2.4s / var(--speed)) var(--ease) infinite; animation-play-state: var(--idle); opacity: 1; }
+@keyframes gb-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(from var(--c-glow) r g b / 0.5); }
+  100% { box-shadow: 0 0 0 calc(14px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0); }
+}
+
+/* ---- interaction slots (component.js sets data-hover / data-press / data-key / data-touching on .gb-host) ---- */
+.gb-host:not([data-touch-off])[data-hover="lift"] .gb:hover,
+.gb-host:not([data-touch-off])[data-hover="both"] .gb:hover,
+.gb-host[data-key="on"][data-hover="lift"] .gb:focus-visible,
+.gb-host[data-key="on"][data-hover="both"] .gb:focus-visible { transform: translateY(calc(-1 * var(--lift))); }
+.gb-host:not([data-touch-off])[data-hover="glow"] .gb:hover,
+.gb-host:not([data-touch-off])[data-hover="both"] .gb:hover,
+.gb-host[data-key="on"][data-hover="glow"] .gb:focus-visible,
+.gb-host[data-key="on"][data-hover="both"] .gb:focus-visible {
+  border-color: rgb(from var(--c-border) r g b / 1);
+  box-shadow: 0 0 calc(28px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.6), inset 0 0 calc(14px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.28);
+}
+.gb-host:not([data-touch-off]):not([data-hover="none"]) .gb:hover .gb-sheen,
+.gb-host[data-key="on"]:not([data-hover="none"]) .gb:focus-visible .gb-sheen {
+  opacity: 1; background-position: -20% 0;
+  transition: background-position calc(700ms / var(--speed)) var(--ease), opacity 200ms;
+}
+.gb-host:not([data-touch-off])[data-press="press"] .gb:active { transform: translateY(0) scale(0.96); }
+.gb-host:not([data-touch-off])[data-press="glow"] .gb:active { box-shadow: 0 0 calc(36px * var(--glow-k)) var(--c-glow); }
+.gb-host[data-touch-off] .gb { cursor: default; }
+.gb-host[data-key="on"] .gb:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+.gb-host[data-key="off"] .gb:focus-visible { outline: none; }
+.gb.is-fired { animation: gb-fire calc(420ms / var(--speed)) var(--ease); }
+@keyframes gb-fire {
+  0% { filter: brightness(1.6); }
+  100% { filter: brightness(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gb, .gb-sheen { transition: none; }
+  .gb-host[data-pulse="on"] .gb::after, .gb.is-fired { animation: none; }
+}

@@ -1,5 +1,5 @@
 {
-  "$comment": "Per-kind starting points for new-component.py / Lab + New (core@1 ids). featured = starred on the Pro front; defaults = core overrides; category = library category.",
+  "$comment": "Per-kind starting points for new-component.py / Lab + New (core@1 ids). featured = starred on the Pro front; defaults = core overrides; category = library category; hide = core controls that do not apply to this kind (P1).",
   "kinds": {
     "card": {
       "label": "Card",
@@ -51,7 +51,10 @@
       "defaults": {
         "SPACE_PAD": 16,
         "RADIUS": 16
-      }
+      },
+      "hide": [
+        "IX_DRAG"
+      ]
     },
     "hero": {
       "label": "Hero",
@@ -109,7 +112,12 @@
         "GLOW_STRENGTH": 1.2,
         "MOTION_INTENSITY": 1.1,
         "HOVER_LIFT": 0
-      }
+      },
+      "hide": [
+        "SIZE_W",
+        "IX_DRAG",
+        "IX_PRESS"
+      ]
     },
     "list": {
       "label": "List",
@@ -167,7 +175,11 @@
         "SCALE_TEXT": 0.94,
         "RADIUS": 12,
         "GLOW_STRENGTH": 1.2
-      }
+      },
+      "hide": [
+        "SIZE_W",
+        "IX_DRAG"
+      ]
     }
   }
 }

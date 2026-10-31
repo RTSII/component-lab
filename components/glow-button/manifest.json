@@ -1,0 +1,234 @@
+{
+  "schema": 3,
+  "meta": {
+    "id": "glow-button",
+    "name": "Glow button",
+    "version": "1.0.0",
+    "kind": "button",
+    "category": "buttons",
+    "tags": {
+      "purpose": [
+        "button"
+      ],
+      "interaction": [
+        "hover",
+        "press",
+        "touch",
+        "keyboard"
+      ],
+      "tech": [
+        "vanilla-js",
+        "css"
+      ],
+      "feel": [
+        "neon"
+      ],
+      "fit": [
+        "component-lab",
+        "ptcb26"
+      ]
+    },
+    "tierMin": "free",
+    "source": {
+      "origin": "original",
+      "author": "Rob",
+      "url": null,
+      "vaultId": null,
+      "note": "Component #2 (P1, 2026-10-31): proof of the core@1 base template. Original, no helix code."
+    },
+    "license": "original",
+    "status": "ready",
+    "deps": [],
+    "thumbnail": null,
+    "created": "2026-10-31",
+    "updated": "2026-10-31"
+  },
+  "inherits": "core@1",
+  "animated": false,
+  "paletteFrom": [
+    "project/tokens.css"
+  ],
+  "frames": {
+    "1600x770": {
+      "w": 360,
+      "h": 200
+    },
+    "1366x768": {
+      "w": 340,
+      "h": 180
+    }
+  },
+  "core": {
+    "hide": [
+      "SIZE_W",
+      "IX_DRAG"
+    ],
+    "opt": [
+      "COLOR_ACCENT",
+      "BLUR",
+      "WEIGHT",
+      "TRACKING",
+      "SPACE_PAD",
+      "HOVER_LIFT",
+      "IDLE"
+    ],
+    "freePicks": [
+      "GLOW_STRENGTH",
+      "RADIUS"
+    ],
+    "interaction": {
+      "mode": "fx"
+    },
+    "override": {
+      "COLOR_BORDER": {
+        "label": "Button border",
+        "featured": true
+      },
+      "COLOR_FILL": {
+        "label": "Button fill",
+        "featured": true
+      },
+      "COLOR_TEXT": {
+        "label": "Label text",
+        "featured": true
+      },
+      "COLOR_GLOW": {
+        "label": "Glow",
+        "featured": true
+      },
+      "COLOR_ACCENT": {
+        "label": "Icon / focus ring"
+      },
+      "GLOW_STRENGTH": {
+        "default": 1.2,
+        "featured": true,
+        "signature": true
+      },
+      "RADIUS": {
+        "default": 12,
+        "featured": true,
+        "signature": true
+      },
+      "SCALE_TEXT": {
+        "default": 0.94,
+        "label": "Label size"
+      },
+      "IX_HOVER": {
+        "default": "both",
+        "hint": "Lift, glow and the sheen sweep when the pointer is over the button.",
+        "where": "style.css :hover rules on .gb (data-hover on .gb-host)"
+      },
+      "IX_PRESS": {
+        "hint": "Squash or flare while the button is held down.",
+        "where": "style.css :active rules (data-press)"
+      },
+      "IX_TOUCH": {
+        "hint": "A touch acts like hover + press, or is ignored.",
+        "where": "component.js pointerdown: e.pointerType === 'touch'"
+      },
+      "IX_KEY": {
+        "hint": "Tab focus shows the hover state and a focus ring; off removes it from the tab order.",
+        "where": "component.js tabIndex + :focus-visible"
+      }
+    }
+  },
+  "layout": {
+    "deck": [],
+    "pads": [
+      "Button"
+    ]
+  },
+  "extras": [
+    {
+      "id": "BTN_ICON",
+      "tier": "mid",
+      "label": "Icon",
+      "section": "component",
+      "group": "Button",
+      "widget": "seg-pads",
+      "default": "arrow",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "arrow",
+          "label": "Arrow"
+        },
+        {
+          "value": "play",
+          "label": "Play"
+        },
+        {
+          "value": "plus",
+          "label": "Plus"
+        }
+      ],
+      "short": "Icon",
+      "where": "component.js render(): .gb-icon"
+    },
+    {
+      "id": "BTN_SHEEN",
+      "tier": "mid",
+      "label": "Hover sheen",
+      "section": "component",
+      "group": "Button",
+      "widget": "pad",
+      "default": true,
+      "padTitle": "SHEEN",
+      "padSub": "On hover",
+      "short": "Sheen",
+      "where": "style.css .gb-sheen"
+    },
+    {
+      "id": "BTN_SHEEN_ANGLE",
+      "tier": "pro",
+      "label": "Sheen angle",
+      "section": "component",
+      "group": "Button",
+      "widget": "knob",
+      "min": 0,
+      "max": 180,
+      "step": 1,
+      "default": 115,
+      "unit": "deg",
+      "css": "--shine-angle",
+      "short": "Sheen angle"
+    },
+    {
+      "id": "BTN_PULSE",
+      "tier": "pro",
+      "label": "Idle pulse ring",
+      "section": "component",
+      "group": "Button",
+      "widget": "pad",
+      "default": false,
+      "padTitle": "PULSE",
+      "padSub": "Idle halo",
+      "short": "Pulse",
+      "where": "style.css .gb::after"
+    },
+    {
+      "id": "BTN_CASE",
+      "tier": "pro",
+      "label": "Label case",
+      "section": "component",
+      "group": "Button",
+      "widget": "seg-pads",
+      "default": "normal",
+      "options": [
+        {
+          "value": "normal",
+          "label": "Aa"
+        },
+        {
+          "value": "upper",
+          "label": "AA"
+        }
+      ],
+      "short": "Case"
+    }
+  ],
+  "aliases": {}
+}

@@ -251,7 +251,7 @@ Checklist per new component:
 
 ## 5. P0 completion status & remaining checklist
 
-### P0 — done (local, uncommitted)
+### P0 — done (committed `d090c4a` on `feat/icons-dock`, Oct 31, 2026 ET)
 
 - [x] `components/_core/core.json` — core@1: 12 core + 5 IX slots + 16 optional, widgets, override whitelist, groups, budget, tag vocab, categories, licences, statuses.
 - [x] `lab/manifest.js` — schema-3 resolver (`resolve`, `renameKeys`, `sourceForSave`, `widgetOf`); loaded before `lab.js`.
@@ -265,26 +265,118 @@ Checklist per new component:
 - [x] `components/_template` rebuilt on core@1 (manifest, component.js with the 5 IX slots, centred style.css, kinds.json on core IDs).
 - [x] Docs: README, COMPONENT-LAB-REVIEW-MVP.md, this file.
 
-### P1 — next
+### P1 — status (committed + pushed, Oct 31, 2026 ET)
 
-- [ ] Rob: restart `run.bat`, Ctrl+F5, check helix at Free / Mid / Pro, then commit the P0 run when happy.
-- [ ] Build component #2 (simple card or button) with `new-component.py` as the proof of the template.
-- [ ] Port the disintegrating gallery (ours) as #3 (10 of 16 vars map to core).
-- [ ] Lab reads `components/index.json` (fallback `registry.js`); Library popover (search, facets, Recent, Favourites).
-- [ ] `lab/scan.js` emits core IDs; `kinds.json` per-kind hide lists.
-- [ ] Verify the previous component's raf / CSS / listeners are released on switch once 2+ components exist.
+P0 was committed on `feat/icons-dock` as `d090c4a` (Rob t591u "commit this"). P1 below was committed together with the wizard / navigation plan docs and pushed to GitHub (Rob t594u).
+
+- [x] `components/_template` on core@1 (inherits core, 5 IX slots wired, centred CSS) — passes `tools/check-components.py`. `kinds.json` now has per-kind `hide` lists (button: `SIZE_W`, `IX_DRAG`; nav: `IX_DRAG`; animated-background: `SIZE_W`, `IX_DRAG`, `IX_PRESS`), applied by `new-component.py`.
+- [x] `lab/scan.js` emits core IDs: CSS custom properties that match a core control's `css` (e.g. `--radius`, `--c-border`, `--w`) and common names (`SPEED`, `EASE`, `GLOW`, `PAD`, `GAP` …, `CORE_SYNONYMS`) use the core ID; interaction controls are `IX_HOVER`, `IX_DRAG`, `IX_TOUCH`, `IX_KEY` (+ non-core `IX_WHEEL`, `IX_CLICK`, `IX_HOVER_CSS`); master speed is `MOTION_SPEED`. Each rename goes into the scan result's `aliases` and the lab migrates saved data of auto-scanned components once (`migrateIds`). Lab capture guards use `scanIx(kind)` instead of `byId.WHEEL / CLICK / KEYS`. The lab passes `core.json` to `Scan.analyze`.
+- [x] Component #2 **`glow-button`** ("Glow button", kind button, category buttons, status ready): made with `new-component.py`, then its own markup / JS / CSS. Manifest: inherits core; hides `SIZE_W` + `IX_DRAG`; opt `COLOR_ACCENT`, `BLUR`, `WEIGHT`, `TRACKING`, `SPACE_PAD`, `HOVER_LIFT`, `IDLE`; freePicks `GLOW_STRENGTH` + `RADIUS`; extras in the "Button" group (`section: component`, shown under Layout): `BTN_ICON` (Mid, pads none / arrow / play / plus), `BTN_SHEEN` (Mid, pad), `BTN_SHEEN_ANGLE` (Pro, knob 0–180°), `BTN_PULSE` (Pro, pad), `BTN_CASE` (Pro, pads). Free 6 / Mid 17 / Pro 27. Slots: hover lift / glow / both + sheen, press squash / flare, touch same-as-hover or ignored, keyboard focus ring or out of tab order. No helix code.
+- [x] Picker and toolbar menu show names from `components/index.json` (fallback: folder id).
+- [ ] Port the disintegrating gallery (ours, original, not the licensed bundle) as #3 — **skipped in P1**: it is an ES module with raw WebGL2 and its own clock, so it needs a module loader path (dynamic `import()` in `mount`), a 16-var schema-3 mapping and `rate`/time wiring. Not a quick port. The licensed Aceternity bundle stays out of this repo.
+- [ ] Library popover from `index.json` (search, facets, Recent, Favourites) — moved to P2 with category folders (worth it at 3–5 components).
+- [ ] Dedicated "component" section in the rail (extras with `section: component` currently show in Layout).
+- [ ] Verify the previous component's raf / CSS / listeners are released on switch with 3+ components (2 checked: CSS swapped, helix values kept).
+
+**P1 verification (light):** checker 0 errors (3 components); `node --check` on `lab/scan.js`, `lab/lab.js`, `glow-button/component.js`; headless Chrome 1600x770 at `?tier=free|mid|pro` for helix (6 / 22 / 43) and glow-button (6 / 17 / 27), 0 console errors; button centred (0 px offset), hover lift −4 px; `IX_TOUCH` / `IX_KEY` / `BTN_ICON` changes applied; helix → glow-button → helix kept helix `MOTION_SPEED` 1.75 and `SIZE_W` 190, glow-button kept `RADIUS` 30; scanner unit check returned core IDs + aliases.
 
 ### P2
 
+- [ ] Library popover from `components/index.json` (search, facets: category / tags / status / tier, Recent, Favourites).
+- [ ] Disintegrating gallery (ours) as #3 via a module-loader path.
 - [ ] Category subfolders + `components-private/` root + `index.private.json` (git-ignored).
 - [ ] Thumbnail script (Playwright, 320x200 `thumb.webp`).
 - [ ] Optional: Rate → Motion merge (map `ui.railOrder` once); dedicated component section.
 - [ ] Cross-component "Looks" presets on core IDs.
+- [ ] (Plan, Rob t594u) Decide the toolbar component-list cap (8 / 10 / 12 + "More..." to Library page or popover) - see "Later: New-component wizard and component navigation".
+- [ ] (Plan) Shared component-list function for the toolbar dropdown and the dock-header name dropdown, with a "Wizard" entry on top.
+- [ ] (Later, not now) New-component wizard stepper in the sandbox (type -> choices -> confirm), paid tiers.
 
 ### P3
 
 - [ ] ui-vault sync (`vaultId`; save generic copy to ui-vault `created/` only when Rob asks).
 - [ ] Saved filter views; bulk tag editing in Settings › Manifest tools; virtualisation past 200 components.
+
+### Paid-tier offering analysis (Rob t593u, docs only)
+
+Rob's framing: the Pro template builder is "the real nuts and bolts" of the product: a wide range of controls and component banks to start and test with. It is what the lab already does, so this section turns the P0 / P1 findings into a tier offer. Nothing here is built yet.
+
+**1. The banks**
+- **Control bank:** (a) **core@1** — 12 core controls (4 colours, fill / border opacity, glow, radius, text scale, speed, easing, width); (b) **interaction slots** — `IX_HOVER`, `IX_PRESS`, `IX_DRAG`, `IX_TOUCH`, `IX_KEY` (scanner adds `IX_WHEEL`, `IX_CLICK`, `IX_HOVER_CSS`); (c) **optional library** — 16 opt-ins (accent, muted, second fill, blur, weight, tracking, label scale, height, padding, gap, direction, intensity, cycle, perspective, hover lift, idle); (d) **component extras** — each component's own controls (helix 21, glow-button 5).
+- **Widget bank:** swatches, seg-pads, pad, switch, h-slider, knob, v-fader, fx-unit, tempo-deck, select (core.json `widgets`), chosen per control in the manifest.
+- **Component bank:** library components (helix, glow-button, `_template`; gallery next), the 6 kinds in `kinds.json` (card, nav, hero, animated-background, list, button) with frames, starred controls, defaults and hide lists, and the 12 categories in `core.json`.
+- **Add-on / connector bank (future):** motion, interaction and effect snippets with their own meta (see "Later: Pro blank-component template builder").
+
+**2. Tier split (recommended)**
+
+| | Free (taste) | Mid (unlock) | Pro (builder) |
+|---|---|---|---|
+| Controls | 6: 4 core colours + 2 `freePicks` per component | up to 22: all core + interaction slots + chosen opt-ins / extras tagged `tier: mid`; real ranges (sliders, not just presets) | everything: all extras, flip-card backs, `where` / `hint`, stars, custom hex, tempo deck |
+| Interaction | sees the default behaviour only | the 5 IX slots | slots + scanner-only slots + interaction scan diagnostics |
+| Components | 2–3 featured components (one per kind family), read-only | full public library, kind templates, snapshots A/B/C (save is Pro today) | library + blank template + `+ New` / `new-component.py`, manifest Save / Export / Re-scan, the builder pop-out, private banks |
+| Output | copy values | copy changes / working file | export manifest + code, connectors, later ui-vault sync |
+
+- Free shows "what this lab can do" on every component with the same 6-control shape, so it stays a fair taste and the budget check (`budget.free = 6`) enforces it.
+- Mid is the "tune any component fully" plan: the 22-control budget stays the cap, so Mid never becomes Pro by accident.
+- Pro is "make and extend components": the builder, scaffold, scanner and connector suggestions.
+
+**3. How schema 3 meta drives it**
+- Per control: `tier` (free / mid / pro), `freePicks`, `featured`, `signature`, `advanced` decide what each tier shows; the checker enforces the budget.
+- Per component: `meta.tierMin` can gate a whole component (for example Pro-only showcase components); `status` (draft / ready / template) hides drafts from Free and Mid; `license` keeps private / licensed entries out of public tiers.
+- Library and builder: `kind`, `category`, `tags.purpose`, `tags.interaction`, `tags.tech` (code language) and `tags.feel` drive Library filters (P2) and the builder's suggestions (match add-ons whose applies-to kinds / tech overlap; skip what the component already covers via `core.hide` / `opt`).
+- `components/index.json` already carries control counts per tier, so a tier badge ("6 / 17 / 27") and upsell hints need no extra data.
+
+**4. Seeding and testing the banks**
+- Starter components (one per kind, all original): glow-button (done), a card, a nav / tabs, a hero, a list, an animated background, plus the helix and the gallery as showcase pieces. Each made with `new-component.py`, checked, and loaded headless at Free / Mid / Pro.
+- Starter add-ons (for the builder): spring easing, idle float, press ripple, sheen sweep, glow pulse, scroll reveal, cursor tilt, glass blur, each with CSS + vanilla JS snippets and the core / opt IDs it adds.
+- Test loop per bank item: checker (ranges, defaults, budget, licence), headless tier load with 0 console errors, interaction slot smoke test (hover / press / touch / key), and a switch test so saved values never leak between components.
+
+**5. Packaging and licensing**
+- **Public bank** (this repo): original or permissively licensed components and add-ons only; checker licence guard blocks Aceternity / licensed markers.
+- **Private bank:** git-ignored `components-private/` + `index.private.json` (P2) for licensed rebuilds (for example the Aceternity gallery bundle) and Rob's paid-only pieces; never committed here, shipped only in a private build or separate private repo.
+- Paid tiers would unlock private-bank entries by `license` + `tierMin`; each entry keeps `source.url` / `author` so licence terms can be checked before anything is offered to paying users (some licences don't allow redistribution even to paid users).
+
+**6. Open questions for Rob**
+1. Final tier names and prices (Free / Base / Pro kept for now), and whether Mid saves values and snapshots (only Pro saves today).
+2. How many components Free sees: all of them at 6 controls, or a featured few?
+3. Is the builder Pro-only, or does Mid get a read-only "what could be added" preview as an upsell?
+4. Should private / licensed banks ever be part of a paid offer, given their licence terms?
+5. Snippet languages beyond CSS / vanilla JS (React first?), and where the add-on catalog lives (this repo vs ui-vault).
+6. Does export (code / manifest) belong to Mid or Pro?
+
+### Later (P3 or after): Pro blank-component template builder
+
+Deferred by Rob (t592u). Docs only, not built.
+
+- **Goal:** build out the top-tier blank component template builder. A pop-out (opened from an "Advanced" button, or from extra pages / tabs) filters the library and offers choices and connectors from what exists and beyond, showing what extra code or connections could add (for example motion), relevant to the component's type, purpose and code language.
+- **Access:** Pro only (tier `pro`; listed in `PRO_FEATURES`). Free and Mid don't see it.
+- **Inputs:** schema-3 `meta` of the component being built and of the whole library through `components/index.json`: `kind`, `category`, `tags.purpose`, `tags.interaction`, `tags.tech` (code language: vanilla-js, css, svg, canvas, webgl, react), `tags.feel`, `license`, `status`, `deps`; plus core@1 control and `IX_*` slot coverage (which core controls are hidden, which opt-ins are in use).
+- **Outputs:** ranked suggestions of add-ons / connectors, for example motion (idle loop, spring easing, scroll reveal), interaction (press ripple, drag, cursor-follow), effects (sheen, glow pulse, glass blur), each with a short what-it-does note, the core / optional control IDs it would add, and a code snippet per language (CSS, vanilla JS, later React). "Add" would write the extra into the manifest and starter code (Pro, with undo).
+- **Already enabled by P0 / P1:** tag vocabulary and categories in `core.json`; per-component meta + control counts in the generated `index.json`; `core.opt` library and `overrideWhitelist`; per-kind defaults / hide lists in `_template/kinds.json`; `new-component.py` scaffold; `check-components.py` validation; licence field + licence guard.
+- **Prerequisites:** a fuller library (several components per category), the Library popover / index reader (P2), tag vocab kept current, licence flags on every entry so licensed or private sources (`components-private/`) are never suggested into the public tree, and a snippet store (an `addons/` catalog with its own meta: applies-to kinds / tech, adds controls, licence).
+- **Open questions:** where the snippet catalog lives (in this repo vs ui-vault); suggestion ranking (tag overlap only, or usage); whether "Add" edits files through `serve.py` or only copies code; how React snippets fit a vanilla lab; whether Mid gets a read-only preview.
+
+### Later (P2-related, docs only): New-component wizard and component navigation
+
+Added by Rob (t594u). Plans only - **not built**; Rob: "i dont want to create the wizard now, just add to plans".
+
+**a) New-component wizard (paid tiers)**
+- A button on the **expanded paid-tier dock** opens a **wizard stepper inside the sandbox** (sandbox stays primary: the stepper floats over it and never resizes / reflows it) that assists the user in creating a new component.
+- **Step 1 - qualifier questions:** what type of component (for example card, button, nav, hero, list, animated background - the kinds in `_template/kinds.json` and categories in `core.json`).
+- **Step 2 - next choice(s):** offered from the step-1 answer (for example purpose / feel / interaction / code language, starter controls and add-ons), filtered by library tags.
+- **Step 3 (most likely final) - confirm:** summary of choices, then "Start customizing" scaffolds the component (same path as `new-component.py`: core@1 + kind hide lists + chosen opt-ins) and loads it in the sandbox.
+- Relates to "Later: Pro blank-component template builder": the same schema-3 meta / `components/index.json` tags drive the wizard choices; the builder pop-out is the deeper "Advanced" layer after the wizard.
+
+**b) Toolbar component dropdown**
+- A **"Wizard"** option at the top (for example "+ New with wizard"), a divider, then the components listed below it.
+
+**c) Open decision: how many components before overflow** (no decision made)
+- Options: list **8**, **10** or **12** components, then a **"More..."** entry that opens the component folder / Library page (redirect) or the P2 Library popover.
+- Trade-offs: 8 keeps the menu short and fits 1366x768 with no scroll, but pushes users to the Library sooner; 10 is a middle ground; 12 shows more at once but needs a scroll or tighter rows on 1366x768 and gets slow to scan. Ordering inside the cap (Recent / Favourites / featured / alphabetical) changes which cap feels right. A cap based on viewport height is another option.
+
+**d) Idea: component name at the far right of the expanded dock as a dropdown**
+- Make the component name in the expanded dock header a dropdown with the **same list logic** as the toolbar dropdown (Wizard option on top, same overflow rule and "More..."), from one shared list function so both stay in sync.
+- Open questions: tier visibility (Wizard Pro only, or Mid too? Free sees only the list?); mobile / slim dock behaviour (dropdown, sheet, or hidden); Recent / Favourites ordering; centred header layout and touch target size.
 
 ### Deferred
 
@@ -303,6 +395,8 @@ Checklist per new component:
 | Sat Oct 31, 2026 | Base template proposal (read-only): core@1 (12 core + 5 IX slots + optional library), naming, schema 3, helix Steps A/B, scaffold checklist, risks, phased plan. |
 | Sat Oct 31, 2026 | Rob (t590u): P0 as one local uncommitted run; keep Rate; helix gets both steps; update docs; add this reference. |
 | Sat Oct 31, 2026 | **P0 run (uncommitted, branch `feat/icons-dock`)** — built on a box copy, served on a temp port (not 5179), files copied back to the PC. Results below. |
+| Sat Oct 31, 2026 | Rob (t591u): P0 committed `d090c4a` on `feat/icons-dock`; **P1 run (local, uncommitted)**: scan.js on core IDs, kinds hide lists, component #2 `glow-button`, picker names from index.json; gallery port skipped. Rob (t592u): "Pro blank-component template builder" added as a Later item; Rob (t593u): "Paid-tier offering analysis" added (docs only). |
+| Sat Oct 31, 2026 | Rob (t594u): New-component wizard + toolbar/dock component dropdowns added as plans (not built); P1 committed and `feat/icons-dock` pushed to GitHub. |
 
 **P0 verification (light):**
 - `node --check` on every `lab/*.js`, both `component.js` files and `registry.js`: pass.

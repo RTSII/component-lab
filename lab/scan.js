@@ -274,26 +274,67 @@
     found.forEach((f) => {
       const base = { category: 'interact', interaction: f.kind, source: 'scan', where: f.evidence };
       if (f.kind === 'hover') vs.push(Object.assign(base, animated
-        ? { id: 'HOVER', label: 'On hover', short: 'Hover', control: 'segmented', default: 'pause', options: [{ value: 'play', label: 'Keep' }, { value: 'pause', label: 'Pause' }, { value: 'slow', label: 'Slow' }, { value: 'fast', label: 'Fast' }], note: 'read P.HOVER in component.js; return a rate() multiplier from mount()' }
-        : { id: 'HOVER', label: 'Hover reaction', short: 'Hover', control: 'switch', default: true, note: 'read P.HOVER in your pointerenter handler' }));
-      else if (f.kind === 'hover-css') vs.push(Object.assign(base, { id: 'HOVER_FX', label: 'Hover styles', short: 'Hover styles', control: 'switch', default: true, note: 'lab switches the :hover rules on or off; no code needed' }));
-      else if (f.kind === 'drag') vs.push(Object.assign(base, { id: 'DRAG', label: 'On drag', short: 'Drag', control: 'segmented', default: animated ? 'scrub' : 'on', options: animated ? [{ value: 'scrub', label: 'Spin' }, { value: 'ignore', label: 'Ignore' }] : [{ value: 'on', label: 'Drag' }, { value: 'ignore', label: 'Ignore' }], note: 'read P.DRAG in the pointerdown handler' }));
-      else if (f.kind === 'wheel') vs.push(Object.assign(base, { id: 'WHEEL', label: 'On wheel', short: 'Wheel', control: 'segmented', default: 'scroll', options: [{ value: 'scroll', label: 'Scroll' }, { value: 'ignore', label: 'Ignore' }], note: 'read P.WHEEL in the wheel handler' }));
-      else if (f.kind === 'click') vs.push(Object.assign(base, { id: 'CLICK', label: 'On click', short: 'Click', control: 'segmented', default: 'act', options: [{ value: 'act', label: 'Act' }, { value: 'ignore', label: 'Ignore' }], note: 'read P.CLICK in the click handler' }));
+        ? { id: 'IX_HOVER', core: 'IX_HOVER', label: 'On hover', short: 'Hover', control: 'segmented', default: 'pause', options: [{ value: 'play', label: 'Keep' }, { value: 'pause', label: 'Pause' }, { value: 'slow', label: 'Slow' }, { value: 'fast', label: 'Fast' }], note: 'read P.IX_HOVER in component.js; return a rate() multiplier from mount()' }
+        : { id: 'IX_HOVER', core: 'IX_HOVER', label: 'Hover reaction', short: 'Hover', control: 'switch', default: true, note: 'read P.IX_HOVER in your pointerenter handler' }));
+      else if (f.kind === 'hover-css') vs.push(Object.assign(base, { id: 'IX_HOVER_CSS', label: 'Hover styles', short: 'Hover styles', control: 'switch', default: true, note: 'lab switches the :hover rules on or off; no code needed' }));
+      else if (f.kind === 'drag') vs.push(Object.assign(base, { id: 'IX_DRAG', core: 'IX_DRAG', label: 'On drag', short: 'Drag', control: 'segmented', default: animated ? 'scrub' : 'on', options: animated ? [{ value: 'scrub', label: 'Spin' }, { value: 'ignore', label: 'Ignore' }] : [{ value: 'on', label: 'Drag' }, { value: 'ignore', label: 'Ignore' }], note: 'read P.IX_DRAG in the pointerdown handler' }));
+      else if (f.kind === 'wheel') vs.push(Object.assign(base, { id: 'IX_WHEEL', label: 'On wheel', short: 'Wheel', control: 'segmented', default: 'scroll', options: [{ value: 'scroll', label: 'Scroll' }, { value: 'ignore', label: 'Ignore' }], note: 'read P.IX_WHEEL in the wheel handler' }));
+      else if (f.kind === 'click') vs.push(Object.assign(base, { id: 'IX_CLICK', label: 'On click', short: 'Click', control: 'segmented', default: 'act', options: [{ value: 'act', label: 'Act' }, { value: 'ignore', label: 'Ignore' }], note: 'read P.IX_CLICK in the click handler' }));
       else if (f.kind === 'key') vs.push(Object.assign(base, animated
-        ? { id: 'KEY_PAUSE', label: 'Keyboard focus pauses', short: 'Focus pauses', control: 'switch', default: true, advanced: true, note: 'read P.KEY_PAUSE in focusin' }
-        : { id: 'KEYS', label: 'Keyboard', short: 'Keys', control: 'switch', default: true, advanced: true, note: 'read P.KEYS in the key handler' }));
-      else if (f.kind === 'touch') vs.push(Object.assign(base, { id: 'TOUCH', label: 'Touch', short: 'Touch', control: 'segmented', default: 'hover', options: [{ value: 'hover', label: 'Same as hover' }, { value: 'ignore', label: 'Ignore' }], advanced: true, note: 'check e.pointerType === "touch" and read P.TOUCH' }));
+        ? { id: 'IX_KEY', core: 'IX_KEY', was: 'KEY_PAUSE', label: 'Keyboard focus pauses', short: 'Focus pauses', control: 'switch', default: true, advanced: true, note: 'read P.IX_KEY in focusin' }
+        : { id: 'IX_KEY', core: 'IX_KEY', was: 'KEYS', label: 'Keyboard', short: 'Keys', control: 'switch', default: true, advanced: true, note: 'read P.IX_KEY in the key handler' }));
+      else if (f.kind === 'touch') vs.push(Object.assign(base, { id: 'IX_TOUCH', core: 'IX_TOUCH', label: 'Touch', short: 'Touch', control: 'segmented', default: 'hover', options: [{ value: 'hover', label: 'Same as hover' }, { value: 'ignore', label: 'Ignore' }], advanced: true, note: 'check e.pointerType === "touch" and read P.IX_TOUCH' }));
     });
     return vs;
   }
 
+  // ---------- core@1 ids (P1) ----------
+  // Scanned controls use the shared core ids (components/_core/core.json) when they match a core control, so a
+  // scanned component's values, snapshots and links line up with every manifest component. Matching is by the
+  // CSS custom property a core control drives (opts.core, loaded by the lab) and a small synonym list for
+  // legacy / JS names. Every rename is recorded in the result's "aliases" (old -> new) so data saved under an
+  // older scan id moves over once.
+  const CORE_SYNONYMS = {
+    SPEED: 'MOTION_SPEED', TEMPO: 'MOTION_SPEED', EASE: 'MOTION_EASING', EASING: 'MOTION_EASING',
+    GLOW: 'GLOW_STRENGTH', GLOW_K: 'GLOW_STRENGTH', RADIUS: 'RADIUS', R: 'RADIUS', BLUR: 'BLUR',
+    W: 'SIZE_W', WIDTH: 'SIZE_W', H: 'SIZE_H', HEIGHT: 'SIZE_H', PAD: 'SPACE_PAD', PADDING: 'SPACE_PAD',
+    GAP: 'SPACE_GAP', LIFT: 'HOVER_LIFT', PERSPECTIVE: 'DEPTH_PERSPECTIVE', TYPE_K: 'SCALE_TEXT', FW: 'WEIGHT',
+    TRACK: 'TRACKING', FILL_OP: 'OPACITY_FILL', BORDER_OP: 'OPACITY_BORDER', INTENSITY: 'MOTION_INTENSITY',
+    HOVER: 'IX_HOVER', DRAG: 'IX_DRAG', TOUCH: 'IX_TOUCH', KEYS: 'IX_KEY', KEY_PAUSE: 'IX_KEY',
+    WHEEL: 'IX_WHEEL', CLICK: 'IX_CLICK', HOVER_FX: 'IX_HOVER_CSS'
+  };
+  function coreMap(core) {
+    const byCss = {}, ids = new Set();
+    if (core) (core.controls || []).concat(core.optional || []).forEach((c) => { ids.add(c.id); if (c.css) byCss[c.css] = c.id; });
+    return { byCss, ids };
+  }
+  function coreIdFor(id, cssProp, cm) {
+    if (cssProp && cm.byCss[cssProp]) return cm.byCss[cssProp];
+    const syn = CORE_SYNONYMS[id];
+    if (syn && (!cm.ids.size || cm.ids.has(syn) || /^IX_/.test(syn))) return syn;
+    return null;
+  }
+  // old scan ids (before core@1) for the interaction / speed controls, recorded as aliases
+  const LEGACY_SCAN_IDS = { IX_HOVER: 'HOVER', IX_DRAG: 'DRAG', IX_TOUCH: 'TOUCH', IX_WHEEL: 'WHEEL', IX_CLICK: 'CLICK', IX_HOVER_CSS: 'HOVER_FX', MOTION_SPEED: 'SPEED' };
+
   // ---------- main ----------
-  // opts: { id, cssFiles: [{name, text}], markup, js, legacyParams }
+  // opts: { id, cssFiles: [{name, text}], markup, js, legacyParams, animated, core (components/_core/core.json) }
   function analyze(opts) {
     const vars = [];
     const seen = new Set();
-    const add = (v) => { if (seen.has(v.id)) return null; seen.add(v.id); vars.push(v); return v; };
+    const cm = coreMap(opts.core);
+    const aliases = {};
+    const add = (v) => {
+      const cid = v.source === 'scan' ? null : coreIdFor(v.id, v.css, cm);
+      if (cid && cid !== v.id) {
+        if (seen.has(cid)) { if (!seen.has(v.id)) aliases[v.id] = cid; return null; }   // same core control already found
+        aliases[v.id] = cid;
+        if (v.note) v.note = v.note.split('P.' + v.id).join('P.' + cid);
+        v.id = cid;
+      }
+      if (cid) v.core = cid;
+      if (seen.has(v.id)) return null; seen.add(v.id); vars.push(v); return v;
+    };
     const uniq = (base) => { let id = base, n = 2; while (seen.has(id)) id = base + '_' + (n++); return id; };
     const cssAll = (opts.cssFiles || []).map((f) => f.text).join('\n');
     const notes = [];
@@ -374,8 +415,8 @@
       const v = add({ id: 'DUR_' + (i + 1), label: human(d.sel.split(/[\s,]/).pop().replace(/^[.#]/, '')) + ' ' + d.prop.split('-')[0] + ' (' + d.unit + ')', category: 'rate', control: 'slider', default: d.n, unit: d.unit, advanced: true, speedScaled: true, bind: [{ sel: d.sel, prop: d.prop, tpl: d.value.replace(d.lit, '{v}') }], source: 'css' });
       if (v) Object.assign(v, sliderRange(d.n, d.unit, 'rate'));
     });
-    if (durations.length && !seen.has('SPEED')) {
-      add({ id: 'SPEED', label: 'Speed', category: 'rate', control: 'slider', min: 0.25, max: 3, step: 0.05, default: 1, unit: '×', master: 'speed' });
+    if (durations.length && !vars.some((x) => x.master === 'speed') && !seen.has('MOTION_SPEED')) {
+      add({ id: 'MOTION_SPEED', core: 'MOTION_SPEED', label: 'Speed', category: 'rate', control: 'slider', min: 0.25, max: 3, step: 0.05, default: 1, unit: '×', master: 'speed' });
     }
 
     // 4) UPPER_CASE numeric constants in JS (passed to render as P.NAME; wire them in mount/render)
@@ -397,8 +438,12 @@
     const hv = vars.find((v) => v.category === 'interact' && v.interaction === 'hover');
     if (hv && !hv.featured) { const f = vars.filter((v) => v.featured); if (f.length >= 8) f[f.length - 1].featured = false; hv.featured = true; }
     if (!vars.length) notes.push('Scan found nothing to tune. Add a manifest.json (see README).');
-    return { version: 2, kind, title: opts.title, auto: true, generated: new Date().toISOString(), vars, notes };
+    vars.forEach((v) => {
+      const was = v.was || LEGACY_SCAN_IDS[v.id];
+      if (was && !seen.has(was) && !aliases[was]) aliases[was] = v.id;
+    });
+    return { version: 2, core: opts.core ? (opts.core.id || 'core') + '@' + (opts.core.version || 1) : null, kind, title: opts.title, auto: true, generated: new Date().toISOString(), vars, aliases, notes };
   }
 
-  window.Scan = { analyze, interactions, interactionVars, palette, presets, rolesFrom, rankFor, pickFeatured, guessKind, hex, alphaOf, hsl, mix, rules, KIND_TEMPLATES };
+  window.Scan = { analyze, CORE_SYNONYMS, coreIdFor, interactions, interactionVars, palette, presets, rolesFrom, rankFor, pickFeatured, guessKind, hex, alphaOf, hsl, mix, rules, KIND_TEMPLATES };
 })();

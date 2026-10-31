@@ -618,7 +618,7 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
     - Right Column (`CH 2`): Pioneer XDJ-XZ vertical channel fader for `SCALE_MIN` (`Back scale`, 0.10..1.00×, default 0.56×). Recessed `#090b10` well, 82px fader track, calibration tick marks, white illuminated center indicator line, and cyan LED fill.
   - Fully removes `"Depth"` from `manifest.json` `groups.layout`, leaving a clean 2-card layout accordion: `["Size", "Spacing & Radius"]`.
 
-#### 15. P0 — core@1 base template, schema 3, helix Steps A + B, checker & scaffold (Oct 31, 2026 ET, local, uncommitted)
+#### 15. P0 — core@1 base template, schema 3, helix Steps A + B, checker & scaffold (Oct 31, 2026 ET, committed `d090c4a`)
 
 Full detail (audit table of all 43 controls, library scaffolding, core template proposal, risks, P1–P3 checklist and status log): **[COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md)**.
 
@@ -628,6 +628,18 @@ Full detail (audit table of all 43 controls, library scaffolding, core template 
 - **Audit must-fixes:** Mid Speed = 0.25–3 slider + 0.5/1/2 pads; `COLOR_FILL` (was CARD_FILL) on the Pro Card front; Mid lone deck controls centred (Spacing & Radius knob, Size → Cards select + Card width tile).
 - **Scaffold:** `new-component.py <id> --kind --category --tags --license [--title]`; `_template` rebuilt on core@1 (5 IX slots wired, centred). Component #2 not built (P1).
 - **Verified:** `node --check`; headless Free / Mid / Pro on a temp port, 0 console errors, before/after control list identical apart from the intended changes; migration test with seeded old-ID data.
+
+
+#### 16. P1 — scan.js on core IDs, component #2 `glow-button` (Oct 31, 2026 ET, committed + pushed)
+
+- `lab/scan.js` emits core@1 IDs (CSS var / synonym match, `IX_*` interaction slots, `MOTION_SPEED`) with `aliases`; the lab migrates auto-scan data once and its capture guards use `scanIx(kind)`.
+- `_template/kinds.json` per-kind `hide` lists, applied by `new-component.py`.
+- Component #2 `glow-button` (Free 6 / Mid 17 / Pro 27): inherits core, hides `SIZE_W` + `IX_DRAG`, freePicks `GLOW_STRENGTH` + `RADIUS`, "Button" extras (icon, sheen, sheen angle, pulse, case), 4 interaction slots, centred, no helix code.
+- Picker shows names from `components/index.json`. Disintegrating-gallery port deferred (ES module + WebGL + own clock).
+- Verified: checker 0 errors, `node --check`, headless Free / Mid / Pro for both components with 0 console errors, switch helix ⇄ glow-button keeps each component's values.
+- Later (Rob t592u, docs only): **Pro blank-component template builder** — see [COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md) §5 "Later".
+- Later (Rob t594u, docs only): **New-component wizard and component navigation** — wizard stepper, "Wizard" atop the toolbar dropdown, list-cap open decision, dock-header name dropdown; see [COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md) §5 "Later: New-component wizard and component navigation".
+- Paid-tier offering analysis (Rob t593u, docs only): control / component banks and the Free / Mid / Pro split — reference §5 "Paid-tier offering analysis".
 
 ---
 
@@ -649,4 +661,5 @@ Full detail (audit table of all 43 controls, library scaffolding, core template 
      - Applied all 5 recovery fixes (`railCats` Basic guard, `TB.shown` switch sync + rail unhide on dismiss/flyHome, clickable `#cmpName` component picker in header, disabled `middle-center` anchor, `?reset` URL parameter) and all keyboard/focus fixes (`Ctrl+Z` without `dock.contains`, `Arc.close(false, true)` owner focus restoration, `focusin` pin on dock, `cardFoot.inert`).
      - Overhauled the floating stage toolbar (`TB` in `lab/lab.js` + `.tb` in `lab/lab.css` — Enhancement #7): whole-card hit detection (ignoring interactive child controls), `.is-held` tactile lift + cyan border glow, 1:1 free-roam cursor tracking across the viewport with live velocity banking, session-only custom drop position on calm release (or `>90 ms` hold) with automatic `data-flip="true"` inward expansion on the right half of the window, `Reset toolbar position` button in Settings, and 5 video-game physics exit trajectories (`arc`, `ricochet`, `curve`, `warp`, `spiral`) when thrown off-screen.
      - Added `PRO_FEATURES` / `hasPro()`, wired all 7 enhancements (hold `N changed` to preview defaults, Pro `where`/`hint` subtitles, click `.ctl-val` to type, backup/restore JSON + UI reset + live `Re-scan files`, `jsconfig.json`, `?selftest=1` smoke check, and `A/B/C` snapshot slots), wrapped `lab/lab.css` UI chrome rules in `@scope (:root) to (#labFrame)`, split `lab/controls.js` and `lab/export.js` out of `lab/lab.js`, and synchronized `README.md`.
-  4. ✅ **[DONE locally, uncommitted — Oct 31, 2026 ET] P0 core template + schema 3 + helix Steps A/B** (see audit log item 15 and [COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md)). Next: Rob restarts `run.bat` + Ctrl+F5, checks Free / Mid / Pro, commits; then P1 (component #2 via `new-component.py`, Library popover from `components/index.json`, `scan.js` on core IDs).
+  4. ✅ **[COMMITTED — `d090c4a`, Oct 31, 2026 ET] P0 core template + schema 3 + helix Steps A/B** (see audit log item 15 and [COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md)). Next: Rob restarts `run.bat` + Ctrl+F5, checks Free / Mid / Pro, commits; then P1 (component #2 via `new-component.py`, Library popover from `components/index.json`, `scan.js` on core IDs).
+  5. ✅ **[DONE, committed + pushed — Oct 31, 2026 ET] P1:** `scan.js` core IDs, kinds hide lists, component #2 `glow-button`, picker names (audit log item 16). Next: Rob checks it, then P2 (Library popover, category folders, private root, thumbnails). Later: Pro blank-component template builder and New-component wizard / component navigation (reference §5).

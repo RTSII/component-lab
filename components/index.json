@@ -47,6 +47,46 @@
       "updated": "2026-10-31"
     },
     {
+      "id": "glow-button",
+      "name": "Glow button",
+      "schema": 3,
+      "version": "1.0.0",
+      "kind": "button",
+      "category": "buttons",
+      "tags": {
+        "purpose": [
+          "button"
+        ],
+        "interaction": [
+          "hover",
+          "press",
+          "touch",
+          "keyboard"
+        ],
+        "tech": [
+          "vanilla-js",
+          "css"
+        ],
+        "feel": [
+          "neon"
+        ],
+        "fit": [
+          "component-lab",
+          "ptcb26"
+        ]
+      },
+      "license": "original",
+      "status": "ready",
+      "inherits": "core@1",
+      "controls": {
+        "free": 6,
+        "mid": 17,
+        "pro": 27
+      },
+      "thumbnail": null,
+      "updated": "2026-10-31"
+    },
+    {
       "id": "_template",
       "name": "Blank template",
       "schema": 3,

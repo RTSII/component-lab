@@ -3,5 +3,6 @@
 // To reorder, move a line here; the order is kept on the next run. New folders are appended.
 window.LAB_REGISTRY = [
   'helix',
+  'glow-button',
   '_template',
 ];

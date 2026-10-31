@@ -130,7 +130,7 @@ Optional (opt in with `core.opt`, Pro unless raised): `COLOR_ACCENT`, `COLOR_MUT
 
 **Folder conventions:** `components/<id>/` (flat for now) · `components/_core/` core@1 (do not edit per component) · `components/_template/` blank schema-3 template + `kinds.json` · `components/index.json` and `components/registry.js` are generated (do not hand-edit). Licensed rebuilds never go in this public repo (planned git-ignored `components-private/`, P2).
 
-**Phases:** **P0** core@1, schema 3, helix Steps A/B, checker, scaffold, audit must-fixes — done (Oct 31, 2026) · **P1** Library popover from `index.json`, component #2 as the template proof, `scan.js` on core IDs · **P2** category folders, private root, thumbnails, optional Rate → Motion merge · **P3** ui-vault sync, saved filters, bulk tags.
+**Phases:** **P0** core@1, schema 3, helix Steps A/B, checker, scaffold, audit must-fixes — done (Oct 31, 2026) · **P1** `scan.js` on core IDs, per-kind hide lists, component #2 **`glow-button`** as the template proof, picker names from `index.json` — done; disintegrating-gallery port deferred · **P2** Library popover, category folders, private root, thumbnails, optional Rate → Motion merge · **P3** ui-vault sync, saved filters, bulk tags · **Later** Pro blank-component template builder (add-on / connector pop-out) and the paid-tier offering analysis (control / component banks per tier) · **Later (plan)** New-component wizard (type -> choices -> confirm stepper in the sandbox, paid tiers), "Wizard" at the top of the toolbar component dropdown, list cap before "More..." (open decision), dock-header name as the same dropdown; see [COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md) §5).
 
 ---
 
@@ -292,7 +292,7 @@ Every component lives in `components/<id>/`; `components/registry.js` and `compo
 - **Pure CSS Components Need Zero JS Logic:** Any manifest variable with a `"css": "--my-var"` property is automatically applied inline on `#labFrame` (with `unit` appended or `cssMap` translated), and any variable with `"bind": [{ "sel": ".my-el", "prop": "border-radius", "tpl": "{v}px" }]` is written into `<style id="labBinds">`.
 
 ### 3. Manifest Schema (`components/<id>/manifest.json`)
-If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `markup.html`, and `component.js` to generate controls for CSS custom properties, colour literals (grouped by `hex@alpha` and preserving transparency via `rgb(from {v} r g b / alpha)`), opacities, radii, font sizes (auto-suffixed `_2`, `_3` on selector collisions), animation durations, `UPPER_CASE` numeric JS constants, and pointer/keyboard/CSS `:hover` interactions (requiring down+move for drag, ignoring `preventDefault` click guards, scanning `:focus-visible`, and stripping `@media` wrappers before `:hover`). Use **Settings › Save to disk** in Pro mode to write a curated `manifest.json` to disk.
+If `manifest.json` is omitted, `lab/scan.js` (core@1 IDs where a control matches core, e.g. `--radius` → `RADIUS`, `SPEED` → `MOTION_SPEED`, interactions → `IX_*`, with `aliases` for older scan IDs) automatically scans `style.css`, `markup.html`, and `component.js` to generate controls for CSS custom properties, colour literals (grouped by `hex@alpha` and preserving transparency via `rgb(from {v} r g b / alpha)`), opacities, radii, font sizes (auto-suffixed `_2`, `_3` on selector collisions), animation durations, `UPPER_CASE` numeric JS constants, and pointer/keyboard/CSS `:hover` interactions (requiring down+move for drag, ignoring `preventDefault` click guards, scanning `:focus-visible`, and stripping `@media` wrappers before `:hover`). Use **Settings › Save to disk** in Pro mode to write a curated `manifest.json` to disk.
 
 **Schema 3 (current, new components):**
 
@@ -393,6 +393,7 @@ components/
   index.json                    # Library index: meta, tags, licence, control counts per tier (generated)
   _core/core.json               # core@1: 12 core controls + 5 interaction slots + optional library + vocab
   helix/                        # Reference component: PTCB26 3D rotating card helix (schema 3, Steps A + B)
+  glow-button/                  # Component #2 (P1): generic neon CTA button built on _template / core@1
   _template/                    # Schema-3 starter on core@1 & kinds.json for new components
 compare/
   original.html                 # Untouched v109 helix baseline for visual A/B verification
