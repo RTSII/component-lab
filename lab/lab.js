@@ -1688,6 +1688,9 @@
   function buildSnapBar() {
     if (!hasPro('snapshots') || !def) return null;
     const bar = el('div', 'snap-bar');
+    // Pro home row (t577u): [interaction key + dropdown arrow] | SNAPSHOTS A B C, one centred row
+    const qv = quickVar();
+    if (qv) { const q = buildQuickCtl(); paintQuick(q, qv); bar.append(q, el('span', 'snap-sep')); }
     bar.appendChild(el('span', 'snap-tag', 'Snapshots'));
     const paint = () => {
       const snaps = store.get('snaps:' + def.id, {});
@@ -2135,38 +2138,60 @@
     const ia = interactVars();
     return ia.find((v) => v.interaction === 'hover' && v.options) || ia.find((v) => v.interaction === 'hover') || null;
   }
+  // Quick hover control (t577u): the SAME interaction icon as the slim rail, as an on/off key (dim = off, glowing =
+  // on) plus a small dropdown arrow that jumps to the Interaction section. Off = the option that leaves the helix
+  // running ('play' / Keep); on = the last non-off value (default 'pause'). Same var, same setValue persistence.
+  // One builder serves the Pro home snapshot row and the Basic head row; syncQuick paints every copy.
+  let quickOnVal = null;
+  const quickOff = (v) => {
+    if (!v.options) return false;
+    const o = v.options.find((x) => ['play', 'off', 'none', false].includes(x.value));
+    return o ? o.value : v.options[0].value;
+  };
+  const quickIsOn = (v) => (v.options ? !same(P[v.id], quickOff(v)) : !!P[v.id]);
+  function quickToggle() {
+    const v = quickVar();
+    if (!v) return;
+    if (!v.options) { setValue(v.id, !P[v.id]); return; }
+    if (quickIsOn(v)) { quickOnVal = P[v.id]; setValue(v.id, quickOff(v)); }
+    else {
+      const fallback = !same(v.default, quickOff(v)) ? v.default : (v.options.find((o) => !same(o.value, quickOff(v))) || v.options[0]).value;
+      setValue(v.id, quickOnVal != null && !same(quickOnVal, quickOff(v)) ? quickOnVal : fallback);
+    }
+  }
+  function buildQuickCtl() {
+    const wrap = el('span', 'quick-ctl');
+    const key = el('button', 'quick-key', svg('interact'));
+    key.type = 'button';
+    key.addEventListener('click', () => {
+      quickToggle();
+      if (M.level() === 'full') key.animate([{ transform: 'scale(0.9)' }, { transform: 'none' }], { duration: 220, easing: M.springSoft });
+    });
+    const goB = el('button', 'quick-go', svg('chev'));
+    goB.type = 'button';
+    goB.setAttribute('aria-label', 'Open Interaction section');
+    goB.title = 'Open the Interaction section';
+    goB.addEventListener('click', () => { openDock('click'); go({ type: 'cat', cat: 'interact' }); });
+    wrap.append(key, goB);
+    return wrap;
+  }
+  function paintQuick(wrap, v) {
+    const key = wrap.querySelector('.quick-key');
+    if (!key) return;
+    const on = quickIsOn(v), val = fmt(v, P[v.id]);
+    key.classList.toggle('is-on', on);
+    key.setAttribute('aria-pressed', on ? 'true' : 'false');
+    key.setAttribute('aria-label', v.label + ' (' + val + ')' + (on ? ': on. Press to turn off.' : ': off. Press to turn on.'));
+    key.title = v.label + ': ' + val + (on ? ' \u00b7 click to turn off' : ' \u00b7 click to turn on');
+  }
   function syncQuick() {
     const row = $('quickRow');
     if (!row) return;
     const v = def ? quickVar() : null;
     row.hidden = !v;
-    if (!v) { row.innerHTML = ''; row.dataset.id = ''; return; }
-    if (row.dataset.id !== v.id) {
-      row.dataset.id = v.id;
-      row.innerHTML = '';
-      const pill = el('button', 'quick-pill', svg('interact') + '<span class="quick-k"></span><b class="quick-v"></b>');
-      pill.type = 'button';
-      pill.addEventListener('click', () => {
-        const cur = byId[row.dataset.id];
-        if (!cur) return;
-        if (cur.options) { const i = cur.options.findIndex((o) => same(o.value, P[cur.id])); setValue(cur.id, cur.options[(i + 1) % cur.options.length].value); }
-        else setValue(cur.id, !P[cur.id]);
-        const b = pill.querySelector('.quick-v');
-        if (M.level() === 'full') b.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: M.springSoft });
-      });
-      const goB = el('button', 'icon-btn quick-go', svg('chev'));
-      goB.type = 'button';
-      goB.setAttribute('aria-label', 'All interaction controls');
-      goB.title = 'All interaction controls';
-      goB.addEventListener('click', () => { openDock('click'); go({ type: 'cat', cat: 'interact' }); });
-      row.append(pill, goB);
-    }
-    const pill = row.querySelector('.quick-pill');
-    pill.querySelector('.quick-k').textContent = v.short || v.label;
-    pill.querySelector('.quick-v').textContent = fmt(v, P[v.id]);
-    pill.title = v.label + ': ' + fmt(v, P[v.id]) + ' (click to cycle)';
-    pill.setAttribute('aria-label', v.label + ': ' + fmt(v, P[v.id]) + '. Click to change.');
-    pill.classList.toggle('is-changed', !same(P[v.id], v.default));
+    if (!v) { row.innerHTML = ''; row.dataset.id = ''; document.querySelectorAll('.quick-ctl').forEach((w) => w.remove()); return; }
+    if (row.dataset.id !== v.id) { row.dataset.id = v.id; quickOnVal = null; row.innerHTML = ''; row.appendChild(buildQuickCtl()); }
+    document.querySelectorAll('.quick-ctl').forEach((w) => paintQuick(w, v));
   }
 
   // ---------- wire controls.js module ----------

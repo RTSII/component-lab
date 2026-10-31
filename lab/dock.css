@@ -181,7 +181,8 @@
 .dock[data-pro="true"] .card .head-kicker { align-self: center; }
 .dock[data-pro="true"] .card .cmp-pick { text-align: center; }
 .dock[data-pro="true"] .card-head.is-pro-home .crumb-row { display: none; }
-.dock[data-pro="true"] .card-head.is-pro-home .quick-row { margin-top: 10px; }
+/* Pro home: the quick key lives in the SNAPSHOTS row (below), so the head copy is hidden there */
+.dock[data-pro="true"] .card-head.is-pro-home .quick-row { display: none; }
 
 /* ---------- Basic / Pro: one Beat-FX style pill switch (lab.js buildModeSw). Knob slides left = Basic, right = Pro;
    the LED glows accent on Pro. ---------- */
@@ -213,3 +214,42 @@
 .mode-sw[data-value="pro"] .msw-led { background: var(--lab-accent); box-shadow: 0 0 6px var(--lab-accent); }
 .mode-sw[data-value="pro"] .msw-track { box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(110, 231, 255, 0.35), 0 0 8px -2px rgba(110, 231, 255, 0.5); }
 @media (prefers-reduced-motion: reduce) { .msw-knob { transition: none; } }
+
+/* ---------- Quick hover key (t577u): the rail's interaction icon as an on/off key (dim = off, accent glow = on) +
+   a small dropdown arrow that jumps to the Interaction section. Pro home: left of SNAPSHOTS A B C on one centred row
+   (key + arrow | divider | SNAPSHOTS A B C); Basic / other pages: centred under the head. Solid, never glass. ---------- */
+.dock .quick-ctl { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.dock .quick-key {
+  display: inline-grid; place-items: center; width: 30px; height: 24px; padding: 0; border-radius: 8px;
+  border: 1px solid var(--lab-line); background: color-mix(in srgb, #fff 3%, var(--card-solid));
+  color: var(--lab-dim); cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s var(--ease-out);
+}
+.dock .quick-key .ico { width: 15px; height: 15px; opacity: 0.55; transition: opacity 0.2s, filter 0.2s; }
+.dock .quick-key:hover { border-color: rgba(110, 231, 255, 0.35); color: var(--lab-muted); }
+.dock .quick-key:hover .ico { opacity: 0.8; }
+.dock .quick-key.is-on {
+  color: var(--lab-accent); border-color: rgba(110, 231, 255, 0.55);
+  background: color-mix(in srgb, #6ee7ff 14%, var(--card-solid));
+  box-shadow: 0 0 12px -2px rgba(110, 231, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.dock .quick-key.is-on .ico { opacity: 1; filter: drop-shadow(0 0 4px rgba(110, 231, 255, 0.7)); }
+.dock .quick-key.is-on:hover { background: color-mix(in srgb, #6ee7ff 20%, var(--card-solid)); }
+.dock .quick-key:active { transform: scale(0.94); }
+.dock .quick-ctl .quick-go {
+  display: inline-grid; place-items: center; width: 18px; height: 24px; padding: 0; border-radius: 6px;
+  border: 1px solid var(--lab-line); background: color-mix(in srgb, #fff 3%, var(--card-solid));
+  color: var(--lab-muted); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.dock .quick-ctl .quick-go .ico { width: 14px; height: 14px; transform: rotate(90deg); }
+.dock .quick-ctl .quick-go:hover { color: var(--lab-accent); border-color: rgba(110, 231, 255, 0.4); background: color-mix(in srgb, #6ee7ff 9%, var(--card-solid)); }
+.dock :is(.quick-key, .quick-ctl .quick-go):focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }
+.dock .quick-row { gap: 0; }
+/* the shared row: even 6px gaps, everything 24px tall and vertically centred, row centred in the card */
+.dock .card .snap-bar { flex-wrap: nowrap; justify-content: center; align-items: center; gap: 6px; padding: 2px 4px 6px; }
+.dock .card .snap-bar .snap-tag { margin-right: 0; line-height: 20px; }
+.dock .card .snap-bar .snap-sep { flex: none; width: 1px; height: 16px; background: var(--lab-line); margin: 0 2px; }
+.dock .card .snap-slot { height: 24px; min-width: 26px; padding: 0 8px; background: color-mix(in srgb, #fff 3%, var(--card-solid)); }
+.dock .card .snap-slot:hover { background: color-mix(in srgb, #fff 8%, var(--card-solid)); }
+.dock .card .snap-slot.is-filled { background: color-mix(in srgb, #6ee7ff 14%, var(--card-solid)); }
+@media (prefers-reduced-motion: reduce) { .dock :is(.quick-key, .quick-ctl .quick-go) { transition-duration: 0.01ms !important; } }
