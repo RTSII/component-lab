@@ -1,0 +1,822 @@
+{
+  "$comment": "Component Lab core template (core@1). Lab-owned and 100% original (never seed it from licensed code). Every schema-3 component inherits these controls; a component hides what does not apply, overrides labels/ranges/defaults/css, opts into the optional library, and adds its own extras. Tier ids: free | mid | pro (= ga | vip | pro in schema-2 manifests). widget -> lab control: swatches=swatch-role, seg-pads=segmented, pad=switch+pad, switch=switch, h-slider=slider, knob=radial, v-fader=fader+channel, fx-unit=slider+fx, tempo-deck=slider (Pro tempo deck, Mid slider + 0.5/1/2 pads), select / select-compact=select.",
+  "id": "core",
+  "version": 1,
+  "ref": "core@1",
+  "sectionOrder": [
+    "color",
+    "interact",
+    "surface",
+    "type",
+    "motion",
+    "rate",
+    "layout",
+    "component"
+  ],
+  "sectionNote": "Rate stays its own section for now (Rob t590u); a later Rate->Motion merge remaps ui.railOrder once.",
+  "tierOrder": [
+    "free",
+    "mid",
+    "pro"
+  ],
+  "budget": {
+    "free": 6,
+    "mid": 22
+  },
+  "freeRule": "Free = the 4 core colours + 2 freePicks (default GLOW_STRENGTH + RADIUS). Free and Mid controls never sit on a flip-card back.",
+  "widgets": [
+    "swatches",
+    "seg-pads",
+    "pad",
+    "switch",
+    "h-slider",
+    "knob",
+    "v-fader",
+    "fx-unit",
+    "tempo-deck",
+    "select",
+    "select-compact"
+  ],
+  "overrideWhitelist": [
+    "label",
+    "short",
+    "min",
+    "max",
+    "step",
+    "default",
+    "unit",
+    "options",
+    "css",
+    "tier",
+    "group",
+    "section",
+    "widget",
+    "variant",
+    "deckLabel",
+    "pair",
+    "padTitle",
+    "padSub",
+    "role",
+    "hint",
+    "where",
+    "note",
+    "featured",
+    "advanced",
+    "signature",
+    "master",
+    "timeRole",
+    "interaction",
+    "cssMap",
+    "alpha",
+    "bind"
+  ],
+  "defaultFreePicks": [
+    "GLOW_STRENGTH",
+    "RADIUS"
+  ],
+  "groups": {
+    "color": [
+      "Card",
+      "Text",
+      "Glow",
+      "Accent"
+    ],
+    "interact": [
+      "Pointer",
+      "Touch & keys"
+    ],
+    "surface": [
+      "Opacity",
+      "Glow",
+      "Shape",
+      "Effects"
+    ],
+    "type": [
+      "Size",
+      "Style"
+    ],
+    "motion": [
+      "Loop",
+      "Depth",
+      "Hover"
+    ],
+    "rate": [
+      "Tempo"
+    ],
+    "layout": [
+      "Size",
+      "Spacing"
+    ]
+  },
+  "controls": [
+    {
+      "id": "COLOR_BORDER",
+      "label": "Border",
+      "section": "color",
+      "group": "Card",
+      "widget": "swatches",
+      "tier": "free",
+      "role": "border",
+      "default": "#00e5ff",
+      "css": "--c-border",
+      "short": "Border"
+    },
+    {
+      "id": "COLOR_FILL",
+      "label": "Fill",
+      "section": "color",
+      "group": "Card",
+      "widget": "swatches",
+      "tier": "free",
+      "role": "surface",
+      "default": "#04121f",
+      "css": "--c-fill",
+      "short": "Fill"
+    },
+    {
+      "id": "COLOR_TEXT",
+      "label": "Text",
+      "section": "color",
+      "group": "Text",
+      "widget": "swatches",
+      "tier": "free",
+      "role": "text",
+      "default": "#d8f3ff",
+      "css": "--c-text",
+      "short": "Text"
+    },
+    {
+      "id": "COLOR_GLOW",
+      "label": "Glow",
+      "section": "color",
+      "group": "Glow",
+      "widget": "swatches",
+      "tier": "free",
+      "role": "glow",
+      "default": "#00e5ff",
+      "css": "--c-glow",
+      "short": "Glow"
+    },
+    {
+      "id": "IX_HOVER",
+      "label": "On hover",
+      "section": "interact",
+      "group": "Pointer",
+      "widget": "seg-pads",
+      "tier": "mid",
+      "interaction": "hover",
+      "short": "Hover",
+      "modes": {
+        "rate": {
+          "default": "pause",
+          "options": [
+            {
+              "value": "play",
+              "label": "Keep"
+            },
+            {
+              "value": "pause",
+              "label": "Pause"
+            },
+            {
+              "value": "slow",
+              "label": "Slow"
+            },
+            {
+              "value": "fast",
+              "label": "Fast"
+            }
+          ]
+        },
+        "fx": {
+          "default": "lift",
+          "options": [
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "lift",
+              "label": "Lift"
+            },
+            {
+              "value": "glow",
+              "label": "Glow"
+            },
+            {
+              "value": "both",
+              "label": "Both"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "IX_PRESS",
+      "label": "On press",
+      "section": "interact",
+      "group": "Pointer",
+      "widget": "seg-pads",
+      "tier": "mid",
+      "interaction": "press",
+      "short": "Press",
+      "modes": {
+        "rate": {
+          "default": "press",
+          "options": [
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "press",
+              "label": "Press"
+            },
+            {
+              "value": "glow",
+              "label": "Glow"
+            }
+          ]
+        },
+        "fx": {
+          "default": "press",
+          "options": [
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "press",
+              "label": "Press"
+            },
+            {
+              "value": "glow",
+              "label": "Glow"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "IX_DRAG",
+      "label": "On drag",
+      "section": "interact",
+      "group": "Pointer",
+      "widget": "seg-pads",
+      "tier": "mid",
+      "interaction": "drag",
+      "short": "Drag",
+      "modes": {
+        "rate": {
+          "default": "scrub",
+          "options": [
+            {
+              "value": "scrub",
+              "label": "Spin"
+            },
+            {
+              "value": "ignore",
+              "label": "Ignore"
+            }
+          ]
+        },
+        "fx": {
+          "default": "none",
+          "options": [
+            {
+              "value": "none",
+              "label": "None"
+            },
+            {
+              "value": "tilt",
+              "label": "Tilt"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "IX_TOUCH",
+      "label": "Touch",
+      "section": "interact",
+      "group": "Touch & keys",
+      "widget": "seg-pads",
+      "tier": "mid",
+      "interaction": "touch",
+      "short": "Touch",
+      "advanced": true,
+      "default": "hover",
+      "options": [
+        {
+          "value": "hover",
+          "label": "Same as hover"
+        },
+        {
+          "value": "ignore",
+          "label": "Ignore"
+        }
+      ]
+    },
+    {
+      "id": "IX_KEY",
+      "label": "Keyboard focus",
+      "section": "interact",
+      "group": "Touch & keys",
+      "widget": "pad",
+      "tier": "mid",
+      "interaction": "key",
+      "short": "Focus",
+      "advanced": true,
+      "default": true
+    },
+    {
+      "id": "OPACITY_FILL",
+      "label": "Fill opacity",
+      "section": "surface",
+      "group": "Opacity",
+      "widget": "h-slider",
+      "tier": "mid",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.86,
+      "css": "--fill-op",
+      "short": "Fill"
+    },
+    {
+      "id": "OPACITY_BORDER",
+      "label": "Border opacity",
+      "section": "surface",
+      "group": "Opacity",
+      "widget": "h-slider",
+      "tier": "mid",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.6,
+      "css": "--border-op",
+      "short": "Border"
+    },
+    {
+      "id": "GLOW_STRENGTH",
+      "label": "Glow strength",
+      "section": "surface",
+      "group": "Glow",
+      "widget": "fx-unit",
+      "tier": "mid",
+      "min": 0,
+      "max": 3,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--glow-k",
+      "short": "Strength"
+    },
+    {
+      "id": "RADIUS",
+      "label": "Corner radius",
+      "section": "surface",
+      "group": "Shape",
+      "widget": "knob",
+      "tier": "mid",
+      "min": 0,
+      "max": 48,
+      "step": 1,
+      "default": 14,
+      "unit": "px",
+      "css": "--radius",
+      "short": "Radius"
+    },
+    {
+      "id": "SCALE_TEXT",
+      "label": "Text size",
+      "section": "type",
+      "group": "Size",
+      "widget": "h-slider",
+      "tier": "mid",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--type-k",
+      "short": "Text"
+    },
+    {
+      "id": "MOTION_SPEED",
+      "label": "Speed",
+      "section": "rate",
+      "group": "Tempo",
+      "widget": "tempo-deck",
+      "tier": "mid",
+      "min": 0.25,
+      "max": 3,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--speed",
+      "master": "speed",
+      "short": "Speed"
+    },
+    {
+      "id": "MOTION_EASING",
+      "label": "Easing",
+      "section": "motion",
+      "group": "Loop",
+      "widget": "seg-pads",
+      "tier": "mid",
+      "default": "settle",
+      "css": "--ease",
+      "short": "Easing",
+      "options": [
+        {
+          "value": "settle",
+          "label": "Settle",
+          "css": "cubic-bezier(0.22, 1, 0.36, 1)"
+        },
+        {
+          "value": "spring",
+          "label": "Spring",
+          "css": "cubic-bezier(0.34, 1.4, 0.64, 1)"
+        },
+        {
+          "value": "linear",
+          "label": "Linear",
+          "css": "linear"
+        }
+      ]
+    },
+    {
+      "id": "SIZE_W",
+      "label": "Width",
+      "section": "layout",
+      "group": "Size",
+      "widget": "v-fader",
+      "tier": "mid",
+      "min": 120,
+      "max": 520,
+      "step": 1,
+      "default": 300,
+      "unit": "px",
+      "css": "--w",
+      "short": "Width",
+      "deckLabel": "CH 1"
+    }
+  ],
+  "optional": [
+    {
+      "id": "COLOR_ACCENT",
+      "label": "Accent",
+      "section": "color",
+      "group": "Accent",
+      "widget": "swatches",
+      "tier": "pro",
+      "role": "accent",
+      "default": "#00e5ff",
+      "css": "--c-accent",
+      "short": "Accent",
+      "optional": true
+    },
+    {
+      "id": "COLOR_MUTED",
+      "label": "Muted text",
+      "section": "color",
+      "group": "Text",
+      "widget": "swatches",
+      "tier": "pro",
+      "role": "muted",
+      "default": "#8ea3c0",
+      "css": "--c-muted",
+      "short": "Muted",
+      "advanced": true,
+      "optional": true
+    },
+    {
+      "id": "COLOR_FILL_2",
+      "label": "Fill (gradient end)",
+      "section": "color",
+      "group": "Card",
+      "widget": "swatches",
+      "tier": "pro",
+      "role": "surface2",
+      "default": "#011220",
+      "css": "--c-fill-2",
+      "short": "Fill 2",
+      "advanced": true,
+      "optional": true
+    },
+    {
+      "id": "BLUR",
+      "label": "Backdrop blur",
+      "section": "surface",
+      "group": "Effects",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "default": 0,
+      "unit": "px",
+      "css": "--blur",
+      "short": "Blur",
+      "advanced": true,
+      "optional": true
+    },
+    {
+      "id": "WEIGHT",
+      "label": "Weight",
+      "section": "type",
+      "group": "Style",
+      "widget": "seg-pads",
+      "tier": "pro",
+      "default": "700",
+      "css": "--fw",
+      "short": "Weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "600",
+          "label": "Semi"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "id": "TRACKING",
+      "label": "Letter spacing",
+      "section": "type",
+      "group": "Style",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": -0.05,
+      "max": 0.3,
+      "step": 0.01,
+      "default": 0.02,
+      "unit": "em",
+      "css": "--track",
+      "short": "Tracking",
+      "optional": true
+    },
+    {
+      "id": "SCALE_LABEL",
+      "label": "Label size",
+      "section": "type",
+      "group": "Size",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--label-k",
+      "short": "Label",
+      "optional": true
+    },
+    {
+      "id": "SIZE_H",
+      "label": "Height",
+      "section": "layout",
+      "group": "Size",
+      "widget": "v-fader",
+      "tier": "pro",
+      "min": 80,
+      "max": 560,
+      "step": 1,
+      "default": 320,
+      "unit": "px",
+      "css": "--h",
+      "short": "Height",
+      "deckLabel": "CH 2",
+      "optional": true
+    },
+    {
+      "id": "SPACE_PAD",
+      "label": "Padding",
+      "section": "layout",
+      "group": "Spacing",
+      "widget": "v-fader",
+      "tier": "pro",
+      "min": 0,
+      "max": 48,
+      "step": 1,
+      "default": 20,
+      "unit": "px",
+      "css": "--pad",
+      "short": "Padding",
+      "optional": true
+    },
+    {
+      "id": "SPACE_GAP",
+      "label": "Gap",
+      "section": "layout",
+      "group": "Spacing",
+      "widget": "v-fader",
+      "tier": "pro",
+      "min": 0,
+      "max": 64,
+      "step": 1,
+      "default": 10,
+      "unit": "px",
+      "css": "--gap",
+      "short": "Gap",
+      "optional": true
+    },
+    {
+      "id": "MOTION_DIRECTION",
+      "label": "Direction",
+      "section": "motion",
+      "group": "Loop",
+      "widget": "seg-pads",
+      "tier": "pro",
+      "default": 1,
+      "timeRole": "direction",
+      "short": "Direction",
+      "options": [
+        {
+          "value": 1,
+          "label": "Forward"
+        },
+        {
+          "value": -1,
+          "label": "Reverse"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "id": "MOTION_INTENSITY",
+      "label": "Intensity",
+      "section": "rate",
+      "group": "Tempo",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "master": "intensity",
+      "short": "Intensity",
+      "advanced": true,
+      "optional": true
+    },
+    {
+      "id": "MOTION_CYCLE",
+      "label": "Seconds per loop",
+      "section": "rate",
+      "group": "Tempo",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": 2,
+      "max": 120,
+      "step": 1,
+      "default": 26,
+      "unit": "s",
+      "timeRole": "cycle",
+      "short": "Loop",
+      "advanced": true,
+      "optional": true
+    },
+    {
+      "id": "DEPTH_PERSPECTIVE",
+      "label": "Perspective",
+      "section": "motion",
+      "group": "Depth",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": 200,
+      "max": 2000,
+      "step": 10,
+      "default": 900,
+      "unit": "px",
+      "css": "--perspective",
+      "short": "Perspective",
+      "advanced": true,
+      "optional": true
+    },
+    {
+      "id": "HOVER_LIFT",
+      "label": "Hover lift",
+      "section": "motion",
+      "group": "Hover",
+      "widget": "knob",
+      "tier": "pro",
+      "min": 0,
+      "max": 16,
+      "step": 1,
+      "default": 4,
+      "unit": "px",
+      "css": "--lift",
+      "short": "Lift",
+      "optional": true
+    },
+    {
+      "id": "IDLE",
+      "label": "Idle animation",
+      "section": "motion",
+      "group": "Hover",
+      "widget": "pad",
+      "tier": "pro",
+      "default": true,
+      "css": "--idle",
+      "cssMap": {
+        "true": "running",
+        "false": "paused"
+      },
+      "short": "Idle",
+      "optional": true
+    }
+  ],
+  "tagVocab": {
+    "purpose": [
+      "card",
+      "list",
+      "nav",
+      "menu",
+      "hero",
+      "button",
+      "gallery",
+      "background",
+      "loader",
+      "layout",
+      "form",
+      "dock",
+      "badge",
+      "icon",
+      "modal",
+      "tooltip",
+      "chart"
+    ],
+    "interaction": [
+      "hover",
+      "click",
+      "press",
+      "drag",
+      "touch",
+      "keyboard",
+      "scroll",
+      "cursor-follow",
+      "autoplay"
+    ],
+    "tech": [
+      "vanilla-js",
+      "css",
+      "svg",
+      "canvas",
+      "webgl",
+      "react"
+    ],
+    "feel": [
+      "3d",
+      "depth",
+      "hud",
+      "glass",
+      "neon",
+      "minimal",
+      "playful",
+      "retro",
+      "matrix"
+    ],
+    "fit": [
+      "ptcb26",
+      "study-hub",
+      "component-lab",
+      "ui-vault"
+    ]
+  },
+  "categories": [
+    "menus",
+    "heroes",
+    "cards",
+    "galleries",
+    "buttons",
+    "images",
+    "layouts",
+    "loaders",
+    "icons",
+    "backgrounds",
+    "created",
+    "templates"
+  ],
+  "licenses": [
+    "original",
+    "MIT",
+    "Apache-2.0",
+    "licensed-private"
+  ],
+  "statuses": [
+    "draft",
+    "wip",
+    "ready",
+    "deprecated",
+    "template"
+  ]
+}

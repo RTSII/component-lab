@@ -3,3 +3,8 @@ __pycache__/
 *$py.class
 .DS_Store
 Thumbs.db
+
+# licensed / private component rebuilds never go in the public repo
+components-private/
+index.private.json
+*.log

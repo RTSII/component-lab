@@ -136,7 +136,7 @@
   --chip-edge: rgba(110, 231, 255, 0.2);
   --chip-glow: 0 0 10px -2px rgba(110, 231, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
-.dock .card :is(.head-kicker, .cmp-pick, .page-title, .page-meta, .snap-bar .snap-tag),
+.dock .card :is(.cmp-pick, .page-title, .page-meta, .snap-bar .snap-tag),
 .dock .card .page-inner > .presets > .ctl-label.sub,
 .dock .card .page-inner > .ctl > .ctl-head > :is(.ctl-label, .ctl-val:not(:empty)) {
   background: var(--chip-bg);
@@ -147,7 +147,6 @@
   width: fit-content;
   max-width: 100%;
 }
-.dock .card .head-kicker { align-self: flex-start; font-size: 9.5px; margin-bottom: 3px; color: var(--lab-muted); }
 .dock .card .cmp-pick { padding: 2px 8px; }
 .dock .card .cmp-pick:hover { padding-left: 8px; background: color-mix(in srgb, #6ee7ff 8%, rgb(9, 12, 18)); border-color: rgba(110, 231, 255, 0.4); }
 .dock .card .page-meta { margin-left: auto; }
@@ -173,16 +172,34 @@
   box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 4px rgba(255, 255, 255, 0.07), 0 0 12px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* ---------- Pro home header: no 'All controls' / count row; the component title is a centred block ABOVE the
-   quick (Hover) pill. The tools row (mode switch left, ... ? x right) stays on top. ---------- */
-.dock[data-pro="true"] .card-head .head-row { flex-wrap: wrap; row-gap: 8px; }
-.dock[data-pro="true"] .card-head .mode-sw { order: -1; margin-right: auto; }
-.dock[data-pro="true"] .card-head .head-name { order: 10; flex: 1 0 100%; margin: 0; align-items: center; text-align: center; }
-.dock[data-pro="true"] .card .head-kicker { align-self: center; }
-.dock[data-pro="true"] .card .cmp-pick { text-align: center; }
-.dock[data-pro="true"] .card-head.is-pro-home .crumb-row { display: none; }
-/* Pro home: the quick key lives in the SNAPSHOTS row (below), so the head copy is hidden there */
-.dock[data-pro="true"] .card-head.is-pro-home .quick-row { display: none; }
+/* ---------- Card header (t584u, Basic + Pro): a FIXED region (never scrolls). Row 1 = Basic/Pro switch left,
+   ... ? (and the X only when hover-to-expand is off) right. Row 2 = the working component name, centred, with even
+   space above and below (no 'Component' kicker). Row 3 = quick hover key + arrow (Basic) or key + arrow | SNAPSHOTS
+   A B C (Pro). The controls home has no page title / count row. Only the cards below (.page) scroll, so the
+   scrollbar starts at the top of the first card. ---------- */
+.dock .card-head { padding-bottom: 10px; }
+.dock .card-head .head-row { flex-wrap: wrap; row-gap: 0; }
+.dock .card-head .mode-sw { order: -1; margin-right: auto; }
+.dock .card-head .head-name { order: 10; flex: 1 0 100%; margin: 0; padding: 10px 0; align-items: center; text-align: center; }
+.dock .card-head .cmp-pick { text-align: center; font-size: 15.5px; line-height: 1.25; padding: 3px 12px; }
+.dock .card-head .cmp-pick:hover { padding-left: 12px; }
+.dock .card-head .close-btn.is-hidden { display: none; }
+.dock .card-head.is-home .crumb-row { display: none; }
+.dock .card-head.is-home .quick-row,
+.dock .card-head .snap-row { margin-top: 0; }
+.dock .card-head .snap-row[hidden] { display: none; }
+.dock .card-head .snap-row .snap-bar { padding: 0 4px; }
+/* Pro home: the quick key lives in the SNAPSHOTS row, so the head copy is hidden there */
+/* (Pro and Mid: the row exists whenever the tier has snapshots) */
+.dock .card-head.is-pro-home .quick-row { display: none; }
+/* the scroll area starts flush with the first card (scrollbar top = first card top) */
+.dock .card .page-inner.is-acc { padding-top: 0; }
+/* Basic: the same section cards as Pro, always open (static header: no chevron, no toggle), titles centred */
+.basic-list { display: flex; flex-direction: column; gap: 8px; }
+.dock .card .bsec-head { cursor: default; color: var(--lab-fg); padding: 9px 14px; }
+.dock .card .bsec-head:hover { background: none; }
+.dock .card .bsec .acc-inner { align-items: stretch; }
+.dock .card .bsec .mini-head { justify-content: center; text-align: center; }
 
 /* ---------- Basic / Pro: one Beat-FX style pill switch (lab.js buildModeSw). Knob slides left = Basic, right = Pro;
    the LED glows accent on Pro. ---------- */
@@ -214,6 +231,47 @@
 .mode-sw[data-value="pro"] .msw-led { background: var(--lab-accent); box-shadow: 0 0 6px var(--lab-accent); }
 .mode-sw[data-value="pro"] .msw-track { box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(110, 231, 255, 0.35), 0 0 8px -2px rgba(110, 231, 255, 0.5); }
 @media (prefers-reduced-motion: reduce) { .msw-knob { transition: none; } }
+
+/* ---------- Tiers (lab.js TIER / CAPS): Base and Mid show a tier pill (same 28px pill as the switch) + a glowing
+   UPGRADE button (placeholder: Lab.upgrade toast until UPGRADE_URL is set). Pro keeps the switch above. ---------- */
+.mode-sw.tier-sw { align-items: center; gap: 6px; }
+.tier-pill {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12); background: linear-gradient(180deg, #161b25, #0c1017);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px -2px rgba(0, 0, 0, 0.6);
+  color: var(--lab-fg); font: 600 9.5px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; cursor: default;
+}
+.tier-up {
+  display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px 0 8px; border-radius: 999px;
+  border: 1px solid rgba(110, 231, 255, 0.55); background: linear-gradient(180deg, rgba(110, 231, 255, 0.16), rgba(110, 231, 255, 0.05));
+  color: var(--lab-accent); font: 700 9.5px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  text-shadow: 0 0 8px rgba(110, 231, 255, 0.6);
+  box-shadow: 0 0 10px -2px rgba(110, 231, 255, 0.55), inset 0 0 6px rgba(110, 231, 255, 0.12);
+  animation: tier-glow 2.6s ease-in-out infinite;
+  transition: border-color 0.2s, background 0.2s;
+}
+.tier-up svg { width: 12px; height: 12px; }
+.tier-up:hover { border-color: var(--lab-accent); background: linear-gradient(180deg, rgba(110, 231, 255, 0.26), rgba(110, 231, 255, 0.08)); }
+.tier-up:focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }
+@keyframes tier-glow {
+  0%, 100% { box-shadow: 0 0 8px -3px rgba(110, 231, 255, 0.45), inset 0 0 6px rgba(110, 231, 255, 0.1); }
+  50% { box-shadow: 0 0 16px -1px rgba(110, 231, 255, 0.8), inset 0 0 8px rgba(110, 231, 255, 0.2); }
+}
+@media (prefers-reduced-motion: reduce) { .tier-up { animation: none; } }
+html.no-motion .tier-up { animation: none; }
+/* footer buttons a tier does not have (lab.js syncFootTools) */
+.foot-btn.is-tier-off, .dock .is-tier-off { display: none !important; }
+/* Base: the card is locked open (no avatar fold, slim rail or badge) and there is no stage toolbar */
+html[data-tier="free"] #stageBar,
+html[data-tier="free"] #tbHint,
+html[data-tier="free"] .dock .rail .rail-avatar { display: none !important; }
+.dock .rail.no-tools .rail-tools,
+.dock .rail.no-tools .rail-sep { display: none; }
+/* Base: one line of 8 swatches per colour */
+.chips.chips-8 { gap: 5px; flex-wrap: nowrap; justify-content: center; }
+.chips.chips-8 .chip { width: 20px; height: 20px; flex: none; }
+/* Mid: Speed as 0.5x / 1x / 2x pads */
+.ctl-rate-pads .seg { margin-top: 4px; }
 
 /* ---------- Quick hover key (t577u): the rail's interaction icon as an on/off key (dim = off, accent glow = on) +
    a small dropdown arrow that jumps to the Interaction section. Pro home: left of SNAPSHOTS A B C on one centred row

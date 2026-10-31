@@ -32,12 +32,15 @@ python serve.py 5180          # use another port if 5179 is busy
 ## All-access pass (dock stage 1)
 
 The smallest dock stage is a VIP / all-access lanyard pass instead of a round button: the part of a
-backstage badge that hangs from a DJ's lanyard. Portrait, **54 x 84 px**, pinned 16 px from the top and
-right edges (exactly where the round button sat), with a short lanyard strap running up to the screen
-edge (top anchors only), a metal clip and slot punch, an access band (`ALL ACCESS` by default; also
-GUEST LIST, VIP LOUNGE, BACKSTAGE, CREW / TECH, ARTIST / DJ), a photo window, name and role lines
-(placeholders `DJ NAME` / `ARTIST`), a barcode, a status LED and a holo sheen that follows the pointer.
-It clears the stage toolbar (top left) at both locked viewports, 1600x770 and 1366x768.
+backstage badge that hangs from a DJ's lanyard. It is the **same card as the Settings › Profile pass
+preview (176 x 252) at 80%** (`--pass-zoom: 0.8`, so **141 x 202 px** on screen, text and lines re-laid
+out crisp), pinned 16 px from the top and right edges, with its top edge **above** the screen's top edge
+and a short lanyard strap running up to the window edge (top anchors only): clip and slot punch,
+COMPONENT LAB / year line, status LED, photo window, name and role (placeholders `DJ NAME` / `ARTIST`),
+access level (`ALL ACCESS` by default; also GUEST LIST, VIP LOUNGE, BACKSTAGE, CREW / TECH, ARTIST / DJ),
+holo strip, barcode + serial and a holo sheen that follows the pointer. The screen's side margins are
+sized from the badge width so it sits in the margin beside the screen at both locked viewports,
+1600x770 and 1366x768.
 
 | Input | What the pass does |
 |---|---|
@@ -53,23 +56,81 @@ Settings > **Profile pass** has a live preview and sets name, role, access level
 a **Design** (vinyl, jog wheel, cans, equalizer, waveform, faders, chip, bolt), up to 3 **Characters**, or
 an uploaded **Photo** (cropped to 160 x 160, kept in this browser's localStorage as
 `componentLab:v2:profile`). Files: `lab/avatar.js` (markup), `lab/pass.css` (look). Size comes from
-`--trig-w / --trig-h / --trig-r`; the dock morph reads them. Restyle hooks for a future skin (e.g.
+`--pass-zoom` and `--trig-w / --trig-h / --trig-r`; the dock morph and the screen margins (lab.js
+`screenBox`) read them. Restyle hooks for a future skin (e.g.
 Pioneer XDJ-XZ): `--pass-accent`, `--pass-display`, `--pass-face`, `--pass-clip`, `--pass-strap`,
-`--strap-w`, and one `pm-*` class per part (`pm-clip`, `pm-slot`, `pm-band`, `pm-photo`, `pm-name`,
+`--strap-w`, `--pass-zoom`, and one `pm-*` / `pf-*` class per part (`pm-clip`, `pm-slot`, `pm-band`, `pm-photo`, `pm-name`,
 `pm-role`, `pm-bars`, `pm-led`, `pm-sheen`).
 
-## Core Workflow: Basic vs. Pro Mode
+## Tiers: Base · Mid · Pro (free / mid / pro)
 
-Component Lab separates everyday visual tuning (**Basic**) from deep parameter inspection, layout organization, and manifest curation (**Pro**). Switch between them anytime using the **Basic ⟷ Pro** pill switch (Beat-FX style knob, LED lit on Pro) in the card header: click, Enter or Space toggles, ← = Basic, → = Pro. In Pro the header has no page title / count row: the component name sits in a centred header block. Below it, one centred row holds the **quick hover key** (the same interaction icon as the slim rail: dim = off / Keep, accent glow = on, restoring the last hover effect, default Pause; same `HOVER` value and persistence; `aria-pressed`) plus a small dropdown arrow that jumps to the Interaction section, then a divider and **SNAPSHOTS A B C**. In Basic the key + arrow sit centred under the header.
+Three tiers, internal ids `free` / `mid` / `pro`, labels from the one `TIER` object in `lab/lab.js` (`{ id, label, upgradeTo }`; change the labels there). What each tier gets is the one `CAPS` table next to it; `PRO_FEATURES` still names each feature, and `FEATURE_TIER` says the lowest tier that has it (anything not listed = Pro only). **Tier is a setting for now** (no licence check).
 
-| Area | **Basic Mode** (Everyday Tuning) | **Pro Mode** (Deep Tuning, Curation & Authoring — configured via `PRO_FEATURES` in `lab/lab.js`) |
-|---|---|---|
-| **Controls shown** | Up to **8 starred (`★`) controls**, shown one category page at a time via the right-hand rail icons (ignores hidden rail categories so Basic is never locked out). | **Every control** in one scrollable accordion (`PRO_FEATURES.accordion`), grouped into mini-cards (`Card`, `Text`, `Glow`, etc.) with `More` and `Advanced` folds + **A/B/C Snapshot slots** (`PRO_FEATURES.snapshots`). |
-| **Curation & badges** | Clean labels and live values only. | Shows `✦` signature badges, `★` star buttons (`PRO_FEATURES.starCurate`), and source/wiring sub-labels (`where`, `hint`, `js-const` via `PRO_FEATURES.signatureMarks`). |
-| **Colour picking** | Project palette presets + radial gooey swatch picker (`Arc`). | Compact swatch chip rows + `Custom…` native colour/hex input + **My palette** editor (`PRO_FEATURES.userPalette`). |
-| **Section layout (`⋮`)** | Standard single-category page view. | Header **`⋮`** menu & **Settings › Pro sections** (`PRO_FEATURES.sectionMenu`) choose the default state (*All closed* = default, *First open*, *Remember*), the **Responsive** switch (one section open at a time; the open one moves to the top, and opening another or closing it puts every section back in normal order, closed; off by default) and motion/layout variant (**A Slide**, **B Spring**, **C Stagger**, **D Exclusive chips**). The old *All open* choice was retired; uiVer 6 moves everyone to *All closed* once. |
-| **Settings & Manifest** | Essential settings (Dock position, Anchor, Animations, Viewport, Show toolbar icon, Backup & Reset) + one-click link to switch to Pro. | Adds **Palette source & My palette** (`PRO_FEATURES.userPalette`), **Rail order & Rail actions** (`PRO_FEATURES.railCustomize`), **Stage toolbar advanced options** (`PRO_FEATURES.toolbarAdvanced`), **Interaction scan**, and **Manifest Save/Export/Re-scan** (`PRO_FEATURES.manifestTools`). |
-| **Exports (Footer)** | **Copy changes**, **Copy full working file**, **Undo**, **Reset**, and **`N changed` (Hold to compare defaults)**. | Same export bar in both modes so you never have to switch modes just to copy. |
+| | **Base** (`free`) | **Mid** (`mid`) | **Pro** (`pro`, all access) |
+|---|---|---|---|
+| Header | `BASE` pill + glowing **UPGRADE** (to Mid) | `MID` pill + glowing **UPGRADE** (to Pro) | the Beat-FX switch (as before); sliding to Base previews the lower tiers |
+| Controls | 6 (`tier: "free"`): 4 colours as 8-swatch lines, Text fade + End fade pads | 22 (`free` + `mid`), Speed as a 0.25–3× slider with 0.5× / 1× / 2× pads under it, lone deck controls centred, colour arc picker | all 43, flip cards, stars, My palette, custom hex |
+| Sections | every section open (no folding) | accordions; Settings: default state (closed / first) + Responsive | accordions + ⋮ menu (Remember, variants) |
+| Interaction / hover key | — | yes | yes |
+| Snapshots | — | A (compare with Reset or another change) | A / B / C |
+| Footer | Reset | Copy changes + Reset | Copy changes, Copy full, Undo, Reset |
+| Settings | — | Dock state (Expanded / Slim rail), Sections, Responsive, zoom pad, margin tone, Tier (dev) | everything (toolbar settings are Pro only) + Tier (dev) |
+| Dock | locked open (no avatar fold, slim rail or VIP badge) | card ⇄ slim rail (hover to expand); no badge | pass / badge, flicks, hover, glass |
+| Stage toolbar | — | yes | yes (+ its settings) |
+| Saved prefs | none (reload = defaults) | dock state, section default state, Responsive (`componentLab:v2:mid:ui`) | all |
+
+- **Manifest:** each control has `"tier": "free" | "mid" | "pro"` in schema 3 (legacy schema 2 used `"ga" | "vip" | "pro"`, read as the same tiers). Free = the 4 core colours + the 2 `core.freePicks`; budget Free ≤ 6, Mid ≤ 22 (checked by `tools/check-components.py`). Hidden controls keep their default. Components without the field: featured = every tier, plain = Mid, advanced = Pro.
+- **Pick a tier (dev):** Settings › Tier (dev) (Mid and Pro), `?tier=free|mid|pro` in the URL (saved), or **Alt+Shift+T** (cycles). Pro's switch previews Base for this tab only (sessionStorage); UPGRADE then steps back up (Base → Mid → Pro). `?reset` clears all `componentLab:v2:*` prefs and starts on **Pro**.
+- **Upgrade placeholder:** the UPGRADE button (tooltip "Upgrade (coming soon)") and the help card call `Lab.upgrade(tier)`, which shows a toast. `TODO(subscription)`: set `UPGRADE_URL` in `lab/lab.js` and it redirects there with `?tier=` instead.
+- **Migration (uiVer 7):** the old `ui.mode` becomes the tier once: `basic` → `free`, `pro` → `pro`.
+- **Dev switch:** `DEV_FORCE_TIER = 'pro'` (next to `TIER` in `lab/lab.js`) makes every plain load start on **Pro** with the full Pro menu, ignoring a saved tier or a leftover Base / Mid preview; `?tier=`, Settings > Tier (dev) and Alt+Shift+T still work for that page. Set it to `null` to restore normal saved-tier behaviour.
+
+## Core Workflow: Base · Mid · Pro
+
+The old Basic ⟷ Pro switch is now the 3-tier model above (uiVer 7 maps `basic` → `free`). What each tier does day to day:
+
+- **Card header (all tiers, fixed, never scrolls):** row 1 = the tier pill + glowing **UPGRADE** (Base / Mid) or the Beat-FX tier switch (Pro), with ⋮ (Pro) and ? on the right. Row 2 = the working component name, centred (click it to pick another component). Row 3 (Mid / Pro) = the **quick hover key** (same `IX_HOVER` value as the Interaction section; dim = off, accent glow = on) plus a jump arrow to Interaction; Pro continues with **SNAPSHOTS A B C** (Mid has A). Only the section cards scroll.
+- **Base (`free`):** 6 controls (4 colours + 2 `freePicks`, for the helix the Text fade / End fade pads); every section open, no folding, no stars or flips; Reset only; nothing is saved (reload = defaults).
+- **Mid (`mid`):** the 22 Free + Mid controls in accordions; manifest-driven decks (`layout.deck` / `layout.pads`, a lone deck control is centred); Speed = slider + 0.5/1/2 pads; colour Arc picker; Snapshot A; Copy changes + Reset; Settings for dock state, sections and Responsive.
+- **Pro (`pro`, all access, `DEV_FORCE_TIER = 'pro'` for now):** all controls in the accordion with **flip cards** (front = everyday, back = `advanced`), `✦` signature marks, `★` stars, `where` / `hint` sub-labels, My palette + custom hex, tempo deck for `master: "speed"`, A/B/C snapshots, ⋮ section menu (All closed / First open / Remember, Responsive, variants A–D), Rail order, toolbar settings, Interaction scan and **Manifest Save / Export / Re-scan**. Footer: Copy changes, Copy full working file, Undo, Reset and hold **`N changed`** to compare with defaults.
+- **Rule:** inside each section and card, Free controls come first, then Mid, then Pro (flip backs), so a higher tier never hides what a lower tier shows. The loader forces Free controls onto the Pro front face.
+
+## Tier plan & core template (core@1, schema 3)
+
+Full background, the 43-control audit table, risks and the remaining P1–P3 checklist: **[COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md)**.
+
+**Tier plan:** Free 6 (4 core colours + 2 `freePicks`) · Mid ≤ 22 cumulative · Pro = everything. Keep the 3 tiers and the UPGRADE placeholders; ranges, steps and defaults are the component's own (overrides), never changed by a tier.
+
+**Core template (`components/_core/core.json`, core@1):** every schema-3 component inherits these and only overrides what differs.
+
+| ID | Section › card | Widget | Range / default | Tier |
+|---|---|---|---|---|
+| `COLOR_BORDER` / `COLOR_FILL` / `COLOR_TEXT` / `COLOR_GLOW` | Color › Card / Text / Glow | swatches | role colours | Free |
+| `IX_HOVER` / `IX_PRESS` / `IX_DRAG` | Interact › Pointer | seg-pads | `interaction.mode`: `rate` (play/pause/slow/fast, scrub) or `fx` (lift/glow, press, tilt) | Mid |
+| `IX_TOUCH` / `IX_KEY` | Interact › Touch & keys | seg-pads / pad | hover·ignore / on | Mid (back) |
+| `OPACITY_FILL` / `OPACITY_BORDER` | Surface › Opacity | h-slider | 0–1, 0.86 / 0.6 | Mid |
+| `GLOW_STRENGTH` | Surface › Glow | fx-unit | 0–3 ×, 1 | Free pick / Mid |
+| `RADIUS` | Surface › Shape | knob | 0–48 px, 14 | Free pick / Mid |
+| `SCALE_TEXT` | Type › Size | h-slider | 0.5–2 ×, 1 | Mid |
+| `MOTION_SPEED` | Rate › Tempo (Rate kept for now) | Mid slider + pads · Pro tempo deck | 0.25–3 ×, 1 | Mid |
+| `MOTION_EASING` | Motion › Loop | seg-pads | settle / spring / linear | Mid |
+| `SIZE_W` | Layout › Size | v-fader | 120–520 px, 300 | Mid |
+
+Optional (opt in with `core.opt`, Pro unless raised): `COLOR_ACCENT`, `COLOR_MUTED`, `COLOR_FILL_2`, `BLUR`, `WEIGHT`, `TRACKING`, `SCALE_LABEL`, `SIZE_H`, `SPACE_PAD`, `SPACE_GAP`, `MOTION_DIRECTION`, `MOTION_INTENSITY`, `MOTION_CYCLE`, `DEPTH_PERSPECTIVE`, `HOVER_LIFT`, `IDLE`.
+
+**Naming:** core IDs are PROPERTY_TARGET (`COLOR_*`, `OPACITY_*`, `SCALE_*`, `SIZE_*`, `SPACE_*`, `MOTION_*`, `DEPTH_*`, `IX_*` …) and are reserved; component extras are UPPER_SNAKE, noun-first (`ORBIT_RADIUS`), and may not reuse a core ID. Labels and CSS vars can be overridden per component (the helix keeps `--hx-*`).
+
+**Behaviour comes from manifest fields, not IDs:** `widget` (swatches, seg-pads, pad, switch, h-slider, knob, v-fader, fx-unit, tempo-deck, select, select-compact), `variant`, `master: "speed" | "intensity"`, `timeRole: "cycle" | "direction"`, `interaction`, `deckLabel`, `padTitle` / `padSub`, `pair`, and manifest `layout.deck` / `layout.pads`. `lab/controls.js` and `lab/lab.js` no longer check helix IDs.
+
+**Helix Steps A + B (done, P0):** the 22 generic helix controls inherit core (Step A) and use core IDs (Step B); 21 old IDs are listed in `aliases` (`SPEED → MOTION_SPEED`, `CARD_W → SIZE_W`, `HOVER → IX_HOVER`, `KEY_PAUSE → IX_KEY`, `CARD_OPACITY → OPACITY_FILL`, `CYCLE → MOTION_CYCLE` …), `aliasVersion: 1`. On load the lab migrates saved values, snapshots A/B/C and stars once (`componentLab:v2:idVer:<id>`; idempotent), maps old keys in `#c=` links and backups, and exports show `NEW (was OLD)` for one release. No `?reset` needed. The 21 helix extras (STEP, fades, TILT, WAVE, N …) keep their IDs.
+
+**Scripts (stdlib Python, no installs):**
+- `python tools/check-components.py` validates every manifest (meta, vocab, overrides, extras, ranges, defaults, pairs, aliases, tier budget), runs the licence guard (no Aceternity / licensed-private markers in `components/` or `lab/`), and writes `components/index.json` + `components/registry.js`. `--check` = read only. It runs automatically when `serve.py` starts, after **Save to disk**, and after `new-component.py`.
+- `python new-component.py <id> --kind card --category cards --tags purpose:card,interaction:hover --license original [--title "…"]` scaffolds a schema-3 component from `_template` (refuses `licensed-private`; removes the folder if the check fails).
+
+**Folder conventions:** `components/<id>/` (flat for now) · `components/_core/` core@1 (do not edit per component) · `components/_template/` blank schema-3 template + `kinds.json` · `components/index.json` and `components/registry.js` are generated (do not hand-edit). Licensed rebuilds never go in this public repo (planned git-ignored `components-private/`, P2).
+
+**Phases:** **P0** core@1, schema 3, helix Steps A/B, checker, scaffold, audit must-fixes — done (Oct 31, 2026) · **P1** Library popover from `index.json`, component #2 as the template proof, `scan.js` on core IDs · **P2** category folders, private root, thumbnails, optional Rate → Motion merge · **P3** ui-vault sync, saved filters, bulk tags.
 
 ---
 
@@ -82,11 +143,11 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
 - The sandbox is primary: it always uses the full window. The dock (card, slim rail, VIP badge) and the floating toolbar only float over it and never resize or move it.
 
 ### Sandbox Screen (locked card)
-- The sandbox card (`#stageFit`) is the **screen**: one box, no extra bezel or frame drawn. It looks like an opaque tablet / touch-display work area: **one solid colour** (`--screen-bg`, the lab's existing stage tone) with **no dots, grid, dotted viewport frame or tag**; only a faint inner hairline (`--screen-edge`, drawn as an inset shadow so the box never changes) and rounded corners (`--screen-radius`).
+- The sandbox card (`#stageFit`) is the **screen**: one box, no extra bezel or frame drawn. It looks like an opaque tablet / touch-display work area: **one solid colour** (`--screen-bg`, the lab's existing stage tone) with **no dots, grid, border, hairline, dotted viewport frame or tag**. Its edge is a soft **fade-out**: the screen colour (and any content zoomed up to the edge) melts into the margin over `--screen-fade` (28px, a CSS mask: paint only, the box and the pointer maths never change), with rounded corners (`--screen-radius`).
 - The **margin** around it is a flat, darker solid tone (`--margin-bg`), no frame lines, glow or square-within-square. **Settings › Viewport › Margin tone**: Deep / Dark (default) / Light.
-- **Liquid glass dock:** the expanded dock's outer panel (card + rail shell, its border and the blank space between cards) is translucent with a backdrop blur and a light top edge, so the screen shows through (`--glass-opacity`, `--glass-blur`). The section cards inside (Color, Surface, … rows, accordions, mini cards) stay **opaque** on `--card-solid`. **Settings › Dock › Dock glass** (Pro): Clear (0.12) / Frosted (default, 0.3 tint, 14px blur) / Solid (0.9). Loose text on the glass (component kicker + name, page title/count, SNAPSHOTS, Basic control labels/values) sits on a dark chip with a thin accent edge (`--chip-bg`, `--chip-edge`, `--chip-glow` in dock.css); buttons on the glass (mode switch, quick hover key + arrow, snapshot slots, foot and icon buttons, rail icon groups) are solid. Look only: no control value changes. Its border is **locked**: 1552×714 at (24,20) on 1600×770 and 1318×712 at (24,20) on 1366×768, at every dock stage.
-- The narrow margin around it is just where the controls live (top-left toolbar, right-hand dock / VIP badge, edge tabs); they float over the stage and never resize or move the screen.
-- **Only the contents zoom** inside the card, and zoomed-in content is clipped at the card edge. The zoom pad sits centred at the top of the card.
+- **Liquid glass dock:** the expanded dock's outer panel (card + rail shell, its border and the blank space between cards) is translucent with a backdrop blur and a light top edge, so the screen shows through (`--glass-opacity`, `--glass-blur`). The section cards inside (Color, Surface, … rows, accordions, mini cards) stay **opaque** on `--card-solid`. **Settings › Dock › Dock glass** (Pro): Clear (0.12) / Frosted (default, 0.3 tint, 14px blur) / Solid (0.9). Loose text on the glass (component name, page title/count, SNAPSHOTS, Basic control labels/values) sits on a dark chip with a thin accent edge (`--chip-bg`, `--chip-edge`, `--chip-glow` in dock.css); buttons on the glass (mode switch, quick hover key + arrow, snapshot slots, foot and icon buttons, rail icon groups) are solid. Look only: no control value changes. The screen box is set in one place (lab.js `screenBox`): side margins = VIP badge width + 16 + 8 px gap (167 px, screen centred), 36 px top and bottom, so **1266×698 at (167,36) on 1600×770** and **1032×696 at (167,36) on 1366×768**, the same at every dock stage.
+- The margin around it is just where the controls live (top-left toolbar, right-hand dock / VIP badge, edge tabs); they float over the stage and never resize or move the screen.
+- **Only the contents zoom** inside the card, and zoomed-in content fades out at the card edge (clipped inside the box). The zoom pad sits centred at the top of the card.
 
 ### Sandbox View Zoom (magnifier)
 - Small Pioneer-style pad **centred at the top of the screen**, inside the work area (clear of the top-left toolbar and the right-hand dock at 1600×770 and 1366×768): **− zoom out · readout (e.g. `125%`) · + zoom in · frame icon = reset to 100% and centre**.
@@ -104,6 +165,7 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
   1. **Pass** (`data-state="closed"`, Pro only): the all-access lanyard pass above.
   2. **Rail** (`data-state="slim"`): the thin vertical icon rail. A rail icon opens the card on that page.
   3. **Card** (`data-state="open"`): the control card plus the rail.
+- **Card X:** shown only when the slim-rail hover expand/collapse is unavailable (Basic) or turned off (Pro, Settings > Dock > Hover to expand slim rail). With hover on, the round avatar and the hover do its job, and ⋮ / ? move right into its spot. `Esc` still folds the card.
 - **Basic:** card + thin rail only. The **X** folds the card to the rail; a rail icon or `Alt+D` opens it
   again. Basic never shows the pass stage and never hides the dock (switching to Basic brings a hidden
   dock back at the rail).
@@ -120,7 +182,7 @@ Component Lab separates everyday visual tuning (**Basic**) from deep parameter i
     Pro adds and a Switch to Pro button. The text is generated from `KEYS` / `PRO_FEATURES`, so it
     stays in sync with the code.
 - **Dock state** (Pro, Settings > Dock > Dock state): `Expanded` (card + rail, default), `Slim rail` or `VIP badge` (collapsed) on load. Saved values are unchanged (`full` / `slim` / `icon`); an old saved `slim` default moves to `full` once (uiVer 5).
-  With `VIP badge`, the X folds the card straight to the badge.
+  With `VIP badge`, the X (when shown) folds the card straight to the badge.
 - **Hover to expand slim rail** (Pro, `PRO_FEATURES.dockHover`, Settings > Dock, default ON, saved as `ui.dockHover`): rest the cursor on the slim rail (~240 ms) and it grows to the card; move away (~420 ms) and it folds back to the slim rail. It never folds while a control is held or dragged, a text field / select has focus, or the colour arc, popover or help card is open (it waits, then folds). Hover expand / fold is never saved: the Dock state setting and `ui.open` stay as they were. Touch: tap the slim rail's empty space to expand (rail icons open their page as usual); tap outside folds it. Click the avatar on a hover-opened card to keep it open.
 - **Nested tabs (a way back for everything flicked away):** the dock's edge tab (`#dockHint`) springs in on its screen edge when the badge is flicked away and slides out when the dock returns. The stage toolbar has its own tab (`#tbHint`, left edge; right edge with a left-anchored dock): while the toolbar is ON but flicked away and no rail pad is on screen (dock at the VIP badge or hidden), the toolbar flies into that tab, the tab springs in, and a click flies the toolbar back to the top-left (the tab slides out). With the slim rail or card showing, the rail pad is its nest instead (LED pulses).
 - **Keys:** `Esc` = one stage down (closes the help card, colour arc or popover first; never hides the
@@ -171,25 +233,26 @@ The card footer has two copy buttons designed for different AI chat contexts:
 
 1. **`Copy changes` (Default — Page with `+/−` icon):**
    - **When to use:** You are continuing in an existing AI chat session that already has the component's source files.
-   - **What it puts on your clipboard:** A compact diff block listing the component folder, files, active interaction settings, only the modified parameters (`- Label [ID --css-var]: default -> new`), and a `#c=...` deep-link URL:
+   - **What it puts on your clipboard:** A compact diff block listing the component folder, files, active interaction settings, only the modified parameters (`- Label [ID --css-var]: default -> new`; renamed IDs show `(was OLD)` for one release), and a `#c=...` deep-link URL:
      ```text
-     Component: PTCB26 home helix (components/helix/ — style.css, markup.html, component.js)
-     Interaction: hover = pause [HOVER], drag = spin [DRAG]
-     Changes:
-     - Speed [SPEED]: 1× -> 1.4×
-     - Card fill opacity [CARD_OPACITY --helix-card-opacity]: 0.9 -> 0.65
-     Link: http://127.0.0.1:5179/#c=helix&SPEED=1.4&CARD_OPACITY=0.65
+     Component Lab: PTCB26 home helix (helix), 2 changed
+     Files: components/helix/ (manifest.json, style.css, markup.html, component.js)
+     Interaction: hover = pause [IX_HOVER (was HOVER)], drag = scrub [IX_DRAG (was DRAG)]
+     - Speed [MOTION_SPEED (was SPEED)]: 1× -> 1.4×
+     - Card opacity [OPACITY_FILL (was CARD_OPACITY) --hx-fill-op]: 1× -> 0.65×
+     Link: http://127.0.0.1:5179/#c=helix&MOTION_SPEED=1.4&OPACITY_FILL=0.65
      ```
 2. **`Copy full working file` (Page with `</>` icon):**
    - **When to use:** Starting a brand-new AI chat or handing off to another model/agent that has never seen the component.
    - **What it puts on your clipboard:** A single, self-contained `.html` file containing the font links, tokens, component CSS, HTML markup, `component.js`, baked-in CSS custom properties on `.lab-frame`, `window.LAB_PARAMS` defaults, a summary comment of your changes, and a minimal standalone `requestAnimationFrame` runner that opens directly in Chrome.
 
 ### 2. How an AI Agent Should Create or Import a Component Into the Lab
-Every component lives in `components/<id>/` and is listed in `components/registry.js`.
+Every component lives in `components/<id>/`; `components/registry.js` and `components/index.json` are generated by `tools/check-components.py` (do not hand-edit).
 
 - **Scaffold via CLI (recommended for agents):**
   ```powershell
-  python new-component.py <component-id> --kind card
+  python new-component.py <component-id> --kind card --category cards --tags purpose:card,interaction:hover --license original
+  python tools/check-components.py          # re-validate + regenerate index.json / registry.js
   ```
   *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `animated-background`, `list`, `button`.)*
 - **Component Folder Structure:**
@@ -198,7 +261,7 @@ Every component lives in `components/<id>/` and is listed in `components/registr
     component.js    # Calls Lab.register({ id, title, css, markup, animated, mount })
     style.css       # Component styles (prefer CSS custom properties on .lab-frame or :root)
     markup.html     # Component HTML fragment injected inside .lab-frame
-    manifest.json   # Optional control definitions (auto-scanned by lab/scan.js if omitted)
+    manifest.json   # Schema 3: meta + inherits core@1 + overrides + extras (auto-scanned by lab/scan.js if omitted)
   ```
 - **`component.js` Lifecycle Contract:**
   ```js
@@ -231,6 +294,40 @@ Every component lives in `components/<id>/` and is listed in `components/registr
 ### 3. Manifest Schema (`components/<id>/manifest.json`)
 If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `markup.html`, and `component.js` to generate controls for CSS custom properties, colour literals (grouped by `hex@alpha` and preserving transparency via `rgb(from {v} r g b / alpha)`), opacities, radii, font sizes (auto-suffixed `_2`, `_3` on selector collisions), animation durations, `UPPER_CASE` numeric JS constants, and pointer/keyboard/CSS `:hover` interactions (requiring down+move for drag, ignoring `preventDefault` click guards, scanning `:focus-visible`, and stripping `@media` wrappers before `:hover`). Use **Settings › Save to disk** in Pro mode to write a curated `manifest.json` to disk.
 
+**Schema 3 (current, new components):**
+
+```json
+{
+  "schema": 3,
+  "meta": { "id": "quiz-card", "name": "Quiz card", "version": "0.1.0", "kind": "card", "category": "cards",
+            "tags": { "purpose": ["card"], "interaction": ["hover"] }, "tierMin": "free",
+            "source": { "origin": "original", "author": "Rob" }, "license": "original", "status": "draft",
+            "created": "2026-10-31", "updated": "2026-10-31" },
+  "inherits": "core@1",
+  "animated": false,
+  "frames": { "1600x770": { "w": 420, "h": 320 } },
+  "core": {
+    "hide": ["IX_DRAG"],
+    "opt": ["COLOR_ACCENT", "SPACE_PAD"],
+    "freePicks": ["GLOW_STRENGTH", "RADIUS"],
+    "interaction": { "mode": "fx" },
+    "override": { "SIZE_W": { "default": 420, "max": 640 }, "COLOR_BORDER": { "label": "Card border" } }
+  },
+  "layout": { "deck": [], "pads": [] },
+  "extras": [
+    { "id": "SCORE_RING", "label": "Score ring", "section": "surface", "group": "Ring",
+      "widget": "knob", "min": 0, "max": 12, "step": 1, "default": 4, "unit": "px", "css": "--ring", "tier": "mid" }
+  ],
+  "aliases": {},
+  "aliasVersion": 1
+}
+```
+
+- **Resolution** (`lab/manifest.js`, mirrored in the checker): core.json → `interaction.mode` → `core.override` (whitelisted keys; `null` removes a key) → `extras` → `freePicks` → `order` → tier sort. Save to disk / Export JSON write this source form back (stars folded into overrides / extras); the working-file export bakes the resolved controls.
+- **`section`** is the old `category` (`color`, `interact`, `surface`, `type`, `motion`, `rate`, `layout`); **`tier`**: `free` / `mid` / `pro`; **`widget`**: see Tier plan above.
+
+**Schema 2 (legacy, still loads unchanged; the checker only warns):**
+
 ```json
 {
   "version": 2,
@@ -259,7 +356,7 @@ If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `m
   ]
 }
 ```
-- **Categories (`category`):** `color`, `interact`, `surface`, `type`, `motion`, `rate`, `layout`.
+- **Schema 2 categories (`category`):** `color`, `interact`, `surface`, `type`, `motion`, `rate`, `layout`.
 - **Controls (`control`):** `slider`, `swatch-role`, `switch`, `segmented`, `select` (auto-expands integer range if `min`/`max` are given without `options`), `radial` (Pioneer XDJ-XZ `HI / MID / LOW` mixer EQ rotary pot; supports optional `variant`: `"eq"`, `"fx"` / `"color"`, `"gain"` / `"trim"`), `tempo` (Pioneer XDJ-XZ vertical tempo fader + jog display deck, automatic for `master: "speed"` in Pro mode), `fader` (vertical mixer channel fader), `pad` (illuminated performance pad switch).
 - **Colour roles (`role`):** `accent`, `border`, `glow`, `text`, `muted`, `surface`, `surface2`, `danger`.
 - **Interactions (`interaction`):** `hover` (`keep`/`pause`/`slow`/`fast`), `drag` (`spin`/`ignore`), `touch` (`hover`/`ignore`), `key`, `wheel`, `click`, `hover-css` (toggles CSS `:hover` rules on/off).
@@ -271,7 +368,9 @@ If `manifest.json` is omitted, `lab/scan.js` automatically scans `style.css`, `m
 ```text
 index.html                      # Lab shell HTML (stage, floating toolbar, right/bottom dock)
 serve.py                        # Local Python HTTP server + POST /api/new and /api/manifest
-new-component.py                # CLI & backend scaffolder for new components from _template
+new-component.py                # CLI & backend scaffolder (schema 3) from _template: --kind --category --tags --license
+tools/
+  check-components.py           # Stdlib validator + licence guard; writes components/index.json + registry.js
 run.bat                         # Windows double-click launcher (py/python serve.py 5179 --open)
 jsconfig.json                   # Zero-build ES2022 editor config for VS Code / Antigravity
 project/
@@ -281,21 +380,25 @@ lab/
   motion.js                     # Spring presets, FLIP helpers, and Motion.Flick physics
   scan.js                       # Auto-manifest generator & CSS/JS interaction scanner
   controls.js                   # Control rows, click-to-type inputs, radial dials, colour Arc & hold button
+  manifest.js                   # Schema-3 resolver: core@1 + overrides + extras, aliases, save-back source
   export.js                     # Manifest clean export/save, clipboard summaries, standalone HTML & JSON backup
   lab.js                        # Core lab state, PRO_FEATURES, dock stages, help card, floating toolbar & self-test runner
   avatar.js                     # All-access lanyard pass markup + profile (Settings > Profile pass)
-  pass.css                      # Pass look (54 x 84) + Settings preview; --pass-* restyle hooks
+  pass.css                      # Pass look (stage-1 badge = Settings card at 80%) + Settings preview; --pass-* restyle hooks
   dock.css                      # Dock edge grip, hidden-dock handle, ? help card
   icons.js                      # Material Icons registry (loaded, not wired in yet; v2 keeps its own icons)
   fonts/                        # Offline Chakra Petch & JetBrains Mono font files + fonts.css
 components/
-  registry.js                   # Ordered list of components shown in the lab picker
-  helix/                        # Reference component: PTCB26 3D rotating card helix
-  _template/                    # Starter template & kinds.json for new components
+  registry.js                   # Ordered list of components shown in the lab picker (generated)
+  index.json                    # Library index: meta, tags, licence, control counts per tier (generated)
+  _core/core.json               # core@1: 12 core controls + 5 interaction slots + optional library + vocab
+  helix/                        # Reference component: PTCB26 3D rotating card helix (schema 3, Steps A + B)
+  _template/                    # Schema-3 starter on core@1 & kinds.json for new components
 compare/
   original.html                 # Untouched v109 helix baseline for visual A/B verification
   original-home.js              # Original home.js helix script
 COMPONENT-LAB-REVIEW-MVP.md     # Consolidated code review, MVP execution plan & future audit log
+COMPONENT-LAB-ANALYSIS-REFERENCE.md # Control audit, library scaffolding, core template, P0 status & P1–P3 checklist
 mvp-decision-selector.html      # Interactive HTML decision selector for the MVP plan
 ```
 

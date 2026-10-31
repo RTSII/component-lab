@@ -13,6 +13,7 @@
       swatchesFor, allPresets, presetDots, applyPreset,
       userPalette, featuredOverrides, store, toast, push, buildSeg, syncSeg
     } = ctx;
+    const tierNow = () => (ctx.getTier ? ctx.getTier() : 'pro');   // 'free' | 'mid' | 'pro' (lab.js TIER)
 
     // Same snapping as <input type=range>: steps counted from min, clamped to [min, max].
     function snapStep(raw, min, max, step) {
@@ -109,18 +110,36 @@
       lab.title = (tipExtra ? tipExtra + '\n' : '') + v.id + (v.css ? '  ' + v.css : '') + '\nDouble-click to reset';
       lab.addEventListener('dblclick', () => setValue(v.id, v.default));
       const out = el('span', 'ctl-val', esc(fmt(v, P[v.id])));
-      const isTempoDeck = (v.master === 'speed' || v.id === 'SPEED' || v.control === 'tempo' || v.variant === 'tempo') && (hasPro('accordion') || v.control === 'tempo' || v.variant === 'tempo');
+      const isTempoDeck = (v.master === 'speed' || v.control === 'tempo' || v.variant === 'tempo') && (hasPro('tempoDeck') || v.control === 'tempo' || v.variant === 'tempo');
+      // Mid: Speed as a real slider (its own range / step) with three preset pads under it (0.5x / 1x / 2x, only
+      // the ones inside its range) instead of the tempo deck (audit must-fix a)
+      const isRatePads = !isTempoDeck && v.master === 'speed' && v.control === 'slider' && tierNow() === 'mid';
       const isVertFader = !isTempoDeck && (v.control === 'fader' || v.variant === 'fader' || v.variant === 'volume' || v.variant === 'channel');
-      const isFxUnit = (v.id === 'GLOW_STRENGTH' || (v.category === 'surface' && v.group === 'Glow') || v.control === 'fx' || (v.variant === 'fx' && v.control !== 'swatch-role')) && (hasPro('accordion') || v.control === 'fx' || v.variant === 'fx');
-      const isPadSwitch = v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad' || v.variant === 'button' || v.group === 'Fades');
+      const isFxUnit = (v.control === 'fx' || v.widget === 'fx-unit' || (v.variant === 'fx' && v.control !== 'swatch-role')) && (hasPro('accordion') || v.control === 'fx' || v.variant === 'fx');
+      const isPadSwitch = v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad' || v.variant === 'button');
       const isPadBtn = !isPadSwitch && (v.control === 'pad' || v.variant === 'pad' || v.variant === 'button');
-      if (v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader || isFxUnit) wireClickToType(v, out);
+      if ((v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader || isFxUnit)) wireClickToType(v, out);
       head.append(lab, out);
       if (hasPro('starCurate')) head.appendChild(starBtn(v));
       row.appendChild(head);
       const uid = 'c-' + v.id;
 
-      if (isTempoDeck) {
+      if (isRatePads) {
+        row.classList.add('ctl-rate-pads');
+        lab.htmlFor = uid;
+        const r = el('input', 'range');
+        Object.assign(r, { type: 'range', id: uid, min: v.min, max: v.max, step: v.step, value: P[v.id] });
+        const paint = () => r.style.setProperty('--p', ((r.value - v.min) / (v.max - v.min || 1) * 100).toFixed(2) + '%');
+        paint();
+        r.addEventListener('input', () => { setValue(v.id, r.value, { quiet: true }); paint(); if (!out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]); });
+        row.appendChild(r);
+        const seg = el('div', 'seg seg-sm');
+        seg.setAttribute('role', 'radiogroup');
+        seg.setAttribute('aria-label', v.label + ' presets');
+        const pads = [0.5, 1, 2].filter((x) => x >= v.min && x <= v.max).map((x) => ({ value: x, label: x + '\u00d7' }));
+        buildSeg(seg, pads, P[v.id], (val) => { setValue(v.id, val, { quiet: true }); out.textContent = fmt(v, getP()[v.id]); }, { equal: true });
+        row.appendChild(seg);
+      } else if (isTempoDeck) {
         row.classList.add('ctl-tempo-deck');
         row.appendChild(tempoDeckEl(v, out));
       } else if (isVertFader) {
@@ -148,7 +167,16 @@
         row.appendChild(r);
       } else if (v.control === 'swatch-role') {
         const line = el('div', 'swatch-line');
-        if (!hasPro('accordion') && M.level() === 'full') {
+        const t = tierNow();
+        if (t === 'free') {
+          // Base: one line of 8 swatches (default first, then the best palette matches); no colour page
+          const chips = el('div', 'chips chips-8');
+          swatchesFor(v, 8).forEach((c) => chips.appendChild(chip(v, c)));
+          line.appendChild(chips);
+          row.appendChild(line);
+          return row;
+        }
+        if ((t === 'mid' || !hasPro('accordion')) && M.level() === 'full') {
           const trig = el('button', 'swatch-trigger', '<span class="sw" style="background:' + P[v.id] + '"></span><span class="sw-hex">' + esc(String(P[v.id]).toUpperCase()) + '</span>');
           trig.type = 'button';
           trig.setAttribute('aria-haspopup', 'true');
@@ -189,7 +217,7 @@
       } else if (v.control === 'select') {
         lab.htmlFor = uid;
         out.remove();
-        const isCompact = (v.variant === 'compact' || v.id === 'N' || compact);
+        const isCompact = (v.variant === 'compact' || compact);
         const s = el('select', 'lab-select' + (isCompact ? ' is-compact' : ''));
         s.id = uid;
         v.options.forEach((o) => { const op = el('option', null, esc(o.label)); op.value = o.value; s.appendChild(op); });
@@ -202,11 +230,14 @@
           row.appendChild(s);
         }
       }
-      if (v.variant === 'master' || v.variant === 'gain' || v.id === 'RADIUS_MAX') {
+      // Deck caption: the manifest's deckLabel first ("MASTER" / "CH 1" / "CH 2"), then the generic variant / channel rule
+      if (v.deckLabel) {
+        row.appendChild(el('div', 'xdj-deck-sub', esc(v.deckLabel)));
+      } else if (v.variant === 'master' || v.variant === 'gain') {
         row.appendChild(el('div', 'xdj-deck-sub', 'MASTER'));
-      } else if (v.id === 'WAVE' || v.id === 'SCALE_MIN' || (isVertFader && v.deckCh === 2)) {
+      } else if (isVertFader && v.deckCh === 2) {
         row.appendChild(el('div', 'xdj-deck-sub', 'CH 2'));
-      } else if (v.id === 'TRAVEL' || v.id === 'CARD_W' || (isVertFader && (v.deckCh === 1 || v.variant === 'channel'))) {
+      } else if (isVertFader && (v.deckCh === 1 || v.variant === 'channel')) {
         row.appendChild(el('div', 'xdj-deck-sub', 'CH 1'));
       }
       return row;
@@ -556,15 +587,9 @@
       pad.setAttribute('role', 'switch');
       pad.dataset.id = v.id;
 
-      let titleText = v.short || v.label;
-      let subText = 'Toggle';
-      if (v.id === 'TEXT_FADE_ON') {
-        titleText = 'TEXT FADE';
-        subText = 'Turned cards';
-      } else if (v.id === 'END_FADE_ON') {
-        titleText = 'END FADE';
-        subText = 'Cards at ends';
-      }
+      // Pad caption from the manifest (padTitle / padSub), else the short label
+      const titleText = v.padTitle || v.short || v.label;
+      const subText = v.padSub || 'Toggle';
 
       pad.title = (v.hint || v.label) + '\n' + v.id + '\nClick to toggle';
       pad.innerHTML =
@@ -945,7 +970,8 @@
       reset.addEventListener('click', () => setValue(id, v.default));
       const customBtn = el('button', 'link-btn', 'Custom…');
       customBtn.type = 'button';
-      actions.append(reset, customBtn);
+      actions.append(reset);
+      if (hasPro('customColour')) actions.append(customBtn);   // custom hex: Pro
       row.appendChild(actions);
       const custom = el('div', 'custom-box');
       const colIn = el('input', 'color-in');

@@ -13,8 +13,14 @@
       flashOk, announce, Log, reloadAfterImport
     } = ctx;
 
-    function manifestForExport() {
-      const out = JSON.parse(JSON.stringify(getMan()));
+    // Schema 3: Save to disk / Export JSON write the source manifest (core@1 + overrides + extras), with star
+    // changes folded back in; the working file embeds the resolved vars ({ resolved: true }).
+    function manifestForExport(opts) {
+      const m0 = getMan();
+      if (m0 && m0.schema === 3 && m0.source && !(opts && opts.resolved) && window.LabManifest) return window.LabManifest.sourceForSave(m0);
+      const out = JSON.parse(JSON.stringify(m0));
+      delete out.source;
+      delete out.loaderNotes;
       delete out.auto;
       delete out.notes;
       delete out.scan;
@@ -22,6 +28,7 @@
       delete out.sig;
       (out.vars || []).forEach((v) => {
         if (v._genOpts) { delete v.options; delete v._genOpts; }
+        delete v._featured0;
       });
       return out;
     }
@@ -46,6 +53,9 @@
       }
     }
 
+    // "[MOTION_SPEED (was SPEED) --css]": renamed controls show their old id for one release (Step B)
+    const idTag = (v) => v.id + (v.was ? ' (was ' + v.was + ')' : '');
+
     async function copyText(text) {
       let ok = false;
       try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
@@ -63,14 +73,14 @@
     function interactionText() {
       const ia = interactVars(), P = getP();
       if (!ia.length) return '';
-      return 'Interaction: ' + ia.map((v) => (v.short || v.label).toLowerCase() + ' = ' + fmt(v, P[v.id]).toLowerCase() + ' [' + v.id + ']').join(', ');
+      return 'Interaction: ' + ia.map((v) => (v.short || v.label).toLowerCase() + ' = ' + fmt(v, P[v.id]).toLowerCase() + ' [' + idTag(v) + ']').join(', ');
     }
 
     function changesText() {
       const def = getDef(), P = getP(), ch = changedVars();
       const lines = ['Component Lab: ' + def.title + ' (' + def.id + '), ' + ch.length + ' changed'];
       lines.push('Files: components/' + def.id + '/ (' + ['manifest.json'].concat(def.css || [], def.markup ? [def.markup] : [], ['component.js']).join(', ') + ')');
-      ch.forEach((v) => lines.push('- ' + v.label + ' [' + v.id + (v.css ? ' ' + v.css : '') + ']: ' + fmt(v, v.default) + ' -> ' + fmt(v, P[v.id])));
+      ch.forEach((v) => lines.push('- ' + v.label + ' [' + idTag(v) + (v.css ? ' ' + v.css : '') + ']: ' + fmt(v, v.default) + ' -> ' + fmt(v, P[v.id])));
       const it = interactionText();
       if (it) lines.push(it);
       lines.push('Link: ' + location.href);
@@ -112,7 +122,7 @@
         '  Frame: ' + frameKeyFor(ui.view) + ' (' + f.w + ' x ' + f.h + ')',
         '  Exported: ' + stamp.getFullYear() + '-' + String(stamp.getMonth() + 1).padStart(2, '0') + '-' + String(stamp.getDate()).padStart(2, '0') + ' ' + stamp.toTimeString().slice(0, 8) + ' (local time)',
         '  ' + (ch.length ? ch.length + ' changed from defaults:' : 'No changes from defaults.'),
-        ch.map((v) => '    - ' + v.label + ' [' + v.id + (v.css ? ' ' + v.css : '') + ']: ' + fmt(v, v.default) + ' -> ' + fmt(v, P[v.id])).join('\n'),
+        ch.map((v) => '    - ' + v.label + ' [' + idTag(v) + (v.css ? ' ' + v.css : '') + ']: ' + fmt(v, v.default) + ' -> ' + fmt(v, P[v.id])).join('\n'),
         (interactionText() ? '  ' + interactionText() + '\n  (component.js reads these from LAB_PARAMS; the runner applies its rate() and time hooks.)' : '  Interaction: none in this component.'),
         '  Every value below (CSS custom properties on .lab-frame and LAB_PARAMS) is the live lab state.',
         '  Open this file in Chrome to see it run on its own.',
@@ -133,7 +143,7 @@
       out.push('<style data-file="lab-values">\n/* current lab values */\n.lab-frame[data-component="' + def.id + '"] {\n  ' + decl.join(';\n  ') + ';\n}\n' + (binds ? safe(binds) + '\n' : '') + '</style>');
       out.push('</head>', '<body>');
       out.push('<div class="lab-frame" id="labFrame" data-component="' + esc(def.id) + '">\n' + markup.trim() + '\n</div>');
-      out.push('<script>\n// Lab shim: component.js calls Lab.register(); the runner below mounts it with these values.\nwindow.LAB_PARAMS = ' + safe(JSON.stringify(params, null, 2)) + ';\nwindow.LAB_MANIFEST = ' + safe(JSON.stringify(manifestForExport())) + ';\nwindow.Lab = { register: function (d) { window.LAB_DEF = d; }, get params() { return window.LAB_PARAMS; } };\n</script>');
+      out.push('<script>\n// Lab shim: component.js calls Lab.register(); the runner below mounts it with these values.\nwindow.LAB_PARAMS = ' + safe(JSON.stringify(params, null, 2)) + ';\nwindow.LAB_MANIFEST = ' + safe(JSON.stringify(manifestForExport({ resolved: true }))) + ';\nwindow.Lab = { register: function (d) { window.LAB_DEF = d; }, get params() { return window.LAB_PARAMS; } };\n</script>');
       out.push('<script data-file="component.js">\n' + safe(js).trim() + '\n</script>');
       const tm = def.time || {};
       out.push('<script>\n// Runner: same loop as the lab (cycle / speed / direction, plus the interaction hooks:\n// inst.rate() scales playback for hover pause / slow / fast; time.nudge() lets drag spin it).\n(function () {\n  var P = window.LAB_PARAMS, d = window.LAB_DEF, frame = document.getElementById("labFrame");\n  var T = ' + JSON.stringify({ cycle: tm.cycle || null, speed: tm.speed || null, direction: tm.direction || null }) + ', animated = ' + (!!def.animated) + ', offset = ' + (+wrap(offset).toFixed(4)) + ', playing = ' + (!!def.animated && playing) + ', last = 0;\n  var time = { nudge: function (x) { offset += x; }, get offset() { return offset; }, set offset(v) { offset = v; }, get playing() { return playing; } };\n  var inst = (d && d.mount && d.mount(frame, { params: P, manifest: window.LAB_MANIFEST, time: time })) || {};\n  function tick(t) {\n    var dt = last ? Math.min(0.05, (t - last) / 1000) : 0; last = t;\n    if (inst.render) {\n      if (animated && playing) {\n        var cyc = T.cycle && P[T.cycle] ? P[T.cycle] : 10, spd = T.speed && P[T.speed] !== undefined ? P[T.speed] : 1, dir = T.direction && P[T.direction] !== undefined ? Number(P[T.direction]) || 1 : 1;\n        var k = inst.rate ? Number(inst.rate(P, dt)) : 1; if (!isFinite(k)) k = 1;\n        offset += (dt / Math.max(0.1, cyc)) * spd * dir * k;\n      }\n      inst.render(P, ((offset % 1) + 1) % 1);\n    }\n    requestAnimationFrame(tick);\n  }\n  requestAnimationFrame(tick);\n})();\n</script>');

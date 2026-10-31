@@ -1,67 +1,87 @@
-/* Starter styles. Every value worth tuning is a custom property listed in manifest.json. */
+/* Starter styles (core@1). Every value worth tuning is a core control in manifest.json with a "css" key. */
 /* Defaults sit on the lab frame; the lab's inline values on the same element override them. */
 .lab-frame {
-  --c-accent: #00e5ff; --c-text: #d8f3ff; --c-surface: #04121f; --c-border: #00e5ff; --c-muted: #8ea3c0; --c-glow: #00e5ff;
-  --fill-op: 0.86; --border-op: 0.6; --glow-k: 1; --blur: 8px;
-  --fs: 18px; --fw: 700; --track: 0.02em;
-  --radius: 14px; --pad: 20px; --w: 300px; --gap: 10px;
+  --c-border: #00e5ff; --c-fill: #04121f; --c-text: #d8f3ff; --c-glow: #00e5ff;    /* core colours (Free) */
+  --c-accent: #00e5ff; --c-muted: #8ea3c0;                                          /* optional colours */
+  --fill-op: 0.86; --border-op: 0.6; --glow-k: 1; --radius: 14px; --blur: 0px;
+  --type-k: 1; --fw: 700; --track: 0.02em;
+  --w: 300px; --pad: 20px; --gap: 10px;
   --idle: running; --ease: cubic-bezier(0.22, 1, 0.36, 1); --lift: 4px;
-  --speed: 1; --pulse: 0.5;
+  --speed: 1; --intensity: 1;
+  --fs: calc(18px * var(--type-k));
+  --pulse: calc(0.5 * var(--intensity));
 }
+/* Centred by default: the component sits in the middle of the frame on both axes */
 .cmp-host {
-  position: absolute; inset: 0; display: grid; place-items: center;
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
   font-family: "Segoe UI", system-ui, sans-serif; color: var(--c-text);
 }
 .cmp {
   animation: cmp-idle calc(3.2s / var(--speed)) var(--ease) infinite alternate;
   animation-play-state: var(--idle);
-  transition: transform 320ms var(--ease), box-shadow 320ms var(--ease);
+  transition: transform 320ms var(--ease), box-shadow 320ms var(--ease), filter 320ms var(--ease);
+  transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
 }
 @keyframes cmp-idle {
-  from { transform: translateY(0); }
-  to { transform: translateY(calc(-1 * var(--lift))); }
+  from { translate: 0 0; }
+  to { translate: 0 calc(-1 * var(--lift)); }
 }
+
+/* ---- interaction slots (component.js sets data-hover / data-press / data-drag / data-key on .cmp-host) ---- */
+.cmp-host:not([data-touch-off])[data-hover="lift"] .cmp:hover,
+.cmp-host:not([data-touch-off])[data-hover="both"] .cmp:hover,
+.cmp-host[data-key="on"][data-hover="lift"] .cmp:focus-visible,
+.cmp-host[data-key="on"][data-hover="both"] .cmp:focus-visible { transform: translateY(calc(-1.5 * var(--lift))); }
+.cmp-host:not([data-touch-off])[data-hover="glow"] .cmp:hover,
+.cmp-host:not([data-touch-off])[data-hover="both"] .cmp:hover,
+.cmp-host[data-key="on"][data-hover="glow"] .cmp:focus-visible,
+.cmp-host[data-key="on"][data-hover="both"] .cmp:focus-visible { filter: drop-shadow(0 0 calc(10px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.55)); }
+.cmp-host:not([data-touch-off])[data-press="press"] .cmp:active { transform: scale(0.97); }
+.cmp-host:not([data-touch-off])[data-press="glow"] .cmp:active { filter: drop-shadow(0 0 calc(14px * var(--glow-k)) var(--c-glow)); }
+.cmp-host[data-drag="tilt"] .cmp { cursor: grab; touch-action: none; }
+.cmp-host[data-key="on"] .cmp:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+.cmp-host[data-key="off"] .cmp:focus-visible { outline: none; }
+
 .cmp-card, .cmp-hero, .cmp-list, .cmp-nav {
-  background: rgb(from var(--c-surface) r g b / var(--fill-op));
+  background: rgb(from var(--c-fill) r g b / var(--fill-op));
   border: 1px solid rgb(from var(--c-border) r g b / var(--border-op));
   border-radius: var(--radius);
   backdrop-filter: blur(var(--blur));
   box-shadow: 0 0 calc(18px * var(--glow-k)) rgb(from var(--c-glow) r g b / calc(0.28 * var(--pulse) + 0.1)), 0 18px 40px -24px #000;
 }
-.cmp-card { width: var(--w); padding: var(--pad); display: grid; gap: var(--gap); }
-.cmp-badge { justify-self: start; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-accent); border: 1px solid rgb(from var(--c-accent) r g b / 0.5); border-radius: 99px; padding: 2px 8px; }
+.cmp-card { width: var(--w); padding: var(--pad); display: grid; gap: var(--gap); justify-items: center; }
+.cmp-badge { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-accent); border: 1px solid rgb(from var(--c-accent) r g b / 0.5); border-radius: 99px; padding: 2px 8px; }
 .cmp-title { margin: 0; font-size: var(--fs); font-weight: var(--fw); letter-spacing: var(--track); color: var(--c-text); }
 .cmp-text { margin: 0; font-size: calc(var(--fs) * 0.72); line-height: 1.45; color: var(--c-muted); }
 .cmp-btn {
-  justify-self: start; font: inherit; font-size: calc(var(--fs) * 0.72); font-weight: 600; letter-spacing: var(--track);
-  color: var(--c-surface); background: var(--c-accent); border: 0; border-radius: calc(var(--radius) * 0.6);
+  font: inherit; font-size: calc(var(--fs) * 0.72); font-weight: 600; letter-spacing: var(--track);
+  color: var(--c-fill); background: var(--c-accent); border: 0; border-radius: calc(var(--radius) * 0.6);
   padding: calc(var(--pad) * 0.45) calc(var(--pad) * 0.9); cursor: pointer;
   box-shadow: 0 0 calc(14px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.45);
 }
-.cmp-btn:hover { transform: translateY(-2px); }
 .cmp-solo { font-size: var(--fs); font-weight: var(--fw); border-radius: var(--radius); padding: calc(var(--pad) * 0.6) calc(var(--pad) * 1.4); }
 
-.cmp-nav { display: flex; gap: var(--gap); padding: calc(var(--pad) * 0.4); }
+.cmp-nav { display: flex; justify-content: center; gap: var(--gap); padding: calc(var(--pad) * 0.4); }
 .cmp-nav a { font-size: calc(var(--fs) * 0.8); font-weight: var(--fw); letter-spacing: var(--track); color: var(--c-muted); padding: 8px 14px; border-radius: calc(var(--radius) * 0.7); cursor: pointer; }
 .cmp-nav a.is-active { color: var(--c-text); background: rgb(from var(--c-accent) r g b / 0.16); box-shadow: inset 0 0 0 1px rgb(from var(--c-accent) r g b / 0.5); }
 
-.cmp-hero { width: calc(var(--w) * 2); padding: calc(var(--pad) * 2); display: grid; gap: var(--gap); justify-items: start; }
+.cmp-hero { width: calc(var(--w) * 2); padding: calc(var(--pad) * 2); display: grid; gap: var(--gap); justify-items: center; }
 .cmp-eyebrow { margin: 0; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-accent); }
 .cmp-hero .cmp-title { font-size: calc(var(--fs) * 2); line-height: 1.1; }
 
-.cmp-list { width: var(--w); margin: 0; padding: calc(var(--pad) * 0.5); list-style: none; display: grid; gap: calc(var(--gap) * 0.5); }
+.cmp-list { width: var(--w); margin: 0; padding: calc(var(--pad) * 0.5); list-style: none; display: grid; gap: calc(var(--gap) * 0.5); text-align: start; }
 .cmp-list li { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: var(--gap); padding: calc(var(--pad) * 0.45) calc(var(--pad) * 0.5); border-radius: calc(var(--radius) * 0.6); font-size: calc(var(--fs) * 0.8); }
 .cmp-list li + li { border-top: 1px solid rgb(from var(--c-border) r g b / calc(var(--border-op) * 0.4)); }
 .cmp-list i { width: 8px; height: 8px; border-radius: 50%; background: var(--c-accent); box-shadow: 0 0 calc(8px * var(--glow-k)) var(--c-glow); }
 .cmp-list b { color: var(--c-accent); font-weight: var(--fw); }
 
-.cmp-bg { position: absolute; inset: 0; overflow: hidden; border-radius: var(--radius); background: rgb(from var(--c-surface) r g b / var(--fill-op)); animation: none; }
+.cmp-bg { position: absolute; inset: 0; overflow: hidden; border-radius: var(--radius); background: rgb(from var(--c-fill) r g b / var(--fill-op)); animation: none; transform: none; }
 .cmp-bg i { position: absolute; width: 46%; aspect-ratio: 1; border-radius: 50%; filter: blur(calc(40px * var(--glow-k))); opacity: var(--pulse);
   animation: cmp-drift calc(14s / var(--speed)) var(--ease) infinite alternate; animation-play-state: var(--idle); }
 .cmp-bg .b1 { background: var(--c-accent); left: -8%; top: -10%; }
 .cmp-bg .b2 { background: var(--c-glow); right: -6%; bottom: -14%; animation-delay: calc(-5s / var(--speed)); }
 .cmp-bg .b3 { background: var(--c-border); left: 30%; top: 40%; width: 30%; animation-delay: calc(-9s / var(--speed)); }
-.cmp-bg-label { position: absolute; left: var(--pad); bottom: var(--pad); font-size: var(--fs); font-weight: var(--fw); color: var(--c-text); letter-spacing: var(--track); }
+.cmp-bg-label { position: absolute; left: 50%; bottom: var(--pad); translate: -50% 0; font-size: var(--fs); font-weight: var(--fw); color: var(--c-text); letter-spacing: var(--track); }
 @keyframes cmp-drift {
   from { transform: translate(0, 0) scale(1); }
   to { transform: translate(18%, 12%) scale(1.15); }

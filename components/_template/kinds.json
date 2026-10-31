@@ -1,8 +1,10 @@
 {
+  "$comment": "Per-kind starting points for new-component.py / Lab + New (core@1 ids). featured = starred on the Pro front; defaults = core overrides; category = library category.",
   "kinds": {
     "card": {
       "label": "Card",
       "desc": "Title, text, action",
+      "category": "cards",
       "frames": {
         "1600x770": {
           "w": 420,
@@ -14,18 +16,19 @@
         }
       },
       "featured": [
-        "ACCENT",
-        "TEXT",
-        "SURFACE",
-        "FILL_OP",
-        "BORDER_OP",
-        "FONT_SIZE",
-        "EASING"
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_FILL",
+        "OPACITY_FILL",
+        "OPACITY_BORDER",
+        "SCALE_TEXT",
+        "MOTION_EASING"
       ]
     },
     "nav": {
       "label": "Nav",
       "desc": "Tabs or menu bar",
+      "category": "menus",
       "frames": {
         "1600x770": {
           "w": 560,
@@ -36,23 +39,24 @@
           "h": 130
         }
       },
-      "defaults": {
-        "PAD": 16,
-        "RADIUS": 16
-      },
       "featured": [
-        "ACCENT",
-        "TEXT",
-        "SURFACE",
-        "FILL_OP",
-        "FONT_SIZE",
-        "GAP",
-        "EASING"
-      ]
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_FILL",
+        "OPACITY_FILL",
+        "SCALE_TEXT",
+        "SPACE_GAP",
+        "MOTION_EASING"
+      ],
+      "defaults": {
+        "SPACE_PAD": 16,
+        "RADIUS": 16
+      }
     },
     "hero": {
       "label": "Hero",
       "desc": "Headline block",
+      "category": "heroes",
       "frames": {
         "1600x770": {
           "w": 820,
@@ -63,24 +67,25 @@
           "h": 380
         }
       },
-      "defaults": {
-        "FONT_SIZE": 22,
-        "WIDTH": 320
-      },
       "featured": [
-        "ACCENT",
-        "TEXT",
-        "SURFACE",
-        "FILL_OP",
-        "FONT_SIZE",
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_FILL",
+        "OPACITY_FILL",
+        "SCALE_TEXT",
         "WEIGHT",
-        "PAD",
-        "EASING"
-      ]
+        "SPACE_PAD",
+        "MOTION_EASING"
+      ],
+      "defaults": {
+        "SCALE_TEXT": 1.22,
+        "SIZE_W": 320
+      }
     },
     "animated-background": {
       "label": "Animated bg",
       "desc": "Moving backdrop",
+      "category": "backgrounds",
       "frames": {
         "1600x770": {
           "w": 900,
@@ -91,24 +96,25 @@
           "h": 460
         }
       },
-      "defaults": {
-        "FILL_OP": 1,
-        "GLOW": 1.2,
-        "PULSE": 0.55,
-        "LIFT": 0
-      },
       "featured": [
-        "ACCENT",
-        "GLOW_COLOR",
-        "SURFACE",
-        "FILL_OP",
-        "GLOW",
-        "SPEED"
-      ]
+        "COLOR_ACCENT",
+        "COLOR_GLOW",
+        "COLOR_FILL",
+        "OPACITY_FILL",
+        "GLOW_STRENGTH",
+        "MOTION_SPEED"
+      ],
+      "defaults": {
+        "OPACITY_FILL": 1,
+        "GLOW_STRENGTH": 1.2,
+        "MOTION_INTENSITY": 1.1,
+        "HOVER_LIFT": 0
+      }
     },
     "list": {
       "label": "List",
       "desc": "Rows with values",
+      "category": "cards",
       "frames": {
         "1600x770": {
           "w": 420,
@@ -119,24 +125,25 @@
           "h": 300
         }
       },
-      "defaults": {
-        "PAD": 16,
-        "GAP": 8,
-        "FONT_SIZE": 17
-      },
       "featured": [
-        "ACCENT",
-        "TEXT",
-        "MUTED",
-        "BORDER_OP",
-        "FONT_SIZE",
-        "GAP",
-        "PAD"
-      ]
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_MUTED",
+        "OPACITY_BORDER",
+        "SCALE_TEXT",
+        "SPACE_GAP",
+        "SPACE_PAD"
+      ],
+      "defaults": {
+        "SPACE_PAD": 16,
+        "SPACE_GAP": 8,
+        "SCALE_TEXT": 0.94
+      }
     },
     "button": {
       "label": "Button",
       "desc": "One call to action",
+      "category": "buttons",
       "frames": {
         "1600x770": {
           "w": 360,
@@ -147,20 +154,20 @@
           "h": 180
         }
       },
-      "defaults": {
-        "FONT_SIZE": 17,
-        "RADIUS": 12,
-        "GLOW": 1.2
-      },
       "featured": [
-        "ACCENT",
-        "TEXT",
-        "GLOW_COLOR",
-        "GLOW",
-        "FONT_SIZE",
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_GLOW",
+        "GLOW_STRENGTH",
+        "SCALE_TEXT",
         "RADIUS",
-        "EASING"
-      ]
+        "MOTION_EASING"
+      ],
+      "defaults": {
+        "SCALE_TEXT": 0.94,
+        "RADIUS": 12,
+        "GLOW_STRENGTH": 1.2
+      }
     }
   }
 }

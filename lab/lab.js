@@ -12,10 +12,67 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const bust = () => '?t=' + Date.now();
   const KEY = 'componentLab:v2:';
-  const store = {
+  const rawStore = {
     get(k, d) { try { const v = localStorage.getItem(KEY + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (e) { /* private mode */ } },
     del(k) { try { localStorage.removeItem(KEY + k); } catch (e) { /* ignore */ } }
+  };
+
+  // ---------- tiers (t586u): internal ids free / mid / pro ----------
+  // The ONE place for tier names: rename a label here and every header pill, button, toast and help line follows.
+  // upgradeTo = the tier that tier's UPGRADE button offers.
+  const TIER = {
+    free: { id: 'free', label: 'Base', upgradeTo: 'mid' },
+    mid: { id: 'mid', label: 'Mid', upgradeTo: 'pro' },
+    pro: { id: 'pro', label: 'Pro', upgradeTo: null }
+  };
+  // DEV SWITCH (t587u): every load starts on this tier with its full menu, ignoring any saved tier or leftover
+  // Base / Mid preview in storage. An explicit ?tier=free|mid|pro, Settings > Tier (dev) and Alt+Shift+T still
+  // work for deliberate testing until the next plain reload. Set to null to restore normal saved-tier behaviour.
+  const DEV_FORCE_TIER = 'pro';
+  const TIER_IDS = ['free', 'mid', 'pro'];
+  const tierRank = (t) => Math.max(0, TIER_IDS.indexOf(t));
+  // TODO(subscription): the plan / purchase page. While empty, Lab.upgrade() only shows a "coming soon" toast;
+  // once set, the UPGRADE buttons redirect here with ?tier=<target> appended.
+  const UPGRADE_URL = '';
+  // One capability table (the tier is a SETTING for now: Settings > Tier (dev), ?tier=free|mid|pro, Alt+Shift+T;
+  // no licensing). PRO_FEATURES below keeps its keys; FEATURE_TIER maps each one onto this 3-way model.
+  const CAPS = {
+    free: { settings: false, copySnippet: false, copyFull: false, undo: false, interaction: false, snapshots: 0, accordions: false, responsive: false, toolbar: false, dockStages: [3], savedPrefs: 'none', controls: 'ga', newComponent: false },
+    mid: { settings: 'limited', copySnippet: true, copyFull: false, undo: false, interaction: true, snapshots: 1, accordions: true, responsive: true, toolbar: true, dockStages: [2, 3], savedPrefs: 'some', controls: 'vip', newComponent: false },
+    pro: { settings: 'full', copySnippet: true, copyFull: true, undo: true, interaction: true, snapshots: 3, accordions: true, responsive: true, toolbar: true, dockStages: [1, 2, 3], savedPrefs: 'all', controls: 'pro', newComponent: true }
+  };
+  const VAR_TIER = { ga: 0, vip: 1, pro: 2 };   // manifest var "tier" -> the lowest tier rank that shows it
+  // Which tier you are on. The stored 'tier' key is your plan (the dev setting). Pro's switch can step DOWN to
+  // preview a lower tier for this tab only (sessionStorage); UPGRADE steps back up to anything up to the plan.
+  const TIER_PREVIEW = KEY + 'tierPreview';
+  const URLQ = (() => { try { return new URL(location.href).searchParams; } catch (_) { return new URLSearchParams(''); } })();
+  if (URLQ.has('reset')) {   // ?reset: clear every componentLab:v2:* key first (default tier: pro)
+    try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith(KEY)) localStorage.removeItem(k); } } catch (_) { /* ignore */ }
+    try { sessionStorage.removeItem(TIER_PREVIEW); } catch (_) { /* ignore */ }
+  }
+  // uiVer 7 migration: the old Basic / Pro switch (ui.mode) becomes the tier: 'basic' -> 'free', 'pro' -> 'pro'
+  if (!TIER_IDS.includes(rawStore.get('tier', null))) { const old = rawStore.get('ui', null); rawStore.set('tier', old && old.mode === 'basic' ? 'free' : 'pro'); }
+  if (TIER_IDS.includes(DEV_FORCE_TIER) && !TIER_IDS.includes(URLQ.get('tier'))) { rawStore.set('tier', DEV_FORCE_TIER); try { sessionStorage.removeItem(TIER_PREVIEW); } catch (_) { /* ignore */ } }
+  if (TIER_IDS.includes(URLQ.get('tier'))) { rawStore.set('tier', URLQ.get('tier')); try { sessionStorage.removeItem(TIER_PREVIEW); } catch (_) { /* ignore */ } }
+  let plan = rawStore.get('tier', 'pro');
+  let tier = (() => { let p = null; try { p = sessionStorage.getItem(TIER_PREVIEW); } catch (_) { /* ignore */ } return TIER_IDS.includes(p) && tierRank(p) < tierRank(plan) ? p : plan; })();
+  const caps = () => CAPS[tier];
+  // Saved preferences per tier. Pro saves everything, as before. Mid saves only the dock state and the two
+  // section settings, under its own 'mid:' keys so a Pro setup is never overwritten. Free saves nothing.
+  // Anything not saved lives in memory for this page only (values, snapshot A, other settings).
+  const MID_UI = ['proDock', 'accCollapse', 'accResponsive'];
+  const mem = new Map();
+  const pickKeys = (o, keys) => { const r = {}; if (o && typeof o === 'object') keys.forEach((x) => { if (o[x] !== undefined) r[x] = o[x]; }); return r; };
+  function gate(k) {
+    if (tier === 'pro' || k === 'tier' || k === 'uiVer' || k.startsWith('manifest:')) return { raw: k };
+    if (tier === 'mid' && k === 'ui') return { raw: 'mid:ui', pick: MID_UI };
+    return null;
+  }
+  const store = {
+    get(k, d) { const g = gate(k); if (!g) return mem.has(k) ? JSON.parse(mem.get(k)) : d; const v = rawStore.get(g.raw, d); return g.pick ? pickKeys(v, g.pick) : v; },
+    set(k, v) { const g = gate(k); if (!g) { try { mem.set(k, JSON.stringify(v)); } catch (_) { /* ignore */ } return; } rawStore.set(g.raw, g.pick ? pickKeys(v, g.pick) : v); },
+    del(k) { const g = gate(k); if (!g) { mem.delete(k); return; } rawStore.del(g.raw); }
   };
 
   function hashText(s) {
@@ -60,6 +117,7 @@
     undo: '<path d="M6 9.6A7 7 0 1 1 6.6 16"/><path d="M5.6 4.8v4.9h4.9"/>',
     reset: '<path d="M15.6 4.4l4 4-8.8 8.8H6.7l-2.2-2.2a1.4 1.4 0 0 1 0-2z"/><path d="M10.4 20h9.1"/><path d="M10.9 9.1l4 4"/>',
     sig: '<path d="M12 3.5l2 6.5 6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2z" class="fill"/>',
+    up: '<path d="M12 19V6"/><path d="M6.5 11.5L12 6l5.5 5.5"/>',
     flip: '<path d="M17 4l3 3-3 3"/><path d="M4 11V9a2 2 0 0 1 2-2h14"/><path d="M7 20l-3-3 3-3"/><path d="M20 13v2a2 2 0 0 1-2 2H4"/>'
   };
   const svg = (n, cls) => '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICON[n] + '</svg>';
@@ -96,8 +154,13 @@
     dockFlick: true,        // flick the pass / the dock's inner edge to step stages
     dockHide: true,         // strong flick of the pass away hides the dock for this session
     dockHover: true,        // hover the slim rail: it grows to the card, folds back when the cursor leaves
-    helpIcon: true          // ? help card: full how-to in Pro; Basic sees "what Pro adds"
+    helpIcon: true,         // ? help card: full how-to in Pro; Base / Mid see what the next tiers add
+    accSettings: true,      // Settings > Sections: default state + responsive (Mid's short Settings list)
+    tempoDeck: true,        // SPEED as the DJ tempo deck (Mid gets 0.5x / 1x / 2x preset pads instead)
+    customColour: true      // Custom... hex / colour input on a colour's page
   };
+  // The lowest tier that has each PRO_FEATURES key (anything not listed = Pro only).
+  const FEATURE_TIER = { accordion: 'mid', snapshots: 'mid', dockHover: 'mid', accSettings: 'mid' };
   // ---- dock stages (like the toolbar's nested progression) ----
   // Stage n -> dock data-state, smallest first: 1 = the lanyard pass, 2 = thin rail, 3 = card + rail.
   // Basic keeps 2 and 3 only (the X folds the card to the rail).
@@ -112,15 +175,27 @@
   };
 
   // ---------- state ----------
-  const ui = Object.assign({ dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true }, store.get('ui', {}));
-  if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
-  if (store.get('uiVer', 0) < 3) { ui.accVariant = 'B'; store.set('uiVer', 3); store.set('ui', ui); }
-  if (store.get('uiVer', 0) < 4) { ui.view = '1600x770'; store.set('uiVer', 4); store.set('ui', ui); }
+  const UI_DEFAULTS = { dockPos: 'right', anchor: 'top-right', proDock: 'full', motion: true, paletteSource: 'project', view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B', tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true };
+  // migrations run on the saved (Pro) settings, whatever tier is showing
+  const ui = Object.assign({}, UI_DEFAULTS, rawStore.get('ui', {}));
+  if (rawStore.get('uiVer', 0) < 3) { ui.accVariant = 'B'; rawStore.set('uiVer', 3); rawStore.set('ui', ui); }
+  if (rawStore.get('uiVer', 0) < 4) { ui.view = '1600x770'; rawStore.set('uiVer', 4); rawStore.set('ui', ui); }
   // v5: Pro now opens fully expanded (card + rail). 'slim' was the old saved default, so move it to 'full'; 'icon' stays.
-  if (store.get('uiVer', 0) < 5) { if (!ui.proDock || ui.proDock === 'slim') ui.proDock = 'full'; store.set('uiVer', 5); store.set('ui', ui); }
+  if (rawStore.get('uiVer', 0) < 5) { if (!ui.proDock || ui.proDock === 'slim') ui.proDock = 'full'; rawStore.set('uiVer', 5); rawStore.set('ui', ui); }
   // uiVer 6: Pro sections start ALL CLOSED (new default); 'All open' was retired for 'First open'. Responsive (one open, moved to the top) starts off.
-  if (store.get('uiVer', 0) < 6) { ui.accCollapse = 'closed'; if (typeof ui.accResponsive !== 'boolean') ui.accResponsive = false; store.set('uiVer', 6); store.set('ui', ui); }
-  if (!['closed', 'first', 'remember'].includes(ui.accCollapse)) ui.accCollapse = 'closed';
+  if (rawStore.get('uiVer', 0) < 6) { ui.accCollapse = 'closed'; if (typeof ui.accResponsive !== 'boolean') ui.accResponsive = false; rawStore.set('uiVer', 6); rawStore.set('ui', ui); }
+  // uiVer 7: tiers. ui.mode (Basic / Pro) is retired; it was turned into the 'tier' key above ('basic' -> 'free').
+  if (rawStore.get('uiVer', 0) < 7) { delete ui.mode; rawStore.set('uiVer', 7); rawStore.set('ui', ui); }
+  // The settings the current tier sees: Pro = everything saved, Mid = defaults + its few saved ones, Free = defaults.
+  function loadUiForTier() {
+    Object.keys(ui).forEach((k) => { delete ui[k]; });
+    Object.assign(ui, UI_DEFAULTS, store.get('ui', {}));
+    delete ui.mode;
+    if (ui.anchor === 'middle-center') ui.anchor = 'top-right';
+    if (!['closed', 'first', 'remember'].includes(ui.accCollapse)) ui.accCollapse = 'closed';
+    if (tier === 'mid') { if (ui.accCollapse === 'remember') ui.accCollapse = 'closed'; if (ui.proDock === 'icon') ui.proDock = 'full'; }
+  }
+  loadUiForTier();
   const saveUi = () => store.set('ui', ui);
   M.enabled = ui.motion !== false;
   // screen look (CSS only, never a control value): margin tone + expanded-dock glass as data-* on <html> (lab.css / dock.css)
@@ -129,8 +204,9 @@
 
   let def = null, inst = null, man = null, vars = [], byId = {}, P = {};
   let offset = 0, playing = true, lastT = 0, loadSeq = 0, pendingResolve = null;
-  let mode = ui.mode === 'pro' ? 'pro' : 'basic';
-  const hasPro = (k) => mode === 'pro' && !!PRO_FEATURES[k];
+  // mode = the old two-way alias ('pro' only on the Pro tier); tier is the real switch.
+  let mode = tier === 'pro' ? 'pro' : 'basic';
+  const hasPro = (k) => !!PRO_FEATURES[k] && tierRank(tier) >= tierRank(FEATURE_TIER[k] || 'pro');
   let previewDefaults = false;
   let scanHovering = false, scanHoverTouch = false, scanKbdPause = false;
   let projectPalette = [], presets = [], kindsInfo = null;
@@ -227,6 +303,7 @@
   // ---------- manifest ----------
   function normVar(v) {
     v.label = v.label || v.id;
+    if (!(v.tier in VAR_TIER)) delete v.tier;   // "ga" | "vip" | "pro" (who sees the control); see tierVars()
     if (!CAT_IDS.includes(v.category)) v.category = 'layout';
     if (!v.control) v.control = v.category === 'color' ? 'swatch-role' : typeof v.default === 'boolean' ? 'switch' : v.options ? 'segmented' : 'slider';
     if (v.control === 'swatch-role') { v.default = S.hex(v.default) || '#ffffff'; v.role = v.role || 'accent'; }
@@ -246,9 +323,14 @@
   function featuredOverrides() { return store.get('featured:' + def.id, {}); }
 
   // ---------- applying values ----------
+  // Behaviour flags (manifest fields), never component ids: the master Speed control, and the auto-scan
+  // interaction controls (source 'scan') by interaction kind.
+  const speedVar = () => vars.find((x) => x.master === 'speed') || null;
+  const scanIx = (kind) => vars.find((x) => x.source === 'scan' && x.interaction === kind) || null;
   function isModified(v) {
     if (previewDefaults) return false;
-    return !same(P[v.id], v.default) || (v.speedScaled && byId.SPEED && !same(P.SPEED, byId.SPEED.default));
+    const sv = speedVar();
+    return !same(P[v.id], v.default) || (v.speedScaled && sv && !same(P[sv.id], sv.default));
   }
   function cssVal(v) {
     const curP = activeParams();
@@ -257,7 +339,8 @@
     if (v.options) { const o = v.options.find((x) => same(x.value, val)); if (o && o.css != null) return o.css; }
     if (v.cssMap) return v.cssMap[String(val)];
     if (typeof val === 'boolean') return val ? '1' : '0';
-    if (v.speedScaled && byId.SPEED) return +(val / (curP.SPEED || 1)).toFixed(4) + (v.unit || '');
+    const sv = v.speedScaled ? speedVar() : null;
+    if (sv) return +(val / (curP[sv.id] || 1)).toFixed(4) + (v.unit || '');
     if (v.unit === '\u00d7') return String(val);
     return val + (v.unit || '');
   }
@@ -363,8 +446,13 @@
     logMute = false;
     Hist.end('reset');
     Log.push('reset ' + ch.length + ' change' + (ch.length === 1 ? '' : 's') + ' (undo: \u21ba)');
-    announce('Reset ' + ch.length + ' changes. Undo brings them back.');
-    toast('Reset ' + ch.length + ' to defaults. Undo (Ctrl+Z) brings them back.');
+    if (caps().undo) {
+      announce('Reset ' + ch.length + ' changes. Undo brings them back.');
+      toast('Reset ' + ch.length + ' to defaults. Undo (Ctrl+Z) brings them back.');
+    } else {
+      announce('Reset ' + ch.length + ' changes.');
+      toast('Reset ' + ch.length + ' to defaults.');
+    }
   }
 
   // ---------- CSS :hover styles as an interaction control (lab-side, no component code needed) ----------
@@ -389,7 +477,29 @@
     });
   }
   const interactVars = () => vars.filter((v) => v.category === 'interact');
+  // The controls this tier SHOWS (manifest var "tier": ga / vip / pro). vars stays complete (values, export,
+  // URL hash, defaults), so a hidden control simply keeps its default. No "tier" field (other components):
+  // featured = every tier, other plain controls = Mid, advanced = Pro.
+  function varTier(v) { return v.tier in VAR_TIER ? VAR_TIER[v.tier] : v.featured ? 0 : v.advanced ? 2 : 1; }
+  function tierVars() {
+    if (tier === 'pro') return vars;
+    const r = tierRank(tier);
+    let list = vars.filter((v) => varTier(v) <= r && (caps().interaction || v.category !== 'interact'));
+    if (tier === 'free' && !vars.some((v) => v.tier)) list = list.slice(0, BASIC_CAP);
+    return list;
+  }
   function changedVars() { return vars.filter((v) => !same(P[v.id], v.default)); }
+  // Footer per tier: Base = Reset only; Mid = Copy changes + Reset; Pro = Copy changes, Copy full, Undo, Reset.
+  function syncFootTools() {
+    const c = caps();
+    [['copyBtn', c.copySnippet], ['fullBtn', c.copyFull], ['undoBtn', c.undo]].forEach(([id, on]) => {
+      const b = $(id);
+      if (!b) return;
+      b.classList.toggle('is-tier-off', !on);
+      b.tabIndex = on ? 0 : -1;
+      b.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+  }
   function refreshChanged() {
     const n = changedVars().length;
 
@@ -439,6 +549,43 @@
   }
 
   // ---------- component loading ----------
+  // Core template (components/_core/core.json, "core@1"): fetched once, shared by every schema-3 manifest.
+  let coreDoc = null;
+  async function loadCore() {
+    if (coreDoc) return coreDoc;
+    const t = await fetchText('components/_core/core.json');
+    try { coreDoc = t ? JSON.parse(t) : null; } catch (e) { coreDoc = null; toast('components/_core/core.json has a JSON error (' + e.message + ').', 6000); }
+    return coreDoc || { controls: [], optional: [] };
+  }
+  // One-time, idempotent id migration (helix Step B, t590u): saved values, snapshots and stars stored under an
+  // old control id move to its new id ("aliases" in manifest.json: old -> new). Runs on every load, so a backup
+  // imported later (Settings > Import) or an old snapshot is migrated too; a key already on the new id wins.
+  // Works on the raw saved store so Pro data migrates even while previewing Mid / Base.
+  function migrateIds(id, aliases, ver) {
+    if (!aliases || !Object.keys(aliases).length) return;
+    const LM = window.LabManifest;
+    let n = 0;
+    ['values:', 'featured:'].forEach((pre) => {
+      const cur = rawStore.get(pre + id, null);
+      const r = LM.renameKeys(cur, aliases);
+      if (r.changed) { rawStore.set(pre + id, r.obj); n++; }
+      if (mem.has(pre + id)) { const rm = LM.renameKeys(JSON.parse(mem.get(pre + id)), aliases); if (rm.changed) mem.set(pre + id, JSON.stringify(rm.obj)); }
+    });
+    const snaps = rawStore.get('snaps:' + id, null);
+    if (snaps && typeof snaps === 'object') {
+      let ch = false;
+      Object.keys(snaps).forEach((k) => { const r = LM.renameKeys(snaps[k], aliases); if (r.changed) { snaps[k] = r.obj; ch = true; } });
+      if (ch) { rawStore.set('snaps:' + id, snaps); n++; }
+    }
+    if (rawStore.get('idVer:' + id, 0) < (ver || 1)) rawStore.set('idVer:' + id, ver || 1);
+    if (n) console.info('[lab] ' + id + ': moved saved data to the new control ids (' + n + ' store key' + (n === 1 ? '' : 's') + ').');
+  }
+  // A shared link may still use an old id (#c=helix&SPEED=1.5): map it to the new id; the new id wins.
+  function aliasHash(h, aliases) {
+    if (!aliases) return h;
+    return window.LabManifest.renameKeys(h, aliases).obj;
+  }
+
   async function loadComponent(id, fromHash) {
     const seq = ++loadSeq;
     const base = 'components/' + id + '/';
@@ -480,6 +627,11 @@
       m.auto = true;
       auto = true;
     }
+    if (m.schema === 3) {
+      m = window.LabManifest.resolve(m, await loadCore());
+      if (m.loaderNotes) console.warn('[lab] ' + id + '/manifest.json:', m.loaderNotes.join(' | '));
+      migrateIds(id, m.aliases, m.source && m.source.aliasVersion);
+    }
     m.vars = (m.vars || []).map(normVar);
     if (seq !== loadSeq) return;
 
@@ -510,9 +662,11 @@
     P = {};
     vars.forEach((v) => { P[v.id] = v.default; });
     const saved = store.get('values:' + id, null);
-    const hash = fromHash ? readHash() : {};
+    const hash = fromHash ? aliasHash(readHash(), m.aliases) : {};
     if (saved) vars.forEach((v) => { if (saved[v.id] !== undefined) P[v.id] = coerce(v, saved[v.id]); });
-    vars.forEach((v) => { if (hash[v.id] !== undefined && hash[v.id] !== '') P[v.id] = coerce(v, hash[v.id]); });
+    // a shared URL can only set the controls this tier shows (the hidden ones keep their defaults)
+    const seen = tier === 'pro' ? null : new Set(tierVars().map((v) => v.id));
+    vars.forEach((v) => { if (hash[v.id] !== undefined && hash[v.id] !== '' && (!seen || seen.has(v.id))) P[v.id] = coerce(v, hash[v.id]); });
     offset = hash.o !== undefined ? +hash.o : (d.defaultOffset || 0);
     playing = !!d.animated && hash.o === undefined;
 
@@ -525,8 +679,9 @@
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     try { inst = d.mount(frameEl, { params: P, manifest: m, time: timeApi }) || {}; } catch (e) { inst = {}; toast('mount() error: ' + e.message, 6000); console.error(e); }
 
-    mode = ui.mode === 'pro' ? 'pro' : 'basic';
+    mode = tier === 'pro' ? 'pro' : 'basic';
     syncHeadTools();
+    syncFootTools();
     $('cmpName').textContent = d.title;
     $('cmpName').title = d.title + ' (click to switch component)';
     syncQuick();
@@ -570,11 +725,21 @@
   function freeRect() {
     return { x: 0, y: 0, w: innerWidth, h: innerHeight };
   }
+  // The screen box: the ONE source for the sandbox screen's size + position (zoom, pan, hover and
+  // pointer maths all read it back from #stageFit / Zoom.setBase). The side margins are sized so the
+  // stage-1 VIP badge (--trig-w, lab/pass.css) fits in the margin beside the screen with a small gap,
+  // the same on both sides (screen centred); the top margin sits below the badge's top edge so the
+  // badge rises above the screen. 1600x770 -> 1266 x 698 at (167, 36); 1366x768 -> 1032 x 696 at (167, 36).
+  const SCREEN_TOP = 36, SCREEN_BOTTOM = 36, SCREEN_GAP = 8;
+  function screenBox(r) {
+    const tw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--trig-w')) || 54;
+    const side = Math.max(24, Math.min(Math.round(tw) + MARGIN + SCREEN_GAP, Math.round(r.w * 0.16)));
+    return { x: r.x + side, y: r.y + SCREEN_TOP, w: Math.max(80, r.w - 2 * side), h: Math.max(80, r.h - SCREEN_TOP - SCREEN_BOTTOM) };
+  }
   function layoutStage() {
     if (!def) return;
     const r = freeRect();
-    const topPad = 20, bottomPad = r.y + r.h >= innerHeight ? 36 : 16, side = 24;
-    const box = { x: r.x + side, y: r.y + topPad, w: Math.max(80, r.w - 2 * side), h: Math.max(80, r.h - topPad - bottomPad) };
+    const box = screenBox(r);
     const fit = $('stageFit');
     Object.assign(fit.style, { left: box.x + 'px', top: box.y + 'px', width: box.w + 'px', height: box.h + 'px' });
     // the screen's top edge (CSS --scr-t): the top-centre zoom pad sits just inside it; the box never changes for it
@@ -830,11 +995,12 @@
         const dir = tm.direction && curP[tm.direction] !== undefined ? Number(curP[tm.direction]) || 1 : 1;
         let k = 1;
         if (inst.rate) { try { k = Number(inst.rate(curP, dt)); if (!isFinite(k)) k = 1; } catch (e) { k = 1; } }
-        if (byId.HOVER && byId.HOVER.source === 'scan' && scanHovering && !(scanHoverTouch && byId.TOUCH && curP.TOUCH === 'ignore')) {
-          const hr = { play: 1, pause: 0, slow: 0.35, fast: 1.8 }[curP.HOVER];
+        const sHv = scanIx('hover'), sTo = scanIx('touch'), sKy = scanIx('key');
+        if (sHv && scanHovering && !(scanHoverTouch && sTo && curP[sTo.id] === 'ignore')) {
+          const hr = { play: 1, pause: 0, slow: 0.35, fast: 1.8 }[curP[sHv.id]];
           if (hr !== undefined) k *= hr;
         }
-        if (byId.KEY_PAUSE && byId.KEY_PAUSE.source === 'scan' && curP.KEY_PAUSE && scanKbdPause) k = 0;
+        if (sKy && curP[sKy.id] && scanKbdPause) k = 0;
         rateNow = k;
         offset += (dt / Math.max(0.1, cyc)) * spd * dir * k;
       }
@@ -870,34 +1036,68 @@
     requestAnimationFrame(() => syncSeg(host, vp, host.dataset.value, true));
     return vp;
   }
-  // Basic / Pro as ONE Beat-FX style pill switch (was a two-button segment). Same setMode(): persistence (ui.mode),
-  // rail, pages, toast all unchanged. Keyboard: Tab to it, Enter/Space toggles, Left = Basic, Right = Pro.
+  // Card header, top-left (t586u). Pro: the Beat-FX style pill switch (as before); sliding it to Base steps DOWN
+  // to preview the lower tiers (this tab only). Base / Mid: a tier pill (BASE / MID) + a glowing UPGRADE button
+  // (Lab.upgrade). Labels come from TIER. Keyboard on the switch: Enter/Space toggles, Left = Base.
   function buildModeSw(host) {
     if (!host) return;
-    host.innerHTML = '';
-    host.className = 'mode-sw';
-    host.removeAttribute('role');
-    const b = el('button', 'msw-btn', '<span class="msw-lbl msw-b">Basic</span><span class="msw-track"><i class="msw-knob"><i class="msw-led"></i></i></span><span class="msw-lbl msw-p">Pro</span>');
-    b.type = 'button';
-    b.id = 'modeSw';
-    b.setAttribute('role', 'switch');
-    b.addEventListener('click', () => setMode(mode === 'pro' ? 'basic' : 'pro'));
-    b.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' && mode !== 'basic') { e.preventDefault(); setMode('basic'); }
-      else if (e.key === 'ArrowRight' && mode !== 'pro') { e.preventDefault(); setMode('pro'); }
-    });
-    host.appendChild(b);
+    host.dataset.tier = '';
     syncModeSw();
   }
   function syncModeSw() {
-    const host = $('modeSeg'), b = host && host.querySelector('.msw-btn');
-    if (!b) return;
-    const pro = mode === 'pro';
-    host.dataset.value = mode;
-    b.setAttribute('aria-checked', pro ? 'true' : 'false');
-    b.setAttribute('aria-label', 'Control set: ' + (pro ? 'Pro' : 'Basic') + ' (toggle Basic / Pro)');
-    b.title = (pro ? 'Pro: every control' : 'Basic: featured controls') + ' \u00b7 click, Enter or Space to switch to ' + (pro ? 'Basic' : 'Pro') + ' (\u2190 Basic / \u2192 Pro)';
+    const host = $('modeSeg');
+    if (!host) return;
+    if (host.dataset.tier !== tier) {
+      host.dataset.tier = tier;
+      host.innerHTML = '';
+      host.removeAttribute('role');
+      if (tier === 'pro') {
+        host.className = 'mode-sw';
+        const b = el('button', 'msw-btn', '<span class="msw-lbl msw-b">' + esc(TIER.free.label) + '</span><span class="msw-track"><i class="msw-knob"><i class="msw-led"></i></i></span><span class="msw-lbl msw-p">' + esc(TIER.pro.label) + '</span>');
+        b.type = 'button';
+        b.id = 'modeSw';
+        b.setAttribute('role', 'switch');
+        const down = () => { host.dataset.value = 'basic'; setTimeout(() => setTier('free'), M.level() === 'full' ? 240 : 0); };
+        b.addEventListener('click', down);
+        b.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); down(); } });
+        host.appendChild(b);
+      } else {
+        host.className = 'mode-sw tier-sw';
+        const t = TIER[tier], up = TIER[t.upgradeTo] || TIER.pro;
+        const pill = el('span', 'tier-pill', esc(t.label));
+        pill.title = t.label + ' tier';
+        const ub = el('button', 'tier-up', svg('up') + '<span>Upgrade</span>');
+        ub.type = 'button';
+        ub.id = 'tierUp';
+        ub.addEventListener('click', () => upgrade(up.id));
+        host.append(pill, ub);
+      }
+    }
+    const b = host.querySelector('.msw-btn');
+    if (b) {
+      host.dataset.value = 'pro';
+      b.setAttribute('aria-checked', 'true');
+      b.setAttribute('aria-label', 'Tier: ' + TIER.pro.label + ' (switch to ' + TIER.free.label + ' to preview the lower tiers)');
+      b.title = TIER.pro.label + ': every control, sections, snapshots, settings \u00b7 click, Enter or Space (or \u2190) steps down to preview ' + TIER.free.label + '; its UPGRADE button steps back up';
+    }
+    const ub = host.querySelector('.tier-up');
+    if (ub) {
+      const to = TIER[TIER[tier].upgradeTo] || TIER.pro, back = tierRank(to.id) <= tierRank(plan);
+      ub.title = 'Upgrade (coming soon)' + (back ? ' \u00b7 preview: click steps back up to ' + to.label : '');
+      ub.setAttribute('aria-label', 'Upgrade to ' + to.label + (back ? ' (preview: steps back up)' : ' (coming soon)'));
+    }
   }
+  // The ONE upgrade entry point (header button, help card). Below your plan (a preview) it steps back up.
+  // TODO(subscription): with UPGRADE_URL set, this redirects to the plan / purchase page instead of the toast.
+  function upgrade(target) {
+    const to = TIER_IDS.includes(target) ? target : TIER[tier].upgradeTo;
+    if (!to || to === tier) return;
+    if (tierRank(to) <= tierRank(plan)) { setTier(to); return; }
+    if (UPGRADE_URL) { location.href = UPGRADE_URL + (UPGRADE_URL.includes('?') ? '&' : '?') + 'tier=' + encodeURIComponent(to); return; }
+    Log.push('upgrade to ' + TIER[to].label + ' (coming soon)');
+    toast('Upgrade to ' + TIER[to].label + ': coming soon. Dev: Settings \u203a Tier (dev), ?tier=' + to + ' or Alt+Shift+T.', 4800);
+  }
+  window.Lab.upgrade = upgrade;
   function syncSeg(host, vp, value, instant) {
     if (!host) return;
     vp = vp || host._pill;
@@ -912,6 +1112,10 @@
     if (vp) vp.moveTo(hit, instant || !host.offsetWidth);
   }
 
+  // The card's X only shows when the slim-rail hover expand/collapse is unavailable (Basic) or turned off
+  // (Settings > Dock > Hover to expand slim rail). Otherwise the round avatar + hover do its job (t584u).
+  const closeShown = () => minStage() < 3 && !(proOn('dockHover') && ui.dockHover !== false);
+  const closeAnchor = () => (closeShown() ? $('dockClose') : $('railAvatar'));
   // ---------- dock: open / close morph ----------
   function applyDockLayout() {
     dock.dataset.anchor = ui.anchor;
@@ -989,7 +1193,7 @@
         syncModeSw();
         if (fromKey) {
           requestAnimationFrame(() => {
-            const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
+            const target = document.querySelector('#rail .rail-btn.is-active') || closeAnchor();
             if (target) target.focus({ preventScroll: true });
           });
         }
@@ -1004,7 +1208,7 @@
     if (targetState === 'closed') {
       dock.classList.add('is-morphing', 'is-closing');
       if (fromState === 'open') {
-        M.travel($('dockClose'), $('dockTrigger'), svg('close'), { rotate: -90 });
+        M.travel(closeAnchor(), $('dockTrigger'), closeShown() ? svg('close') : (window.Pass ? Pass.miniHtml() : svg('close')), { rotate: closeShown() ? -90 : 0 });
         M.contentOut(card.querySelector('.card-main'));
       }
       M.contentOut($('rail'));
@@ -1036,7 +1240,7 @@
       syncModeSw();
       if (fromKey) {
         requestAnimationFrame(() => {
-          const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
+          const target = document.querySelector('#rail .rail-btn.is-active') || closeAnchor();
           if (target) target.focus({ preventScroll: true });
         });
       }
@@ -1054,7 +1258,7 @@
     if (sliding) dock.classList.add('is-sliding');   // rail rides the moving edge, the card is clipped behind it
 
     if (targetState === 'open' && fromState === 'closed') {
-      M.travel($('dockTrigger'), $('dockClose'), window.Pass ? Pass.miniHtml() : svg('sliders'));
+      M.travel($('dockTrigger'), closeAnchor(), window.Pass ? Pass.miniHtml() : svg('sliders'));
       M.contentIn(cardMain, 60);
       M.contentIn($('rail'), 30);
     } else if (targetState === 'open' && fromState === 'slim') {
@@ -1096,8 +1300,9 @@
   }
 
   // ---------- dock stages: 1 lanyard pass (Pro) · 2 thin rail · 3 card + rail ----------
-  const proOn = (f) => !PRO_FEATURES[f] || mode === 'pro';
-  const minStage = () => (proOn('dockStages') ? 1 : 2);
+  const proOn = (f) => !PRO_FEATURES[f] || hasPro(f);
+  // Pro 1 (VIP badge) · Mid 2 (slim rail) · Base 3 (the card is locked open)
+  const minStage = () => Math.min(...CAPS[tier].dockStages);
   const dockStage = () => Math.max(1, DOCK_STAGES.indexOf((dock && dock.dataset.state) || dockState) + 1);
   function dockEdge() {
     if (ui.dockPos === 'bottom') return 'bottom';
@@ -1182,7 +1387,7 @@
     if (t) {
       t.dataset.edge = (dockEdge() === 'left') ? 'right' : 'left';   // the toolbar moves off a left dock's side
       t.dataset.anchor = 'top';
-      showTab(t, ui.tbOut !== false && !TB.shown && !railPadOnScreen());
+      showTab(t, caps().toolbar && ui.tbOut !== false && !TB.shown && !railPadOnScreen());
     }
   }
   // Basic <-> Pro: Basic has no pass stage and no hiding, so bring the dock back to a visible stage.
@@ -1194,6 +1399,8 @@
   }
   function syncDockTools() {
     dock.dataset.pro = mode === 'pro' ? 'true' : 'false';
+    dock.dataset.tier = tier;
+    document.documentElement.dataset.tier = tier;
     dock.classList.toggle('has-stages', proOn('dockStages'));
     dock.classList.toggle('has-flick', proOn('dockFlick'));
     syncHint();
@@ -1237,7 +1444,7 @@
     if (!f.length) f = vars.filter((v) => !v.advanced);
     return f.slice(0, BASIC_CAP);
   }
-  function hasCat(id) { return vars.some((v) => v.category === id); }
+  function hasCat(id) { return tierVars().some((v) => v.category === id); }
   function orderedCats() {
     const ord = Array.isArray(ui.railOrder) ? ui.railOrder : [];
     const idx = (id) => { const i = ord.indexOf(id); return i < 0 ? 100 + CAT_IDS.indexOf(id) : i; };
@@ -1246,8 +1453,8 @@
   const railHidden = () => (Array.isArray(ui.railHidden) ? ui.railHidden : []);
   function visibleCats() {
     if (hasPro('accordion')) return orderedCats().filter((c) => c.id !== 'interact' || hasCat('interact'));
-    const f = basicVars();
-    return orderedCats().filter((c) => f.some((v) => v.category === c.id));
+    // Basic (t584u): every section that has controls, shown as open cards in one scrolling list
+    return orderedCats().filter((c) => hasCat(c.id));
   }
   // Rail icons: in Basic mode ignore railHidden() so hidden categories cannot lock out Basic controls.
   function railCats() {
@@ -1277,7 +1484,7 @@
       tools.appendChild(b);
       return b;
     };
-    orderedTools().filter((t) => !toolHidden().includes(t.id)).forEach((t) => {
+    railTools().forEach((t) => {
       if (t.id === 'new') tool('new', svg('plus'), 'New component', () => { openDock('click'); startNew(); });
       if (t.id === 'toolbar') {
         // XDJ-style ON/OFF pad (lit LED when ON); TB.syncRailBtn keeps the label and state current
@@ -1286,7 +1493,8 @@
         TB.railButton(b);
       }
     });
-    tool('settings', svg('gear'), 'Settings', () => { openDock('click'); go({ type: 'settings' }); });
+    if (caps().settings) tool('settings', svg('gear'), 'Settings', () => { openDock('click'); go({ type: 'settings' }); });
+    $('rail').classList.toggle('no-tools', !tools.children.length);
     requestAnimationFrame(() => syncRail(true));
   }
   function railKey(spec) {
@@ -1296,7 +1504,7 @@
     return spec.type;
   }
   function railIndex(spec) {
-    const order = railCats().map((c) => c.id).concat(orderedTools().filter((t) => !toolHidden().includes(t.id)).map((t) => t.id), ['settings']);
+    const order = railCats().map((c) => c.id).concat(railTools().map((t) => t.id), ['settings']);
     const i = order.indexOf(railKey(spec));
     return i < 0 ? 0 : i;
   }
@@ -1318,19 +1526,55 @@
     clearTimeout(b._f);
     b._f = setTimeout(() => b.classList.remove('is-flash'), 1100);
   }
-  function setMode(m) {
-    if (m === mode) return;
-    mode = m;
-    ui.mode = m; saveUi();
-    syncHeadTools();
-    syncModeSw();
-    buildRail();
-    const cur = navStack[0];
-    if (cur.type === 'cat' && !visibleCats().some((c) => c.id === cur.cat)) navStack = [{ type: 'cat', cat: railCats()[0].id }];
-    else navStack = [cur];
-    renderPage(0);
-    dockModeChanged();
-    toast(mode === 'pro' ? 'Pro: every control. Star one to feature it in Basic.' : 'Basic: the ' + basicVars().length + ' featured controls.');
+  // Tier change, live (no reload): the tier's own saved settings (Pro all, Mid a few, Base none), its controls,
+  // header, footer, rail and dock stages. Values reload from what that tier keeps (Base / Mid: defaults).
+  const TIER_BLURB = {
+    free: (n) => n + ' controls, sections open, Reset only. Nothing is saved.',
+    mid: (n) => n + ' controls in sections, hover key, toolbar, snapshot A, Copy changes.',
+    pro: () => 'every control, in collapsible sections, plus snapshots and settings.'
+  };
+  let tierBusy = null;
+  function setTier(next, opts) {
+    if (!TIER_IDS.includes(next)) return Promise.resolve();
+    if (opts && opts.plan) { plan = next; rawStore.set('tier', next); }
+    if (tierRank(next) > tierRank(plan)) { plan = next; rawStore.set('tier', next); }
+    try { if (tierRank(next) < tierRank(plan)) sessionStorage.setItem(TIER_PREVIEW, next); else sessionStorage.removeItem(TIER_PREVIEW); } catch (_) { /* ignore */ }
+    if (next === tier) { syncModeSw(); if (Help.isOpen) Help.fill(); return Promise.resolve(); }
+    tier = next;
+    mode = tier === 'pro' ? 'pro' : 'basic';
+    mem.clear();
+    loadUiForTier();
+    applyLook();
+    M.enabled = ui.motion !== false;
+    M.flickOn = ui.flick !== false;
+    M.flickStrength = ui.flickStrength || 'normal';
+    document.documentElement.classList.toggle('no-motion', !ui.motion);
+    Help.hide(); Pop.hide(); Arc.close(true); TB.menuClose();
+    if (!caps().toolbar) TB.close();
+    syncDockTools();
+    applyDockLayout();
+    const id = def && def.id;
+    const run = (id ? loadComponent(id, false) : Promise.resolve()).then(() => {
+      dockModeChanged();
+      initDockState();
+      relayout();
+      Log.push('tier ' + TIER[tier].label + (tier !== plan ? ' (preview)' : ''));
+      toast(TIER[tier].label + (tier !== plan ? ' preview' : '') + ': ' + TIER_BLURB[tier](tierVars().length));
+    });
+    tierBusy = run;
+    return run;
+  }
+  // old name kept for scripts / __lab: 'basic' = Base (free), 'pro' = Pro
+  function setMode(m) { return setTier(m === 'pro' ? 'pro' : m === 'mid' ? 'mid' : 'free'); }
+  // Dock on load / tier change: Pro and Mid open as Settings > Dock state says (Mid: expanded or slim rail);
+  // Base is always the expanded card.
+  function initDockState() {
+    let st = 'open';
+    if (tier !== 'free') {
+      const pref = ui.proDock || 'full';
+      st = pref === 'full' ? 'open' : (pref === 'icon' && proOn('dockStages')) ? 'closed' : 'slim';
+    }
+    setDockState(st, { instant: true, how: 'init', force: true });
   }
 
   // ---------- navigation ----------
@@ -1346,11 +1590,20 @@
       flashTip(spec.cat);
       return;
     }
+    const basicCat = !hasPro('accordion') && spec.type === 'cat';
+    if (basicCat && navStack.length === 1 && cur.type === 'cat' && Basic.list()) {
+      navStack[0] = spec;
+      Basic.scrollTo(spec.cat);
+      syncRail();
+      flashTip(spec.cat);
+      return;
+    }
     if (navStack.length === 1 && sameSpec(cur, spec)) { flashTip(railKey(spec)); return; }
     const dir = railIndex(spec) >= railIndex(cur) ? 1 : -1;
     navStack = [spec];
     renderPage(dir);
     if (proCat) Acc.focus(spec.cat, true);
+    if (basicCat) Basic.scrollTo(spec.cat, true);
     flashTip(railKey(spec));
   }
   function push(spec) { navStack.push(spec); renderPage(1); }
@@ -1393,7 +1646,7 @@
 
   function pageTitleFor(spec) {
     if (spec.type === 'cat' && hasPro('accordion')) return 'All controls';
-    if (spec.type === 'cat') { const c = CATS.find((x) => x.id === spec.cat); return c ? c.label : spec.cat; }
+    if (spec.type === 'cat') return 'All controls';
     if (spec.type === 'role') return byId[spec.id] ? byId[spec.id].label : 'Colour';
     if (spec.type === 'settings') return 'Settings';
     if (spec.type === 'user') return 'My palette';
@@ -1416,7 +1669,18 @@
     if (title.textContent !== newTitle) { title.textContent = newTitle; M.contentIn(title); }
     $('pageMeta').textContent = meta || '';
     // Pro home: no loose 'All controls' / count labels; the component title sits centred above the quick pill (dock.css)
-    $('cardHead').classList.toggle('is-pro-home', mode === 'pro' && spec.type === 'cat' && hasPro('accordion'));
+    const home = spec.type === 'cat';
+    // Both modes (t584u): the controls home has no page title / count row; header = tools row, centred name,
+    // then the quick key row (Basic) or quick key + SNAPSHOTS row (Pro). Only the cards below scroll.
+    $('cardHead').classList.toggle('is-home', home);
+    const snapRow = $('snapRow');
+    snapRow.innerHTML = '';
+    const sb = home && hasPro('accordion') ? buildSnapBar() : null;
+    if (sb) snapRow.appendChild(sb);
+    snapRow.hidden = !sb;
+    // Pro / Mid home: the quick key sits in the SNAPSHOTS row, so the head copy hides (dock.css)
+    $('cardHead').classList.toggle('is-pro-home', !!sb);
+    syncQuick();
     $('backBtn').classList.toggle('is-on', navStack.length > 1);
     $('backBtn').tabIndex = navStack.length > 1 ? 0 : -1;
     const fc = footCollapsed();
@@ -1448,7 +1712,7 @@
 
   function buildPage(spec, inner) {
     if (spec.type === 'cat' && hasPro('accordion')) return Acc.build(spec.cat, inner);
-    if (spec.type === 'cat') return buildCat(spec.cat, inner);
+    if (spec.type === 'cat') return Basic.build(inner);
     if (spec.type === 'role') return buildRole(spec.id, inner);
     if (spec.type === 'settings') return buildSettings(inner);
     if (spec.type === 'user') return buildUser(inner);
@@ -1464,6 +1728,70 @@
     if (!list.length) inner.appendChild(el('p', 'empty', 'Nothing in this category for this component.'));
     return basicVars().length + ' of ' + vars.length + ' controls';
   }
+
+  // ---------- Basic (t584u): every section as an OPEN card in one scrolling list (no accordion, no section menu,
+  // no snapshots, no flip folds). Each section shows all its controls in plain mini cards. The rail scrolls to a
+  // section and follows the scroll. ----------
+  const Basic = (function () {
+    let lock = 0;
+    const list = () => pagesEl.querySelector('.page:not(.is-leaving) .basic-list');
+    const sec = (cat) => { const l = list(); return l ? l.querySelector('.bsec[data-cat="' + cat + '"]') : null; };
+    function fill(cat, bin) {
+      const all = tierVars().filter((v) => v.category === cat);
+      // Base: no palette presets row (each colour is its own 8-swatch line)
+      if (cat === 'color' && tier !== 'free' && vars.some((v) => v.control === 'swatch-role')) bin.appendChild(buildPresets());
+      const groups = groupsFor(all, cat);
+      const bare = groups.length === 1 && groups[0].items.length <= 3;
+      groups.forEach((g) => bin.appendChild(miniCard(g, bare, true)));
+      return all.length;
+    }
+    function build(inner) {
+      const wrapEl = el('div', 'basic-list');
+      let total = 0, n = 0;
+      visibleCats().forEach((c) => {
+        const box = el('section', 'acc is-open bsec');
+        box.dataset.cat = c.id;
+        if (c.id === 'interact') box.classList.add('acc-interact');
+        const head = el('div', 'acc-head bsec-head', svg(c.icon) + '<span class="acc-label">' + esc(c.label) + '</span><span class="acc-n"></span>');
+        head.id = 'bsec-h-' + c.id;
+        const body = el('div', 'acc-body');
+        body.setAttribute('role', 'region');
+        body.setAttribute('aria-labelledby', head.id);
+        const bin = el('div', 'acc-inner');
+        const k = fill(c.id, bin);
+        head.querySelector('.acc-n').textContent = k;
+        total += k; if (k) n++;
+        body.appendChild(bin);
+        box.append(head, body);
+        wrapEl.appendChild(box);
+      });
+      inner.appendChild(wrapEl);
+      inner.classList.add('is-acc', 'is-basic');
+      requestAnimationFrame(() => {
+        const page = wrapEl.closest('.page');
+        if (page) page.addEventListener('scroll', () => spy(page), { passive: true });
+      });
+      return total + ' controls \u00b7 ' + n + ' sections';
+    }
+    function scrollTo(cat, instant) {
+      const box = sec(cat);
+      const page = box && box.closest('.page');
+      if (!page) return;
+      lock = Date.now() + 700;
+      page.scrollTo({ top: Math.max(0, box.offsetTop), behavior: instant || M.level() !== 'full' ? 'auto' : 'smooth' });
+    }
+    function spy(page) {
+      if (Date.now() < lock || navStack.length !== 1 || navStack[0].type !== 'cat') return;
+      const l = list();
+      if (!l) return;
+      const all = [...l.querySelectorAll(':scope > .bsec')];
+      let hit = all[0];
+      all.forEach((b) => { if (b.offsetTop - page.scrollTop <= 24) hit = b; });
+      if (page.scrollTop + page.clientHeight >= page.scrollHeight - 2) hit = all[all.length - 1];
+      if (hit && hit.dataset.cat !== navStack[0].cat) { navStack[0] = { type: 'cat', cat: hit.dataset.cat }; syncRail(); }
+    }
+    return { build, list, scrollTo };
+  })();
 
   // A disclosure (Advanced / More). The body grows on the soft spring (CSS grid rows).
   function foldEl(label, n, fill, cls) {
@@ -1511,6 +1839,9 @@
         return 'Shape';
     }
   }
+  // Card layouts named by the manifest ("layout": { "deck": [...], "pads": [...] }), not by component group names
+  const isDeckGroup = (name) => !!(man && Array.isArray(man.deckGroups) && man.deckGroups.includes(name));
+  const isPadGroup = (name) => !!(man && Array.isArray(man.padGroups) && man.padGroups.includes(name));
   const sigFirst = (items) => items.filter((v) => v.signature).concat(items.filter((v) => !v.signature));
   function groupsFor(list, cat) {
     const order = (man.groups && man.groups[cat]) || [];
@@ -1535,15 +1866,15 @@
     const stage = el('div', 'flip-stage');
     const rotor = el('div', 'flip-rotor');
     const faceA = el('div', 'flip-face is-front');
-    const isPadsA = frontItems.length > 1 && frontItems.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad'));
-    const isDeckA = group === 'Spacing & Radius' || (frontItems.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && frontItems.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
+    const isPadsA = frontItems.length > 1 && frontItems.every((v) => v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad'));
+    const isDeckA = isDeckGroup(group) || (frontItems.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && frontItems.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
     const isDialsA = frontItems.length > 1 && frontItems.every((v) => v.control === 'radial');
     const bodyA = el('div', 'mini-body' + (isDialsA ? ' is-dials' : '') + (isPadsA ? ' is-pads' : '') + (isDeckA ? ' is-deck' : ''));
     frontItems.forEach((v) => bodyA.appendChild(ctlRow(v, { compact: true })));
     faceA.appendChild(bodyA);
 
     const faceB = el('div', 'flip-face is-back');
-    const isPadsB = backItems.length > 1 && backItems.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad'));
+    const isPadsB = backItems.length > 1 && backItems.every((v) => v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad'));
     const isDeckB = (backItems.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && backItems.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
     const isDialsB = backItems.length > 1 && backItems.every((v) => v.control === 'radial');
     const bodyB = el('div', 'mini-body' + (isDialsB ? ' is-dials' : '') + (isPadsB ? ' is-pads' : '') + (isDeckB ? ' is-deck' : ''));
@@ -1604,18 +1935,19 @@
     card.dataset.group = g.name;
     if (!bare) card.appendChild(el('div', 'mini-head', '<span>' + esc(g.name) + '</span>'));
     const isDials = lead.length > 1 && lead.every((v) => v.control === 'radial');
-    const isPads = g.name === 'Fades' || (lead.length > 1 && lead.every((v) => v.control === 'switch' && (v.group === 'Fades' || v.variant === 'pad' || v.control === 'pad')));
-    const isDeck = g.name === 'Spacing & Radius' || (lead.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && lead.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
+    const isPads = isPadGroup(g.name) || (lead.length > 1 && lead.every((v) => v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad')));
+    const isDeck = isDeckGroup(g.name) || (lead.some((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader') && lead.some((v) => v.control === 'radial' || v.variant === 'master' || v.variant === 'gain'));
 
     const faderItems = lead.filter((v) => v.control === 'fader' || v.variant === 'channel' || v.variant === 'fader');
     const topItems = lead.filter((v) => !faderItems.includes(v));
-    if (topItems.length && faderItems.length > 1) {
+    // Mid audit fix (c): a lone fader beside top controls (Size: Cards + Card width) also gets its deck tile, centred
+    if (topItems.length && (faderItems.length > 1 || (tier === 'mid' && faderItems.length === 1))) {
       const body = el('div', 'mini-body is-mixed-deck');
       const topArea = el('div', 'mini-deck-top');
       topItems.forEach((v) => topArea.appendChild(ctlRow(v, { compact: !bare })));
       body.appendChild(topArea);
 
-      const faderArea = el('div', 'mini-deck-faders' + (faderItems.length === 2 ? ' is-2col' : ''));
+      const faderArea = el('div', 'mini-deck-faders' + (faderItems.length === 2 ? ' is-2col' : faderItems.length === 1 ? ' is-single' : ''));
       faderItems.forEach((v, idx) => {
         v.deckCh = v.deckCh || (idx + 1);
         faderArea.appendChild(ctlRow(v, { compact: true }));
@@ -1625,16 +1957,21 @@
       return card;
     }
 
-    const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : '') + (isDeck ? ' is-deck' : ''));
+    const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : '') + (isDeck ? ' is-deck' : '') + (isDeck && lead.length === 1 && tier === 'mid' ? ' is-single' : ''));
     lead.forEach((v) => body.appendChild(ctlRow(v, { compact: !bare })));
     card.appendChild(body);
     return card;
   }
   function fillPro(cat, inner) {
-    const all = vars.filter((v) => v.category === cat);
+    const all = tierVars().filter((v) => v.category === cat);
     if (!all.length) { inner.appendChild(el('p', 'empty', 'No ' + (CATS.find((c) => c.id === cat) || {}).label + ' controls for this component.')); return { n: 0, adv: 0 }; }
     if (cat === 'color' && vars.some((v) => v.control === 'swatch-role')) inner.appendChild(buildPresets());
     const groups = groupsFor(all, cat);
+    if (tier === 'mid') {   // Mid: plain cards, no flip / Advanced folds (those are Pro)
+      const bareM = groups.length === 1 && groups[0].items.length <= 3;
+      groups.forEach((g) => inner.appendChild(miniCard(g, bareM, true)));
+      return { n: all.length, adv: 0 };
+    }
     const front = groups.filter((g) => g.items.some((v) => !v.advanced));
     const back = groups.filter((g) => g.items.every((v) => v.advanced));
     const advN = all.filter((v) => v.advanced).length;
@@ -1686,7 +2023,7 @@
     return s;
   }
   function buildSnapBar() {
-    if (!hasPro('snapshots') || !def) return null;
+    if (!hasPro('snapshots') || !caps().snapshots || !def) return null;
     const bar = el('div', 'snap-bar');
     // Pro home row (t577u): [interaction key + dropdown arrow] | SNAPSHOTS A B C, one centred row
     const qv = quickVar();
@@ -1699,10 +2036,10 @@
         b.classList.toggle('is-filled', !!s);
         b.title = s
           ? 'Slot ' + k + ' saved \u00b7 Click to load \u00b7 Shift+Click to overwrite \u00b7 Alt+Click or Right-click to clear'
-          : 'Slot ' + k + ' empty \u00b7 Click to save current look';
+          : 'Slot ' + k + ' empty \u00b7 Click to save current look' + (caps().snapshots === 1 ? ' (then Reset or change things and click ' + k + ' to compare)' : '');
       });
     };
-    ['A', 'B', 'C'].forEach((k) => {
+    ['A', 'B', 'C'].slice(0, caps().snapshots).forEach((k) => {
       const b = el('button', 'snap-slot', k);
       b.type = 'button';
       b.dataset.slot = k;
@@ -1730,7 +2067,7 @@
         logMute = false;
         Hist.end('snapshot ' + k);
         Log.push('loaded snapshot ' + k);
-        toast('Loaded snapshot ' + k + ' (Ctrl+Z undoes).');
+        toast('Loaded snapshot ' + k + (caps().undo ? ' (Ctrl+Z undoes).' : '.'));
       });
       b.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -1796,8 +2133,6 @@
       const wrapEl = el('div', 'acc-list');
       wrapEl.dataset.variant = variant();
 
-      const snapBar = buildSnapBar();
-      if (snapBar) wrapEl.appendChild(snapBar);
       const cats = visibleCats().map((c, i) => {
         const box = el('section', 'acc');
         box.dataset.cat = c.id;
@@ -2045,7 +2380,7 @@
         + li('Toggle back: click the readout or press ' + k(KEYS.zoomToggle.label) + ' to switch 100% \u21c4 your last zoom')
         + li(k(KEYS.zoomIn.label) + ' / ' + k('=') + ' in \u00b7 ' + k('-') + ' out \u00b7 Ctrl+wheel or a pinch zooms at the cursor \u00b7 drag empty space or middle-drag to pan when zoomed in')
         + li('Screen only: the component\u2019s values, export and URL never change; it still reacts to hover, click, drag and keys at any zoom. Session only; ?reset = 100%. Hide the icons: Settings \u203a Viewport')
-        + li('The screen is one solid colour (no dots, grid or frame lines) on a flat darker margin where the toolbar and dock sit; Settings \u203a Viewport \u203a Margin tone');
+        + li('The screen is one solid colour (no dots, grid, border or frame lines) whose edge fades softly into a flat darker margin where the toolbar, dock and VIP badge sit; zoomed content fades out at the edge. Settings \u203a Viewport \u203a Margin tone');
     }
     function proItems() {
       const fl = ui.flick === false ? 'off (Settings \u203a Toolbar)' : (ui.flickStrength || 'normal');
@@ -2053,7 +2388,7 @@
       return '<p class="help-h">Dock</p><ul>'
         + li('Stages: <b>3</b> card + rail \u00b7 <b>2</b> thin rail \u00b7 <b>1</b> the all-access pass')
         + li('The pass: click, ' + k('Enter') + ' or ' + k(KEYS.dock.label) + ' = next stage \u00b7 Shift+click = full card')
-        + li('Round avatar at the top of the rail: from the card, click collapses straight to the badge; from the slim rail, click expands to the card (Shift+click: card \u2192 slim rail, slim rail \u2192 badge) \u00b7 \u2715 folds the card one stage \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
+        + li('Round avatar at the top of the rail: from the card, click collapses straight to the badge; from the slim rail, click expands to the card (Shift+click: card \u2192 slim rail, slim rail \u2192 badge) \u00b7 ' + (closeShown() ? '\u2715 folds the card one stage' : 'no \u2715 while hover to expand is on (turn it off in Settings \u203a Dock to get the \u2715 back)') + ' \u00b7 ' + k(KEYS.down.label) + ' one stage down \u00b7 ' + k(KEYS.dock.label) + ' or ' + k(KEYS.dock.alt) + ' next stage (wraps)')
         + (proOn('dockFlick') ? li('Flick (' + esc(fl) + '): the pass or the dock\u2019s inner edge toward the stage grows it; the edge toward the screen edge shrinks it. Gentle = one stage, strong = to the end') : '')
         + li(hide ? 'Hide: a strong flick of the pass away (to the edge, up or down) hides the dock until reload. Back: the arrow tab on that edge or ' + k(KEYS.dock.label) + ' brings back the badge AND a flicked-away toolbar (top-left), or reload'
           : 'Flick-to-hide is off (Settings \u203a Dock)')
@@ -2068,24 +2403,48 @@
         + li('Gear on the rail \u203a Dock: dock state (expanded / slim rail / VIP badge), hover to expand slim rail, dock glass (Clear / Frosted / Solid: the outer panel is see-through, the section cards stay opaque), flick-to-hide \u00b7 Pro sections: default state, responsive \u00b7 Profile pass: name, role, access level')
         + '</ul>';
     }
-    function basicItems() {
-      const f = PRO_FEATURES;
-      return '<p class="help-h">Pro adds</p><ul>'
-        + (f.dockStages ? li('A third stage: the dock folds to the all-access pass') : '')
-        + (f.dockFlick ? li('Flick the pass or the dock edge to step stages') : '')
-        + (f.dockHide ? li('Flick the pass away to hide the dock (' + esc(KEYS.dock.label) + ' or the edge handle brings it back)') : '')
-        + li('Every control, in collapsible sections')
-        + '</ul><p class="help-h">Now</p><ul>'
-        + li('\u2715 or the round avatar folds the card to the rail; the avatar or a rail icon opens it') + li('Toolbar pad on the rail: ON / OFF (LED lit = ON)') + li(k(KEYS.dock.label) + ' card \u21c4 rail \u00b7 ' + k(KEYS.pause.label) + ' pause')
+    // Pro: the three tiers and how to switch (dev). Placeholders: UPGRADE = toast until UPGRADE_URL is set.
+    function tierItems() {
+      return '<p class="help-h">Tiers</p><ul>'
+        + li('<b>' + esc(TIER.free.label) + '</b> \u00b7 <b>' + esc(TIER.mid.label) + '</b> \u00b7 <b>' + esc(TIER.pro.label) + '</b> (all access). The switch at the top-left steps down to preview ' + esc(TIER.free.label) + '; its UPGRADE button steps back up (' + esc(TIER.mid.label) + ', then ' + esc(TIER.pro.label) + ')')
+        + li('Pick any tier (dev): Settings \u203a Tier (dev), ' + k('?tier=free|mid|pro') + ' in the URL, or ' + k('Alt+Shift+T') + ' (cycles). Tier is a setting for now: no licence check. Upgrade / purchase pages: coming soon')
+        + '</ul>';
+    }
+    // Base / Mid: what this tier has, then what the next tiers add, then UPGRADE (placeholder)
+    function lowItems() {
+      const n = tierVars().length;
+      const now = tier === 'free'
+        ? li(n + ' controls: four colours (8 swatches each) and two fade pads, every section open (no folding)')
+          + li('The card stays open (no slim rail, no badge). Rail icons jump to a section')
+          + li('Reset (footer) puts every control back. Nothing is saved: a reload starts from the defaults')
+          + li(k(KEYS.pause.label) + ' pause / play')
+        : li(n + ' controls in sections. Settings \u203a Sections: default state (closed / first open) and Responsive (one open at a time, moved to the top)')
+          + li('Hover key (top) turns the hover pause on / off; its arrow opens Interaction. Speed: 0.5\u00d7 / 1\u00d7 / 2\u00d7 pads')
+          + li('Snapshot A: click saves the current look, click again loads it, so you can compare it with Reset or another change (Shift+click overwrites, right-click clears; this session only)')
+          + li('Footer: Copy changes + Reset. Stage toolbar (top-left) with its ON / OFF pad on the rail')
+          + li('Round avatar or ' + k(KEYS.dock.label) + ': card \u21c4 slim rail; rest the cursor on the slim rail to expand it')
+          + li('Saved: the dock state and the two section settings only. Everything else resets on reload');
+      const midAdds = tier === 'free'
+        ? '<p class="help-h">' + esc(TIER.mid.label) + ' adds</p><ul>'
+          + li('22 controls in folding sections (Responsive option), the Interaction section and the hover key')
+          + li('Speed pads 0.5\u00d7 / 1\u00d7 / 2\u00d7, the stage toolbar, snapshot A, Copy changes, the slim rail, a short Settings list')
+          + '</ul>'
+        : '';
+      return '<p class="help-h">' + esc(TIER[tier].label) + ' (this tier)</p><ul>' + now + '</ul>' + midAdds
+        + '<p class="help-h">' + esc(TIER.pro.label) + ' adds</p><ul>'
+        + li('Every control (with flip cards), snapshots A / B / C, \u2605 stars, My palette, custom hex colours')
+        + li('Copy full working file, Undo / Redo, full Settings (toolbar, rail order, manifest tools, backup)')
+        + li('The VIP badge stage, flicks, flick-to-hide, dock glass; everything is saved')
         + '</ul><p class="help-h">Sandbox zoom (view only)</p><ul>' + zoomItems()
-        + '</ul><button type="button" class="help-pro">Switch to Pro</button>';
+        + '</ul>' + (tier === plan ? '' : '<p class="note">Previewing ' + esc(TIER[tier].label) + ': UPGRADE steps back up.</p>')
+        + '<button type="button" class="help-pro">Upgrade (coming soon)</button>';
     }
     function fill() {
-      const pro = mode === 'pro' || !PRO_FEATURES.helpIcon;
-      pop().innerHTML = pro ? proItems() : basicItems();
+      const pro = tier === 'pro' || !PRO_FEATURES.helpIcon;
+      pop().innerHTML = pro ? proItems() + tierItems() : lowItems();
       pop().dataset.kind = pro ? 'pro' : 'basic';
       const sw = pop().querySelector('.help-pro');
-      if (sw) sw.addEventListener('click', () => { setMode('pro'); fill(); place(); });
+      if (sw) sw.addEventListener('click', () => { hide(); upgrade(); });
     }
     // never cover the footer: the card scrolls inside if space is short
     function place() {
@@ -2131,11 +2490,16 @@
     $('moreBtn').classList.toggle('is-hidden', !showMore);
     $('moreBtn').tabIndex = showMore ? 0 : -1;
     if (!showMore) Pop.hide();
+    const showX = closeShown();
+    $('dockClose').classList.toggle('is-hidden', !showX);
+    $('dockClose').tabIndex = showX ? 0 : -1;
+    $('dockClose').setAttribute('aria-hidden', showX ? 'false' : 'true');
     if (Help.isOpen) Help.fill();
   }
 
   function quickVar() {
-    const ia = interactVars();
+    if (!caps().interaction) return null;   // Base: no Interaction section, no hover key
+    const ia = tierVars().filter((v) => v.category === 'interact');
     return ia.find((v) => v.interaction === 'hover' && v.options) || ia.find((v) => v.interaction === 'hover') || null;
   }
   // Quick hover control (t577u): the SAME interaction icon as the slim rail, as an on/off key (dim = off, glowing =
@@ -2200,7 +2564,8 @@
     getDef: () => def, getVars: () => vars, getById: () => byId, getP: () => P, getUi: () => ui,
     hasPro, same, fmt, decimals, setValue,
     swatchesFor, allPresets, presetDots, applyPreset,
-    userPalette, featuredOverrides, store, toast, push, buildSeg, syncSeg
+    userPalette, featuredOverrides, store, toast, push, buildSeg, syncSeg,
+    getTier: () => tier
   });
   const { buildPresets, starBtn, ctlRow, dialEl, chip, syncRow, buildRole, Arc, holdButton } = controlsMod;
 
@@ -2516,7 +2881,51 @@
     inner.appendChild(rs);
   }
 
+  // Settings > Tier (dev): your plan (any tier, no licence check). Mid and Pro both have it; Base has no Settings
+  // (use ?tier=, Alt+Shift+T, or UPGRADE while previewing).
+  function tierDevSection(inner) {
+    section(inner, 'Tier (dev)');
+    const ts = el('div', 'seg seg-sm');
+    ts.dataset.set = 'tier';
+    buildSeg(ts, TIER_IDS.map((id) => ({ value: id, label: TIER[id].label })), plan, (val) => {
+      setTier(val, { plan: true }).then(() => { if (caps().settings) go({ type: 'settings' }); });
+    }, { equal: true });
+    inner.appendChild(setRow('Tier', ts, 'A setting for now (no licence). Also ?tier=free|mid|pro in the URL or Alt+Shift+T. ' + TIER.pro.label + '\u2019s switch previews ' + TIER.free.label + ' for this tab; UPGRADE steps back up. ?reset = defaults (' + TIER.pro.label + ').'));
+  }
+  // Mid: the short Settings list. Saved: Dock state, Default state, Responsive. Zoom pad + margin tone: this page only.
+  function buildMidSettings(inner) {
+    section(inner, 'Dock');
+    const pds = el('div', 'seg seg-sm');
+    pds.dataset.pro = 'dock';
+    buildSeg(pds, [{ value: 'full', label: 'Expanded' }, { value: 'slim', label: 'Slim rail' }], ui.proDock === 'slim' ? 'slim' : 'full', (val) => {
+      ui.proDock = val; saveUi();
+      Log.push('dock start ' + val);
+      toast('Dock state on load: ' + (val === 'slim' ? 'the slim rail' : 'expanded (card + rail)') + '.');
+    }, { equal: true });
+    inner.appendChild(setRow('Dock state', pds, 'How ' + TIER.mid.label + ' opens: Expanded = card + rail, Slim rail = the icon rail (rest the cursor on it to expand). Saved.'));
+    section(inner, 'Sections');
+    const col = el('div', 'seg seg-sm');
+    col.dataset.acc = 'collapse';
+    buildSeg(col, COLLAPSE.filter((c) => c.id !== 'remember').map((c) => ({ value: c.id, label: c.label })), ui.accCollapse === 'first' ? 'first' : 'closed', (val) => Acc.setCollapse(val), { equal: true });
+    inner.appendChild(setRow('Default state', col, 'All closed (default) or First open. Saved.'));
+    const respRow = switchRow('Responsive: 1 open at a time', () => ui.accResponsive === true, (on) => Acc.setResponsive(on),
+      'On: only the section you open stays open and moves to the top. Off: several can be open, in their normal order. Saved.');
+    const rsw = respRow.querySelector('.switch');
+    if (rsw) rsw.dataset.accResp = '1';
+    inner.appendChild(respRow);
+    section(inner, 'Viewport');
+    inner.appendChild(switchRow('Show zoom controls', () => ui.zoomCtl !== false, (on) => { ui.zoomCtl = on; saveUi(); Zoom.sync(); },
+      'The sandbox view zoom pad (top-centre of the screen). Screen only. This page only (not saved in ' + TIER.mid.label + ').'));
+    const mts = el('div', 'seg seg-sm');
+    buildSeg(mts, [{ value: 'deep', label: 'Deep' }, { value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }], ui.marginTone || 'dark', (val) => { ui.marginTone = val; saveUi(); applyLook(); }, { equal: true });
+    inner.appendChild(setRow('Margin tone', mts, 'The flat border around the screen. This page only (not saved in ' + TIER.mid.label + ').'));
+    inner.appendChild(el('p', 'note', TIER.pro.label + ' adds: dock position and anchor, the VIP badge, hover / glass / flick settings, toolbar settings, palettes, rail order, manifest tools and backup.'));
+    tierDevSection(inner);
+    return def.title;
+  }
+
   function buildSettings(inner) {
+    if (tier !== 'pro') return buildMidSettings(inner);
     buildProfile(inner);
     section(inner, 'Dock');
     const pos = el('div', 'seg seg-sm');
@@ -2564,10 +2973,10 @@
         Log.push('dock start ' + val);
         toast('Dock state on load: ' + (val === 'icon' ? 'the VIP badge (collapsed)' : val === 'slim' ? 'the slim rail' : 'expanded (card + rail)') + '.');
       }, { equal: true });
-      inner.appendChild(setRow('Dock state', pds, 'How Pro opens: Expanded = card + rail, Slim rail = the vertical icon rail, VIP badge = collapsed to the lanyard pass. With VIP badge, the X folds the card straight to the badge.'));
+      inner.appendChild(setRow('Dock state', pds, 'How Pro opens: Expanded = card + rail, Slim rail = the vertical icon rail, VIP badge = collapsed to the lanyard pass. The card\u2019s X only shows while Hover to expand slim rail is off; with VIP badge it folds the card straight to the badge.'));
     }
     if (proOn('dockHover')) {
-      inner.appendChild(switchRow('Hover to expand slim rail', () => ui.dockHover !== false, (on) => { ui.dockHover = on; saveUi(); Log.push('dock hover ' + (on ? 'on' : 'off')); },
+      inner.appendChild(switchRow('Hover to expand slim rail', () => ui.dockHover !== false, (on) => { ui.dockHover = on; saveUi(); syncHeadTools(); Log.push('dock hover ' + (on ? 'on' : 'off')); },
         'Rest the cursor on the slim rail and it grows to the full card; move away and it folds back to the slim rail. It stays open while you hold or drag a control, type, or have a picker or menu open. Touch: tap the rail\u2019s empty space to expand, tap outside to fold. Never changes the saved Dock state.'));
     }
     if (proOn('dockStages')) {
@@ -2746,7 +3155,7 @@
     resetUiBtn.addEventListener('click', () => {
       store.del('ui');
       Object.assign(ui, {
-        dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
+        dockPos: 'right', anchor: 'top-right', proDock: 'full', motion: true, paletteSource: 'project',
         view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B',
         tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true,
         railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
@@ -2758,22 +3167,14 @@
       document.documentElement.classList.remove('no-motion');
       TB.resetPos();
       TB.setOut(true);
-      setMode('basic');
+      syncHeadTools();
       relayout();
       go({ type: 'settings' });
       toast('Reset lab layout and settings to defaults.');
     });
     inner.appendChild(resetUiBtn);
 
-    if (mode === 'basic') {
-      const proLink = el('button', 'link-btn', 'Switch to Pro for rail order, custom palettes & manifest tools \u2192');
-      proLink.type = 'button';
-      proLink.addEventListener('click', () => {
-        setMode('pro');
-        go({ type: 'settings' });
-      });
-      inner.appendChild(proLink);
-    }
+    tierDevSection(inner);
     return def.title;
   }
 
@@ -2954,6 +3355,8 @@
   }
   // Basic ignores Pro's hidden rail actions, so the toolbar ON/OFF switch can never be lost there.
   const toolHidden = () => (hasPro('railCustomize') && Array.isArray(ui.toolHidden) ? ui.toolHidden : []);
+  // Rail actions this tier has: + New = Pro, toolbar pad = Mid + Pro (Base has no toolbar)
+  const railTools = () => orderedTools().filter((t) => !toolHidden().includes(t.id) && (t.id !== 'new' || caps().newComponent) && (t.id !== 'toolbar' || caps().toolbar));
 
   const TB = (function () {
     const open = new Set();
@@ -3299,7 +3702,7 @@
     // Recovery (the dock's edge tab, Alt+D from a hidden dock, mode switches): only when the switch is ON.
     // It lands in the top-left corner (flyOut clears any old drop position).
     function restore() {
-      if (ui.tbOut === false || shown) return false;
+      if (!caps().toolbar || ui.tbOut === false || shown) return false;
       flyOut(homeRect(), 0, 0, true);
       return true;
     }
@@ -3489,7 +3892,7 @@
     }
     function refresh() {
       requestAnimationFrame(sizeUnit);
-      if (ui.tbOut !== false && !shown) { shown = true; bar().dataset.out = 'true'; bar().getAnimations().forEach((a) => a.cancel()); syncRailBtn(); }
+      if (caps().toolbar && ui.tbOut !== false && !shown) { shown = true; bar().dataset.out = 'true'; bar().getAnimations().forEach((a) => a.cancel()); syncRailBtn(); }
       if (shown) paint([], true);
     }
     return {
@@ -3600,7 +4003,7 @@
         requestAnimationFrame(() => {
           const a = document.activeElement;
           if (!b.disabled || (a && a !== document.body && a !== b)) return;
-          const next = ['undoBtn', 'resetBtn', 'fullBtn'].map($).find((x) => x && !x.disabled);
+          const next = ['undoBtn', 'resetBtn', 'fullBtn'].map($).find((x) => x && !x.disabled && !x.classList.contains('is-tier-off'));
           if (next) next.focus({ preventScroll: true });
         });
       });
@@ -3632,23 +4035,26 @@
       const curP = activeParams();
       if (e.pointerType === 'touch') {
         scanHoverTouch = true;
-        if (byId.TOUCH && byId.TOUCH.source === 'scan' && curP.TOUCH === 'ignore') {
+        const sTo = scanIx('touch');
+        if (sTo && curP[sTo.id] === 'ignore') {
           e.stopImmediatePropagation();
           return;
         }
       }
-      if (byId.DRAG && byId.DRAG.source === 'scan' && (curP.DRAG === 'ignore' || curP.DRAG === false)) {
+      const sDr = scanIx('drag');
+      if (sDr && (curP[sDr.id] === 'ignore' || curP[sDr.id] === false)) {
         e.stopImmediatePropagation();
       }
     }, true);
     scaler.addEventListener('pointermove', (e) => {
       if (!def) return;
       const curP = activeParams();
-      if (e.pointerType === 'touch' && byId.TOUCH && byId.TOUCH.source === 'scan' && curP.TOUCH === 'ignore') {
+      const sTo = scanIx('touch'), sDr = scanIx('drag');
+      if (e.pointerType === 'touch' && sTo && curP[sTo.id] === 'ignore') {
         e.stopImmediatePropagation();
         return;
       }
-      if (e.buttons !== 0 && byId.DRAG && byId.DRAG.source === 'scan' && (curP.DRAG === 'ignore' || curP.DRAG === false)) {
+      if (e.buttons !== 0 && sDr && (curP[sDr.id] === 'ignore' || curP[sDr.id] === false)) {
         e.stopImmediatePropagation();
       }
     }, true);
@@ -3674,7 +4080,8 @@
         e.stopImmediatePropagation();
         return;
       }
-      if (e.key === ' ' && byId.KEY_PAUSE && byId.KEY_PAUSE.source === 'scan' && curP.KEY_PAUSE) {
+      const sKy = scanIx('key');
+      if (e.key === ' ' && sKy && sKy.control === 'switch' && def.animated && curP[sKy.id]) {
         const tag = (e.target && e.target.tagName || '').toLowerCase();
         if (!['input', 'textarea', 'select', 'button'].includes(tag)) {
           e.preventDefault();
@@ -3827,6 +4234,12 @@
       {
         const a = document.activeElement;
         const texty = a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes(a.type)));
+        // Alt+Shift+T (dev): cycle the tier plan Base -> Mid -> Pro -> Base
+        if (!texty && e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyT') {
+          e.preventDefault();
+          setTier(TIER_IDS[(tierRank(plan) + 1) % TIER_IDS.length], { plan: true });
+          return;
+        }
         // Alt+D (or Shift+D): next stage, wrapping from the card back to the lowest stage;
         // from a hidden dock, back to the pass. Never while typing.
         if (!texty && (KEYS.dock.test(e) || KEYS.dockAlt.test(e))) {
@@ -3839,7 +4252,7 @@
       if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[zy]$/i.test(e.key)) {
         const a = document.activeElement;
         const texty = a && (a.tagName === 'TEXTAREA' || a.isContentEditable || (a.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes(a.type)));
-        if (dockOpen && !texty && def) {
+        if (dockOpen && !texty && def && caps().undo) {
           e.preventDefault();
           const redo = e.key.toLowerCase() === 'y' || e.shiftKey;
           if (!(redo ? Hist.redo() : Hist.undo())) announce(redo ? 'Nothing to redo' : 'Nothing to undo');
@@ -3864,23 +4277,20 @@
     try {
       const url = new URL(location.href);
       if (url.searchParams.has('reset')) {
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith(KEY)) localStorage.removeItem(k);
-        }
+        // the componentLab:v2:* keys were already cleared at the top (before the tier was read): default tier = Pro
         Object.assign(ui, {
-          dockPos: 'right', anchor: 'top-right', mode: 'basic', proDock: 'full', motion: true, paletteSource: 'project',
+          dockPos: 'right', anchor: 'top-right', proDock: 'full', motion: true, paletteSource: 'project',
           view: '1600x770', open: true, accCollapse: 'closed', accResponsive: false, accVariant: 'B',
           tbOut: true, tbStart: 'closed', tbAutoClose: true, tbLast: [], flick: true, flickStrength: 'normal', dockFlickHide: true, dockHover: true, zoomCtl: true,
           railOrder: [], railHidden: [], toolOrder: [], toolHidden: []
         });
         delete ui.marginTone; delete ui.glass; applyLook();   // screen look back to defaults (dark margin, frosted glass)
-        mode = 'basic';
         Zoom.clear();   // view zoom back to 100%
-        store.set('uiVer', 6);   // fresh defaults already match the latest migrations; don't re-run them on the next load
+        rawStore.set('uiVer', 7);   // fresh defaults already match the latest migrations; don't re-run them on the next load
         url.searchParams.delete('reset');
-        history.replaceState(null, '', url.pathname + url.search + url.hash);
       }
+      url.searchParams.delete('tier');   // ?tier= was applied (and saved) at the top
+      history.replaceState(null, '', url.pathname + url.search + url.hash);
     } catch (_) {}
 
     buildChrome();
@@ -3896,15 +4306,7 @@
     } finally {
       TB.start();
       syncDockTools();
-      if (mode === 'pro') {
-        const pref = ui.proDock || 'full';
-        const initDock = (pref === 'full') ? 'open' : (pref === 'icon' && proOn('dockStages')) ? 'closed' : 'slim';
-        setDockState(initDock, { instant: true, how: 'init', force: true });
-      } else {
-        // Basic: card, or the thin rail if it was folded last time (no pass stage in Basic)
-        const initDock = (ui.open !== false) ? 'open' : DOCK_STAGES[minStage() - 1];
-        setDockState(initDock, { instant: true, how: 'init', force: true });
-      }
+      initDockState();   // Pro / Mid: Settings > Dock state · Base: always the expanded card
       document.documentElement.classList.add('is-ready');
     }
 
@@ -3916,6 +4318,6 @@
       }
     } catch (_) {}
   }
-  window.__lab = { openDock, closeDock, setDockState, Dock: { setStage, stepDock, hideDock, showDock, get stage() { return dockStage(); }, get hidden() { return dockHidden; }, edge: dockEdge, PRO_FEATURES, KEYS }, go, push, back, setMode, startNew, get state() { return { dockState, dockOpen, pinned, mode, navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Help: { show: () => Help.show(), hide: () => Help.hide(), get isOpen() { return Help.isOpen; } }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
+  window.__lab = { openDock, closeDock, setDockState, Dock: { setStage, stepDock, hideDock, showDock, get stage() { return dockStage(); }, get hidden() { return dockHidden; }, edge: dockEdge, PRO_FEATURES, KEYS }, go, push, back, setMode, setTier, upgrade, TIER, CAPS, get tier() { return tier; }, get plan() { return plan; }, startNew, get state() { return { dockState, dockOpen, pinned, mode, tier, plan, shown: tierVars().map((v) => v.id), navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Help: { show: () => Help.show(), hide: () => Help.hide(), get isOpen() { return Help.isOpen; } }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
   init();
 })();

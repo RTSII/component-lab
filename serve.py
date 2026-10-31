@@ -8,7 +8,9 @@ Usage (from the component-lab folder):
 Same as "python -m http.server", plus two endpoints. Listens on 127.0.0.1 only.
     POST /api/new       {name, kind, palette, title}  -> runs new-component.py create()
     POST /api/manifest  {id, manifest}                -> writes components/<id>/manifest.json
-Standard library only.
+At start (and after each save / new) it runs tools/check-components.py, which validates every manifest
+and regenerates components/index.json and components/registry.js. A schema-3 save that fails the check
+is refused. Standard library only.
 """
 import http.server
 import importlib.util
@@ -24,6 +26,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("new_component", os.path.join(HERE, "new-component.py"))
 new_component = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(new_component)
+spec_chk = importlib.util.spec_from_file_location("check_components", os.path.join(HERE, "tools", "check-components.py"))
+checker = importlib.util.module_from_spec(spec_chk)
+spec_chk.loader.exec_module(checker)
 ID_RE = re.compile(r"^[a-z0-9_][a-z0-9_-]{0,40}$")
 
 
@@ -71,11 +76,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError("Template is read-only; use + New to create a component.")
                 if not ID_RE.match(cid) or not os.path.isdir(os.path.join(HERE, "components", cid)):
                     raise ValueError("No component folder components/%s" % cid)
-                if not isinstance(man, dict) or not isinstance(man.get("vars"), list):
+                if not isinstance(man, dict):
+                    raise ValueError("manifest must be an object")
+                if man.get("schema") == 3:
+                    # schema 3: core@1 + overrides + extras (no vars list); the checker validates it below
+                    if not isinstance(man.get("extras", []), list) or not isinstance(man.get("core", {}), dict):
+                        raise ValueError("schema-3 manifest needs a core object and an extras list")
+                    errs = []
+                    checker.check_manifest(cid, man, checker.load_json(checker.CORE_PATH), errs, [])
+                    if errs:
+                        raise ValueError("check failed: " + "; ".join(errs[:6]))
+                elif not isinstance(man.get("vars"), list):
                     raise ValueError("manifest must be an object with a vars list")
                 with open(os.path.join(HERE, "components", cid, "manifest.json"), "w", encoding="utf-8", newline="\n") as f:
                     json.dump(man, f, indent=2)
                     f.write("\n")
+                checker.run(write=True, quiet=True)
                 return self.reply(200, {"ok": True})
             self.send_error(404)
         except ValueError as e:
@@ -89,6 +105,10 @@ if __name__ == "__main__":
     open_browser = "--open" in sys.argv[1:]
     port = int(args[0]) if args else 5179
     url = "http://127.0.0.1:%d/" % port
+    try:
+        checker.run(write=True, quiet=True)   # validate manifests, refresh index.json / registry.js
+    except Exception as e:   # never block the lab from starting
+        print("check-components could not run:", e)
     try:
         server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
     except OSError:

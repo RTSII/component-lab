@@ -3,8 +3,10 @@
 // LED and a holo sheen that follows the pointer. The same profile renders the large preview in
 // Settings > Profile pass. No dependencies.
 //
-//   Pass.miniHtml()      the 54 x 84 lanyard pass (also used as the travel ghost when the dock morphs)
+//   Pass.miniHtml()      the small lanyard pass (only the travel ghost while the dock morphs)
 //   Pass.fullHtml()      the large pass for the Settings preview
+//   Pass.badgeHtml()     the stage-1 VIP badge on #dockTrigger: the same card as the Settings preview,
+//                        drawn at --pass-zoom (0.8 = 80% of the Settings size) by lab/pass.css
 //   Pass.mount(button)   renders into #dockTrigger, tracks the pointer, re-renders on change
 //   Pass.faceHtml()      just the photo-window picture (the rail's round avatar button uses it)
 //   Pass.set(patch)      update + save the profile ({ name, role, tier, accent, type, glyph, chars, image })
@@ -76,10 +78,10 @@
       + '<i class="pm-sheen"></i></span>';
   }
 
-  function fullHtml() {
+  function fullHtml(cls) {
     const t = tier(profile.tier);
     const serial = String(profile.serial).padStart(4, '0');
-    return '<div class="pass-full" style="' + accentStyle() + '">'
+    return '<div class="pass-full' + (cls ? ' ' + cls : '') + '" style="' + accentStyle() + '">'
       + '<div class="pf-top"><span>COMPONENT LAB</span><span class="pf-year">2026</span></div>'
       + '<i class="pm-clip"></i><i class="pm-slot pf-slot"></i><i class="pm-led"></i>'
       + '<div class="pm-photo pf-photo">' + face() + '</div>'
@@ -91,9 +93,11 @@
       + '<i class="pm-sheen"></i></div>';
   }
 
+  const badgeHtml = () => fullHtml('pass-badge');
+
   function paintHost() {
     if (!host) return;
-    host.innerHTML = miniHtml();
+    host.innerHTML = badgeHtml();
     host.title = (profile.name || 'Profile') + ' · ' + tier(profile.tier).line + '\nClick or Alt+D: open the controls · Shift+click: full card';
     document.documentElement.style.setProperty('--pass-accent', profile.accent);
   }
@@ -143,7 +147,7 @@
   }
 
   window.Pass = {
-    TIERS, ACCENTS, DESIGNS, miniHtml, fullHtml, faceHtml: face, mount, set, reset, fileToDataUrl,
+    TIERS, ACCENTS, DESIGNS, miniHtml, fullHtml, badgeHtml, faceHtml: face, mount, set, reset, fileToDataUrl,
     get profile() { return Object.assign({}, profile); },
     onChange(fn) { listeners.push(fn); }
   };

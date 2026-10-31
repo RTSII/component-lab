@@ -7,25 +7,26 @@ Lab.register({
   css: ['style.css'],
   markup: 'markup.html',
   animated: true,
-  cycleParam: 'CYCLE',
+  cycleParam: 'MOTION_CYCLE',   // core@1 id (was CYCLE; Step B rename, 2026-10-31)
   defaultOffset: 0.5,
   // Real #hxHelix column size measured in Chrome at each locked viewport.
   frames: {
     '1600x770': { w: 341, h: 614, vars: { '--lab-num-fs': '19.2px', '--lab-card-h': '92px' } },
     '1366x768': { w: 291, h: 577, vars: { '--lab-num-fs': '16.8px', '--lab-card-h': '92px' } }
   },
-  // Controls live in manifest.json (v2 control model). Every id there arrives here as P.<ID>.
+  // Controls live in manifest.json (schema 3: core@1 controls + helix extras, resolved by lab/manifest.js).
+  // Every id there arrives here as P.<ID>; renamed core ids are listed in manifest.json "aliases" (old -> new).
   // Colour / opacity / type controls with a "css" key are applied by the lab as CSS custom
   // properties on the frame; the rest are read below.
   //
   // Interaction (category "interact" in manifest.json), the same behaviour as js/home.js v109:
-  //   HOVER      pointer over a card: play | pause (home.js) | slow | fast. "Over a card" is the
+  //   IX_HOVER   pointer over a card: play | pause (home.js) | slow | fast. "Over a card" is the
   //              browser's own hit test at the pointer (each card's clipped, transformed, rendered
   //              shape; hidden back cards are pointer-events: none), so it tracks exactly what is on
   //              screen at any lab view zoom / pan, never the empty space of the (zoomed) column.
-  //   DRAG       vertical drag spins the helix (scrub) | ignore
-  //   TOUCH      touch acts like hover (hover) | ignore
-  //   KEY_PAUSE  Tab focus on a card brings it to the front and pauses
+  //   IX_DRAG    vertical drag spins the helix (scrub) | ignore
+  //   IX_TOUCH   touch acts like hover (hover) | ignore
+  //   IX_KEY     Tab focus on a card brings it to the front and pauses
   // The lab (and the exported runner) owns the clock: rate() scales playback, ctx.time.nudge()
   // moves it for drags, ctx.time.offset is read for bring-to-front.
 
@@ -97,14 +98,14 @@ Lab.register({
     function render(P, offset) {
       lastP = P;
       setCount(Math.max(1, Math.round(P.N)));
-      frame.style.setProperty('--lab-perspective', P.PERSPECTIVE + 'px');
-      frame.style.setProperty('--lab-card-w', P.CARD_W + 'px');
+      frame.style.setProperty('--lab-perspective', P.DEPTH_PERSPECTIVE + 'px');
+      frame.style.setProperty('--lab-card-w', P.SIZE_W + 'px');
       const n = cards.length;
       // Masters: Intensity scales the turn, twist, wave and depth scaling together (1 = original).
-      const I = P.INTENSITY === undefined ? 1 : P.INTENSITY;
+      const I = P.MOTION_INTENSITY === undefined ? 1 : P.MOTION_INTENSITY;
       const STEP = P.STEP * I, TILT = P.TILT * I, WAVE = P.WAVE * I;
       const SCALE_MIN = 1 - (1 - P.SCALE_MIN) * Math.min(I, 1 / Math.max(0.0001, 1 - P.SCALE_MIN));
-      const ease = easeSlot[P.EASING] || easeSlot.linear;
+      const ease = easeSlot[P.MOTION_EASING] || easeSlot.linear;
       const o = offset * n;
       const slot = Math.floor(o);
       offset = (slot + ease(o - slot)) / n;
@@ -186,8 +187,8 @@ Lab.register({
       window.removeEventListener('pointercancel', endDrag);
     }
     root.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 || lastP.DRAG === 'ignore') return;
-      if (e.pointerType === 'touch' && lastP.TOUCH === 'ignore') return;
+      if (e.button !== 0 || lastP.IX_DRAG === 'ignore') return;
+      if (e.pointerType === 'touch' && lastP.IX_TOUCH === 'ignore') return;
       dragging = true;
       dragMoved = false;
       lastY = startY = e.clientY;
@@ -213,7 +214,7 @@ Lab.register({
       time.nudge(delta);
     }
     root.addEventListener('focusin', (e) => {
-      if (lastP.KEY_PAUSE === false) return;
+      if (lastP.IX_KEY === false) return;
       const card = e.target.closest('.hx-helix-card');
       if (!card || !root.contains(card) || !card.matches(':focus-visible')) return;
       kbdPause = true;
@@ -229,8 +230,8 @@ Lab.register({
       const hovering = overCard();
       let target = 1;
       if (dragging) target = 0;
-      else if (kbdPause && P.KEY_PAUSE !== false) target = 0;
-      else if (hovering && !(hoverTouch && P.TOUCH === 'ignore')) target = HOVER_RATE[P.HOVER] !== undefined ? HOVER_RATE[P.HOVER] : 0;
+      else if (kbdPause && P.IX_KEY !== false) target = 0;
+      else if (hovering && !(hoverTouch && P.IX_TOUCH === 'ignore')) target = HOVER_RATE[P.IX_HOVER] !== undefined ? HOVER_RATE[P.IX_HOVER] : 0;
       if (target === 0) rateNow = 0; // pause is immediate, as on the site
       else rateNow += (target - rateNow) * Math.min(1, (dt || 0.016) * 12);
       return rateNow;

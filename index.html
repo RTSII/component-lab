@@ -66,7 +66,7 @@
       <div class="card-main">
         <header class="card-head" id="cardHead">
           <div class="head-row">
-            <div class="head-name"><span class="head-kicker">Component</span><button class="cmp-pick" id="cmpName" type="button" aria-haspopup="listbox" aria-expanded="false" title="Switch component"></button></div>
+            <div class="head-name"><button class="cmp-pick" id="cmpName" type="button" aria-haspopup="listbox" aria-expanded="false" title="Switch component"></button></div>
             <div class="mode-sw" id="modeSeg"></div>
             <button class="icon-btn more-dots is-hidden" id="moreBtn" type="button" aria-label="Section options" aria-haspopup="menu" aria-expanded="false" aria-controls="accPop" title="Sections: collapse + motion"></button>
             <button class="icon-btn help-btn" id="helpBtn" type="button" aria-label="Help: dock, pass and shortcuts" aria-haspopup="dialog" aria-expanded="false" aria-controls="helpPop"></button>
@@ -80,6 +80,8 @@
             <span class="page-meta" id="pageMeta"></span>
           </div>
           <div class="quick-row" id="quickRow" hidden></div>
+          <!-- Pro home: quick hover key + arrow | SNAPSHOTS A B C (fixed header row; only the cards below scroll) -->
+          <div class="snap-row" id="snapRow" hidden></div>
         </header>
         <div class="pages" id="pages"></div>
         <footer class="card-foot" id="cardFoot">
@@ -115,6 +117,7 @@
   <script src="lab/scan.js"></script>
   <script src="lab/avatar.js"></script>
   <script src="lab/controls.js"></script>
+  <script src="lab/manifest.js"></script>
   <script src="lab/export.js"></script>
   <script src="lab/icons.js"></script>
   <script src="lab/lab.js"></script>

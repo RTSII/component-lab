@@ -618,6 +618,17 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
     - Right Column (`CH 2`): Pioneer XDJ-XZ vertical channel fader for `SCALE_MIN` (`Back scale`, 0.10..1.00×, default 0.56×). Recessed `#090b10` well, 82px fader track, calibration tick marks, white illuminated center indicator line, and cyan LED fill.
   - Fully removes `"Depth"` from `manifest.json` `groups.layout`, leaving a clean 2-card layout accordion: `["Size", "Spacing & Radius"]`.
 
+#### 15. P0 — core@1 base template, schema 3, helix Steps A + B, checker & scaffold (Oct 31, 2026 ET, local, uncommitted)
+
+Full detail (audit table of all 43 controls, library scaffolding, core template proposal, risks, P1–P3 checklist and status log): **[COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md)**.
+
+- **New:** `components/_core/core.json` (core@1: 12 core controls + 5 `IX_*` interaction slots + optional library + vocab), `lab/manifest.js` (schema-3 resolver), `tools/check-components.py` (stdlib validator + licence guard; generates `components/index.json` + `components/registry.js`), `components/index.json`.
+- **Loader:** schema-3 manifests resolve core → interaction mode → overrides → extras → `freePicks` → order. `widget`, `deckLabel`, `padTitle` / `padSub`, `master`, `timeRole`, `interaction`, `layout.deck` / `layout.pads` replace every helix-ID check in `lab/lab.js` / `lab/controls.js`. Schema 2 still loads.
+- **Helix:** Step A (22 generic controls inherit core) + Step B (21 renamed to core IDs, `aliases` + `aliasVersion: 1`); versioned, idempotent migration of values, snapshots, stars, `#c=` links and backups; exports show `NEW (was OLD)` for one release. Ranges, steps, defaults and counts (Free 6 / Mid 22 / Pro 43) unchanged. Rate section kept.
+- **Audit must-fixes:** Mid Speed = 0.25–3 slider + 0.5/1/2 pads; `COLOR_FILL` (was CARD_FILL) on the Pro Card front; Mid lone deck controls centred (Spacing & Radius knob, Size → Cards select + Card width tile).
+- **Scaffold:** `new-component.py <id> --kind --category --tags --license [--title]`; `_template` rebuilt on core@1 (5 IX slots wired, centred). Component #2 not built (P1).
+- **Verified:** `node --check`; headless Free / Mid / Pro on a temp port, 0 console errors, before/after control list identical apart from the intended changes; migration test with seeded old-ID data.
+
 ---
 
 ### Next-session pickup notes
@@ -638,4 +649,4 @@ Because Claude Opus's 5-hour quota expired while it was mid-sentence drafting co
      - Applied all 5 recovery fixes (`railCats` Basic guard, `TB.shown` switch sync + rail unhide on dismiss/flyHome, clickable `#cmpName` component picker in header, disabled `middle-center` anchor, `?reset` URL parameter) and all keyboard/focus fixes (`Ctrl+Z` without `dock.contains`, `Arc.close(false, true)` owner focus restoration, `focusin` pin on dock, `cardFoot.inert`).
      - Overhauled the floating stage toolbar (`TB` in `lab/lab.js` + `.tb` in `lab/lab.css` — Enhancement #7): whole-card hit detection (ignoring interactive child controls), `.is-held` tactile lift + cyan border glow, 1:1 free-roam cursor tracking across the viewport with live velocity banking, session-only custom drop position on calm release (or `>90 ms` hold) with automatic `data-flip="true"` inward expansion on the right half of the window, `Reset toolbar position` button in Settings, and 5 video-game physics exit trajectories (`arc`, `ricochet`, `curve`, `warp`, `spiral`) when thrown off-screen.
      - Added `PRO_FEATURES` / `hasPro()`, wired all 7 enhancements (hold `N changed` to preview defaults, Pro `where`/`hint` subtitles, click `.ctl-val` to type, backup/restore JSON + UI reset + live `Re-scan files`, `jsconfig.json`, `?selftest=1` smoke check, and `A/B/C` snapshot slots), wrapped `lab/lab.css` UI chrome rules in `@scope (:root) to (#labFrame)`, split `lab/controls.js` and `lab/export.js` out of `lab/lab.js`, and synchronized `README.md`.
-
+  4. ✅ **[DONE locally, uncommitted — Oct 31, 2026 ET] P0 core template + schema 3 + helix Steps A/B** (see audit log item 15 and [COMPONENT-LAB-ANALYSIS-REFERENCE.md](COMPONENT-LAB-ANALYSIS-REFERENCE.md)). Next: Rob restarts `run.bat` + Ctrl+F5, checks Free / Mid / Pro, commits; then P1 (component #2 via `new-component.py`, Library popover from `components/index.json`, `scan.js` on core IDs).
