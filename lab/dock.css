@@ -107,9 +107,8 @@
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 22px 60px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.025);
 }
-.dock:is([data-state="open"], [data-state="slim"]) :is(.head-kicker, .page-title, .page-meta, .cmp-pick) { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
-:root[data-glass="clear"] { --glass-opacity: 0.3; --glass-blur: 12px; }
-:root[data-glass="solid"] { --glass-opacity: 0.92; --glass-blur: 20px; }
+:root[data-glass="clear"] { --glass-opacity: 0.12; --glass-blur: 10px; }
+:root[data-glass="solid"] { --glass-opacity: 0.9; --glass-blur: 20px; }
 
 .dock .card .nav-row { background: color-mix(in srgb, #fff 4%, var(--card-solid)); }
 .dock .card .nav-row:hover { background: color-mix(in srgb, #fff 7%, var(--card-solid)); }
@@ -126,3 +125,91 @@
 .dock .card .order-row.is-drag { background: color-mix(in srgb, #6ee7ff 10%, var(--card-solid)); }
 .dock .card .mini.is-flip.is-flipped { background: color-mix(in srgb, #6ee7ff 3%, var(--card-solid)); }
 .dock .card .mini.is-bare { background: none; }
+
+/* ---------- legibility on the glass: anything that sits straight on the see-through panel gets a backing.
+   Loose text (component kicker + name, page title / count, SNAPSHOTS, Basic control labels + values) = a dark
+   opaque-ish chip (--chip-bg) with a thin border and a soft accent (--lab-accent) edge glow. Buttons that used to be
+   faint tints (mode switch, quick pill, foot buttons, icon buttons, rail groups) sit on --card-solid instead.
+   Tune: --chip-bg / --chip-edge / --chip-glow below. ---------- */
+.dock {
+  --chip-bg: rgba(9, 12, 18, 0.84);
+  --chip-edge: rgba(110, 231, 255, 0.2);
+  --chip-glow: 0 0 10px -2px rgba(110, 231, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.dock .card :is(.head-kicker, .cmp-pick, .page-title, .page-meta, .snap-bar .snap-tag),
+.dock .card .page-inner > .presets > .ctl-label.sub,
+.dock .card .page-inner > .ctl > .ctl-head > :is(.ctl-label, .ctl-val:not(:empty)) {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-edge);
+  box-shadow: var(--chip-glow);
+  border-radius: 6px;
+  padding: 1px 7px;
+  width: fit-content;
+  max-width: 100%;
+}
+.dock .card .head-kicker { align-self: flex-start; font-size: 9.5px; margin-bottom: 3px; color: var(--lab-muted); }
+.dock .card .cmp-pick { padding: 2px 8px; }
+.dock .card .cmp-pick:hover { padding-left: 8px; background: color-mix(in srgb, #6ee7ff 8%, rgb(9, 12, 18)); border-color: rgba(110, 231, 255, 0.4); }
+.dock .card .page-meta { margin-left: auto; }
+.dock .card .snap-bar .snap-tag { margin-right: 4px; }
+.dock .card .page-inner > .ctl > .ctl-head > .ctl-label { flex: 0 1 auto; margin-right: auto; }
+.dock .card .page-inner > .ctl > .ctl-head > .ctl-val.is-editable { margin: 0; padding: 1px 7px; }
+.dock .card .page-inner > .ctl > .ctl-head > .ctl-val.is-editable:hover { background: color-mix(in srgb, #fff 8%, rgb(9, 12, 18)); }
+
+/* buttons on the glass: solid, never see-through */
+.dock .card :is(.card-head, .card-foot, .page-inner > .ctl) .icon-btn:not(.back-btn) { background: color-mix(in srgb, #fff 3%, var(--card-solid)); border: 1px solid var(--lab-line); }
+.dock .card :is(.card-head, .card-foot, .page-inner > .ctl) .icon-btn:not(.back-btn):hover { background: color-mix(in srgb, #fff 9%, var(--card-solid)); }
+.dock .card .back-btn.is-on { background: color-mix(in srgb, #fff 3%, var(--card-solid)); border: 1px solid var(--lab-line); }
+.dock .card .quick-pill { background: color-mix(in srgb, #6ee7ff 7%, var(--card-solid)); }
+.dock .card .quick-pill:hover { background: color-mix(in srgb, #6ee7ff 13%, var(--card-solid)); }
+.dock .card .foot-btn { background: color-mix(in srgb, #fff 4%, var(--card-solid)); }
+.dock .card .foot-btn:hover:not(:disabled) { background: color-mix(in srgb, #6ee7ff 9%, var(--card-solid)); }
+.dock .card .foot-btn-primary { background: color-mix(in srgb, #6ee7ff 14%, var(--card-solid)); }
+.dock .card .foot-btn-primary:hover:not(:disabled) { background: color-mix(in srgb, #6ee7ff 21%, var(--card-solid)); }
+.dock .card .foot-btn:disabled { opacity: 1; color: var(--lab-dim); }
+/* rail: each icon group sits on one solid column (box-shadow spread, so no layout or pill offset changes) */
+.dock .rail :is(.rail-tabs, .rail-tools) {
+  background: var(--card-solid); border-radius: 13px;
+  box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 4px rgba(255, 255, 255, 0.07), 0 0 12px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Pro home header: no 'All controls' / count row; the component title is a centred block ABOVE the
+   quick (Hover) pill. The tools row (mode switch left, ... ? x right) stays on top. ---------- */
+.dock[data-pro="true"] .card-head .head-row { flex-wrap: wrap; row-gap: 8px; }
+.dock[data-pro="true"] .card-head .mode-sw { order: -1; margin-right: auto; }
+.dock[data-pro="true"] .card-head .head-name { order: 10; flex: 1 0 100%; margin: 0; align-items: center; text-align: center; }
+.dock[data-pro="true"] .card .head-kicker { align-self: center; }
+.dock[data-pro="true"] .card .cmp-pick { text-align: center; }
+.dock[data-pro="true"] .card-head.is-pro-home .crumb-row { display: none; }
+.dock[data-pro="true"] .card-head.is-pro-home .quick-row { margin-top: 10px; }
+
+/* ---------- Basic / Pro: one Beat-FX style pill switch (lab.js buildModeSw). Knob slides left = Basic, right = Pro;
+   the LED glows accent on Pro. ---------- */
+.mode-sw { flex: none; display: inline-flex; }
+.msw-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12); background: linear-gradient(180deg, #161b25, #0c1017);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px -2px rgba(0, 0, 0, 0.6);
+  color: var(--lab-dim); font: 600 9.5px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.msw-btn:hover { border-color: rgba(110, 231, 255, 0.35); }
+.msw-btn:focus-visible { outline: 2px solid var(--lab-accent); outline-offset: 2px; }
+.msw-lbl { transition: color 0.2s, text-shadow 0.2s; }
+.mode-sw[data-value="basic"] .msw-b { color: var(--lab-fg); }
+.mode-sw[data-value="pro"] .msw-p { color: var(--lab-accent); text-shadow: 0 0 8px rgba(110, 231, 255, 0.6); }
+.msw-track {
+  position: relative; width: 30px; height: 16px; border-radius: 999px; background: #05070b;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.msw-knob {
+  position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e9edf3, #8c95a4 60%, #4b5262);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), inset 0 -1px 1px rgba(0, 0, 0, 0.3);
+  display: grid; place-items: center; transition: transform 0.28s var(--spring);
+}
+.mode-sw[data-value="pro"] .msw-knob { transform: translateX(14px); }
+.msw-led { width: 4px; height: 4px; border-radius: 50%; background: #2a313d; transition: background 0.2s, box-shadow 0.2s; }
+.mode-sw[data-value="pro"] .msw-led { background: var(--lab-accent); box-shadow: 0 0 6px var(--lab-accent); }
+.mode-sw[data-value="pro"] .msw-track { box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(110, 231, 255, 0.35), 0 0 8px -2px rgba(110, 231, 255, 0.5); }
+@media (prefers-reduced-motion: reduce) { .msw-knob { transition: none; } }

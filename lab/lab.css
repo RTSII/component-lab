@@ -14,8 +14,8 @@
   --screen-edge: rgba(255, 255, 255, 0.07);   /* faint hairline where screen meets margin */
   --screen-radius: 8px;
   /* expanded dock glass (Settings > Dock > Dock glass sets data-glass on <html>) */
-  --glass-opacity: 0.5;
-  --glass-blur: 18px;
+  --glass-opacity: 0.3;               /* Frosted default; Clear 0.12, Solid 0.9 (dock.css) */
+  --glass-blur: 14px;
   --card-solid: #10141c;              /* the section cards inside the dock stay opaque on this base */
   --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --settle: cubic-bezier(0.22, 1, 0.36, 1);

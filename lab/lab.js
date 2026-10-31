@@ -536,7 +536,7 @@
     $('labTime').classList.toggle('is-hidden', !d.animated);
     TB.refresh();
     syncTime();
-    syncSeg($('modeSeg'), modePill, mode, true);
+    syncModeSw();
     buildRail();
     navStack = [{ type: 'cat', cat: railCats()[0] ? railCats()[0].id : 'color' }];
     renderPage(0);
@@ -870,6 +870,34 @@
     requestAnimationFrame(() => syncSeg(host, vp, host.dataset.value, true));
     return vp;
   }
+  // Basic / Pro as ONE Beat-FX style pill switch (was a two-button segment). Same setMode(): persistence (ui.mode),
+  // rail, pages, toast all unchanged. Keyboard: Tab to it, Enter/Space toggles, Left = Basic, Right = Pro.
+  function buildModeSw(host) {
+    if (!host) return;
+    host.innerHTML = '';
+    host.className = 'mode-sw';
+    host.removeAttribute('role');
+    const b = el('button', 'msw-btn', '<span class="msw-lbl msw-b">Basic</span><span class="msw-track"><i class="msw-knob"><i class="msw-led"></i></i></span><span class="msw-lbl msw-p">Pro</span>');
+    b.type = 'button';
+    b.id = 'modeSw';
+    b.setAttribute('role', 'switch');
+    b.addEventListener('click', () => setMode(mode === 'pro' ? 'basic' : 'pro'));
+    b.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' && mode !== 'basic') { e.preventDefault(); setMode('basic'); }
+      else if (e.key === 'ArrowRight' && mode !== 'pro') { e.preventDefault(); setMode('pro'); }
+    });
+    host.appendChild(b);
+    syncModeSw();
+  }
+  function syncModeSw() {
+    const host = $('modeSeg'), b = host && host.querySelector('.msw-btn');
+    if (!b) return;
+    const pro = mode === 'pro';
+    host.dataset.value = mode;
+    b.setAttribute('aria-checked', pro ? 'true' : 'false');
+    b.setAttribute('aria-label', 'Control set: ' + (pro ? 'Pro' : 'Basic') + ' (toggle Basic / Pro)');
+    b.title = (pro ? 'Pro: every control' : 'Basic: featured controls') + ' \u00b7 click, Enter or Space to switch to ' + (pro ? 'Basic' : 'Pro') + ' (\u2190 Basic / \u2192 Pro)';
+  }
   function syncSeg(host, vp, value, instant) {
     if (!host) return;
     vp = vp || host._pill;
@@ -958,7 +986,7 @@
       if (targetState === 'open') {
         fitPages(null, false);
         syncRail(true);
-        syncSeg($('modeSeg'), modePill, mode, true);
+        syncModeSw();
         if (fromKey) {
           requestAnimationFrame(() => {
             const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
@@ -1005,7 +1033,7 @@
     if (targetState === 'open') {
       fitPages(null, false);
       syncRail(true);
-      syncSeg($('modeSeg'), modePill, mode, true);
+      syncModeSw();
       if (fromKey) {
         requestAnimationFrame(() => {
           const target = document.querySelector('#rail .rail-btn.is-active') || $('dockClose');
@@ -1295,7 +1323,7 @@
     mode = m;
     ui.mode = m; saveUi();
     syncHeadTools();
-    syncSeg($('modeSeg'), modePill, mode);
+    syncModeSw();
     buildRail();
     const cur = navStack[0];
     if (cur.type === 'cat' && !visibleCats().some((c) => c.id === cur.cat)) navStack = [{ type: 'cat', cat: railCats()[0].id }];
@@ -1387,6 +1415,8 @@
     const newTitle = pageTitleFor(spec);
     if (title.textContent !== newTitle) { title.textContent = newTitle; M.contentIn(title); }
     $('pageMeta').textContent = meta || '';
+    // Pro home: no loose 'All controls' / count labels; the component title sits centred above the quick pill (dock.css)
+    $('cardHead').classList.toggle('is-pro-home', mode === 'pro' && spec.type === 'cat' && hasPro('accordion'));
     $('backBtn').classList.toggle('is-on', navStack.length > 1);
     $('backBtn').tabIndex = navStack.length > 1 ? 0 : -1;
     const fc = footCollapsed();
@@ -3515,7 +3545,7 @@
     $('viewSeg').classList.add('seg-xs');
     $('viewSeg').querySelectorAll('.seg-btn').forEach((b) => { const v = VIEWS.find((x) => x.id === b.dataset.value); if (v) { b.title = v.w ? v.w + ' \u00d7 ' + v.h + ' viewport' : 'Fit the frame to the free space'; b.setAttribute('aria-label', b.title); } });
     viewPill = buildSeg($('viewSeg'), VIEWS.map((x) => ({ value: x.id, label: x.w ? String(x.w) : x.label })), ui.view, (val) => setView(val));
-    modePill = buildSeg($('modeSeg'), [{ value: 'basic', label: 'Basic' }, { value: 'pro', label: 'Pro' }], mode, (val) => setMode(val), { equal: true });
+    buildModeSw($('modeSeg'));
     if (window.Pass) Pass.mount($('dockTrigger')); else $('dockTrigger').innerHTML = svg('sliders');
     paintAvatar();
     if (window.Pass && Pass.onChange) Pass.onChange(paintAvatar);
