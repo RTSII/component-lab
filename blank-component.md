@@ -350,3 +350,4 @@ Expand `components/_template/kinds.json` from 6 to **8 component kinds**, each w
    - Verify `_template` across all 8 kinds (`card`, `button`, `nav`, `hero`, `list`, `modal`, `input`, `animated-background`): centered in `#labFrame`, `0` console errors, `Free = 6`, `Mid <= 22`, and `Pro` flip cards operate smoothly.
    - Verify `glow-button` (`6 / 17 / 27`) and `helix` (`6 / 22 / 43`) retain full parity.
    - Run `http://127.0.0.1:5179/?selftest=1` and confirm all registered components pass smoke testing and standalone HTML export (`workingFile()`).
+
