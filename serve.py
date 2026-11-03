@@ -67,7 +67,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path == "/api/new":
                 name = body.get("name", "")
                 palette = body.get("palette") if isinstance(body.get("palette"), dict) else None
-                new_component.create(name, body.get("kind") or "card", palette, body.get("title"))
+                overrides = body.get("overrides")
+                if overrides is not None and not isinstance(overrides, dict):
+                    raise ValueError("overrides must be an object of {control id: value}")
+                new_component.create(name, body.get("kind") or "card", palette, body.get("title"), overrides=overrides)
                 return self.reply(200, {"ok": True, "name": name})
             if path == "/api/manifest":
                 cid = body.get("id", "")

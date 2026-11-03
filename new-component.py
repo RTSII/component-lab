@@ -74,7 +74,65 @@ def parse_tags(spec, core):
     return out
 
 
-def create(name, kind="card", palette=None, title=None, category=None, tags=None, license="original"):
+MAX_OVERRIDES = 64
+
+
+def check_overrides(overrides, man, core):
+    """Validate {control id: value} against the RESOLVED controls of `man` (after kind + palette).
+
+    Every id must be a shown control; numbers stay within min/max; options must be one of the
+    listed values; swatches take #rrggbb; on/off controls take true/false. Returns a clean dict
+    (hex lower-cased) or raises ValueError naming every bad entry.
+    """
+    if overrides is None:
+        return {}
+    if not isinstance(overrides, dict):
+        raise ValueError("overrides must be an object of {control id: value}")
+    if len(overrides) > MAX_OVERRIDES:
+        raise ValueError("too many overrides (max %d)" % MAX_OVERRIDES)
+    by_id = {v["id"]: v for v in _checker().resolve(man, core)}
+    bad, clean = [], {}
+    for cid, val in overrides.items():
+        v = by_id.get(cid)
+        if v is None:
+            bad.append("%s: not a control of this component" % cid)
+            continue
+        d = v.get("default")
+        opts = v.get("options")
+        if opts:
+            allowed = [o.get("value") if isinstance(o, dict) else o for o in opts]
+            if val not in allowed:
+                bad.append("%s: %r is not one of %s" % (cid, val, ", ".join(map(str, allowed))))
+                continue
+        elif isinstance(d, bool):
+            if not isinstance(val, bool):
+                bad.append("%s: needs true or false" % cid)
+                continue
+        elif isinstance(d, str) and HEX_RE.match(d):
+            if not (isinstance(val, str) and HEX_RE.match(val)):
+                bad.append("%s: needs a #rrggbb colour" % cid)
+                continue
+            val = val.lower()
+        elif isinstance(d, (int, float)):
+            if isinstance(val, bool) or not isinstance(val, (int, float)) or val != val:
+                bad.append("%s: needs a number" % cid)
+                continue
+            lo, hi = v.get("min"), v.get("max")
+            if (lo is not None and val < lo) or (hi is not None and val > hi):
+                bad.append("%s: %s is outside %s..%s" % (cid, val, lo, hi))
+                continue
+        else:
+            bad.append("%s: this control type cannot be preset" % cid)
+            continue
+        clean[cid] = val
+    if bad:
+        raise ValueError("bad overrides: " + "; ".join(bad[:8]))
+    return clean
+
+
+def create(name, kind="card", palette=None, title=None, category=None, tags=None, license="original", overrides=None):
+    """Scaffold components/<name> from _template. Order: template -> kind -> palette -> overrides,
+    so tuned values (e.g. "save as new") win over the palette. Any failure removes the folder."""
     if not NAME_RE.match(name or ""):
         raise ValueError("Use lowercase letters, numbers and dashes only (e.g. quiz-mode-button).")
     all_kinds = kinds()
@@ -123,6 +181,8 @@ def create(name, kind="card", palette=None, title=None, category=None, tags=None
                     role = cc.get("role")
                     if role in palette and HEX_RE.match(str(palette[role])):
                         ov.setdefault(cc["id"], {})["default"] = palette[role].lower()
+        for cid, val in check_overrides(overrides, man, core).items():   # after the palette: tuned values win
+            ov.setdefault(cid, {})["default"] = val
         with open(mpath, "w", encoding="utf-8", newline="\n") as f:
             json.dump(man, f, indent=2)
             f.write("\n")
