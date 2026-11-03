@@ -47,7 +47,8 @@
       if (md) { if (md.options && v.options === undefined) v.options = clone(md.options); if (v.default === undefined) v.default = md.default; }
       delete v.modes;
     }
-    if (v.section !== undefined) { v.category = v.section === 'component' ? 'layout' : v.section; delete v.section; }
+    // section "component" = the component's own controls: shown in Layout, ranked first there (componentGroup)
+    if (v.section !== undefined) { if (v.section === 'component') v.componentGroup = true; v.category = v.section === 'component' ? 'layout' : v.section; delete v.section; }
     if (v.tier !== undefined) v.tier = TIER_MAP[v.tier] || v.tier;
     const w = v.widget && WIDGET[v.widget];
     if (w) {

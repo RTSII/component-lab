@@ -82,11 +82,13 @@
     "override": {
       "COLOR_BORDER": {
         "label": "Button border",
-        "featured": true
+        "featured": true,
+        "group": "Button"
       },
       "COLOR_FILL": {
         "label": "Button fill",
-        "featured": true
+        "featured": true,
+        "group": "Button"
       },
       "COLOR_TEXT": {
         "label": "Label text",
@@ -131,6 +133,14 @@
         "where": "component.js tabIndex + :focus-visible"
       }
     }
+  },
+  "groups": {
+    "color": [
+      "Button",
+      "Text",
+      "Glow",
+      "Accent"
+    ]
   },
   "layout": {
     "deck": [],

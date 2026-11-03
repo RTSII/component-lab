@@ -54,7 +54,8 @@
       },
       "hide": [
         "IX_DRAG"
-      ]
+      ],
+      "colorGroup": "Nav"
     },
     "hero": {
       "label": "Hero",
@@ -83,7 +84,8 @@
       "defaults": {
         "SCALE_TEXT": 1.22,
         "SIZE_W": 320
-      }
+      },
+      "colorGroup": "Hero"
     },
     "animated-background": {
       "label": "Animated bg",
@@ -117,7 +119,8 @@
         "SIZE_W",
         "IX_DRAG",
         "IX_PRESS"
-      ]
+      ],
+      "colorGroup": "Backdrop"
     },
     "list": {
       "label": "List",
@@ -146,7 +149,8 @@
         "SPACE_PAD": 16,
         "SPACE_GAP": 8,
         "SCALE_TEXT": 0.94
-      }
+      },
+      "colorGroup": "List"
     },
     "button": {
       "label": "Button",
@@ -179,7 +183,8 @@
       "hide": [
         "SIZE_W",
         "IX_DRAG"
-      ]
+      ],
+      "colorGroup": "Button"
     },
     "modal": {
       "label": "Modal",
@@ -212,7 +217,8 @@
       },
       "hide": [
         "IX_DRAG"
-      ]
+      ],
+      "colorGroup": "Modal"
     },
     "input": {
       "label": "Input",
@@ -245,7 +251,8 @@
       "hide": [
         "IX_DRAG",
         "IX_PRESS"
-      ]
+      ],
+      "colorGroup": "Field"
     }
   }
 }

@@ -2397,21 +2397,32 @@
     }
     // Base / Mid: what this tier has, then what the next tiers add, then UPGRADE (placeholder)
     function lowItems() {
-      const n = tierVars().length;
+      // counts and names come from the loaded component (tierVars), never from one component's layout
+      const shown = tierVars();
+      const n = shown.length;
+      const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+      const nCol = shown.filter((v) => v.control === 'swatch-role').length;
+      const rest = shown.filter((v) => v.control !== 'swatch-role').map((v) => esc(v.label));
+      const colTxt = (NUM[nCol] || nCol) + ' colour' + (nCol === 1 ? '' : 's') + (nCol ? ' (8 swatches each)' : '');
+      const restTxt = rest.length ? ' plus ' + (rest.length > 1 ? rest.slice(0, -1).join(', ') + ' and ' + rest[rest.length - 1] : rest[0]) : '';
+      const q = def ? quickVar() : null;
+      const hasSpeed = vars.some((v) => v.master === 'speed');
+      const midN = vars.filter((v) => varTier(v) <= 1).length;
+      const hoverKey = vars.some((v) => v.category === 'interact' && v.interaction === 'hover');
       const now = tier === 'free'
-        ? li(n + ' controls: four colours (8 swatches each) and two fade pads, every section open (no folding)')
+        ? li(n + ' controls: ' + colTxt + restTxt + ', every section open (no folding)')
           + li('The card stays open (no slim rail, no badge). Rail icons jump to a section')
           + li('Reset (footer) puts every control back. Nothing is saved: a reload starts from the defaults')
           + li(k(KEYS.pause.label) + ' pause / play')
         : li(n + ' controls in sections. Settings \u203a Sections: default state (closed / first open) and Responsive (one open at a time, moved to the top)')
-          + li('Hover key (top) turns the hover pause on / off; its arrow opens Interaction. Speed: 0.5\u00d7 / 1\u00d7 / 2\u00d7 pads')
+          + (q ? li('Hover key (top): ' + esc(q.label) + ' on / off; its arrow opens Interaction' + (hasSpeed ? '. Speed: 0.5\u00d7 / 1\u00d7 / 2\u00d7 pads' : '')) : hasSpeed ? li('Speed: 0.5\u00d7 / 1\u00d7 / 2\u00d7 pads') : '')
           + li('Snapshot A: click saves the current look, click again loads it, so you can compare it with Reset or another change (Shift+click overwrites, right-click clears; this session only)')
           + li('Footer: Copy changes + Reset. Stage toolbar (top-left) with its ON / OFF pad on the rail')
           + li('Round avatar or ' + k(KEYS.dock.label) + ': card \u21c4 slim rail; rest the cursor on the slim rail to expand it')
           + li('Saved: the dock state and the two section settings only. Everything else resets on reload');
       const midAdds = tier === 'free'
         ? '<p class="help-h">' + esc(TIER.mid.label) + ' adds</p><ul>'
-          + li('22 controls in folding sections (Responsive option), the Interaction section and the hover key')
+          + li(midN + ' controls in folding sections (Responsive option), the Interaction section' + (hoverKey ? ' and the hover key' : ''))
           + li('Speed pads 0.5\u00d7 / 1\u00d7 / 2\u00d7, the stage toolbar, snapshot A, Copy changes, the slim rail, a short Settings list')
           + '</ul>'
         : '';

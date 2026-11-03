@@ -113,7 +113,7 @@ const COMPONENTS = ['helix', 'glow-button'];
 const ALLOWED = [
   /^glow-button\.resolved\.vars\[(WEIGHT|TRACKING)\]\.advanced$/,                        // S4: Style on the Type flip back
   /^glow-button\.resolved\.vars\[(COLOR_BORDER|COLOR_FILL)\]\.group$/,                   // S10: colour group named "Button"
-  /^glow-button\.resolved\.groups\.color$/,
+  /^glow-button\.resolved\.groups\.color(\[\d+\])?$/,
   /^glow-button\.resolved\.source\.(core\.override\.(COLOR_BORDER|COLOR_FILL)\.group|groups)$/,
   /^glow-button\.resolved\.vars\[BTN_[A-Z_]+\]\.componentGroup$/,                        // S11: component-section flag
   /^glow-button\.layout\.(type|surface|color|layout)\.(cards|groups)$/                   // the visible effect of the three above
