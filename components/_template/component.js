@@ -25,7 +25,13 @@ Lab.register({
       'animated-background': '<div class="cmp cmp-bg"><i class="b1"></i><i class="b2"></i><i class="b3"></i><span class="cmp-bg-label">Background</span></div>',
       list: '<ul class="cmp cmp-list" tabindex="0"><li><i></i><span>Medications</span><b>82%</b></li><li><i></i><span>Safety</span><b>64%</b></li>' +
         '<li><i></i><span>Order entry</span><b>71%</b></li><li><i></i><span>Federal law</span><b>0%</b></li></ul>',
-      button: '<button class="cmp cmp-btn cmp-solo" type="button">Start quiz</button>'
+      button: '<button class="cmp cmp-btn cmp-solo" type="button">Start quiz</button>',
+      modal: '<div class="cmp-scrim" aria-hidden="true"></div><div class="cmp cmp-modal" role="dialog" aria-modal="true" aria-labelledby="cmpModalTitle" tabindex="0">' +
+        '<h3 class="cmp-title" id="cmpModalTitle">Save your progress?</h3><p class="cmp-text">You can pick up where you left off next time.</p>' +
+        '<div class="cmp-actions"><button class="cmp-btn cmp-btn-ghost" type="button">Not now</button><button class="cmp-btn" type="button">Save</button></div></div>',
+      input: '<label class="cmp cmp-field"><span class="cmp-field-label">Email</span>' +
+        '<input class="cmp-input" type="email" placeholder="you@example.com" autocomplete="off" spellcheck="false">' +
+        '<span class="cmp-field-hint">We only use it for study reminders.</span></label>'
     };
     const host = frame.querySelector('.cmp-host');
     if (host && !host.children.length) {

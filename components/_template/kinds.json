@@ -1,5 +1,5 @@
 {
-  "$comment": "Per-kind starting points for new-component.py / Lab + New (core@1 ids). featured = starred on the Pro front; defaults = core overrides; category = library category; hide = core controls that do not apply to this kind (P1).",
+  "$comment": "Per-kind starting points for new-component.py / Lab + New (core@1 ids). featured = starred on the Pro front; defaults = core overrides; category = library category; hide = core controls that do not apply to this kind (P1); optional: opt / freePicks replace the template's lists, colorGroup names the body colour group (docs/NAMING-STANDARD.md). Starter markup per kind lives in component.js KINDS, styles in style.css.",
   "kinds": {
     "card": {
       "label": "Card",
@@ -179,6 +179,72 @@
       "hide": [
         "SIZE_W",
         "IX_DRAG"
+      ]
+    },
+    "modal": {
+      "label": "Modal",
+      "desc": "Dialog over a scrim",
+      "category": "layouts",
+      "frames": {
+        "1600x770": {
+          "w": 560,
+          "h": 380
+        },
+        "1366x768": {
+          "w": 520,
+          "h": 360
+        }
+      },
+      "featured": [
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_FILL",
+        "OPACITY_FILL",
+        "BLUR",
+        "RADIUS",
+        "SPACE_PAD"
+      ],
+      "defaults": {
+        "SIZE_W": 380,
+        "RADIUS": 16,
+        "BLUR": 6,
+        "SPACE_PAD": 22
+      },
+      "hide": [
+        "IX_DRAG"
+      ]
+    },
+    "input": {
+      "label": "Input",
+      "desc": "Labelled text field",
+      "category": "forms",
+      "frames": {
+        "1600x770": {
+          "w": 420,
+          "h": 220
+        },
+        "1366x768": {
+          "w": 380,
+          "h": 200
+        }
+      },
+      "featured": [
+        "COLOR_ACCENT",
+        "COLOR_TEXT",
+        "COLOR_BORDER",
+        "OPACITY_BORDER",
+        "RADIUS",
+        "SCALE_TEXT",
+        "SPACE_PAD"
+      ],
+      "defaults": {
+        "SIZE_W": 300,
+        "RADIUS": 10,
+        "SPACE_PAD": 18
+      },
+      "hide": [
+        "IX_DRAG",
+        "IX_PRESS"
       ]
     }
   }

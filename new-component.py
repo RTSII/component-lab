@@ -4,7 +4,7 @@ Usage (from the component-lab folder):
     python new-component.py quiz-mode-button
     python new-component.py quiz-mode-button --kind button --category buttons \
         --tags purpose:button,interaction:hover,feel:neon --license original
-    kinds: card, nav, hero, animated-background, list, button  (components/_template/kinds.json)
+    kinds: card, nav, hero, animated-background, list, button, modal, input  (components/_template/kinds.json)
     categories / tags / licences: components/_core/core.json (categories, tagVocab, licenses)
 
 Copies components/_template/ to components/<name>/ and writes its manifest.json: meta (id, name, kind,

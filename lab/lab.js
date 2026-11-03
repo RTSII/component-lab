@@ -3238,7 +3238,9 @@
     hero: '<path d="M5 8h14M5 12h10M5 16h6"/>',
     'animated-background': '<path d="M3 15c3 0 3-6 6-6s3 6 6 6 3-6 6-6"/><path d="M3 19c3 0 3-4 6-4s3 4 6 4 3-4 6-4" opacity=".5"/>',
     list: '<path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/>',
-    button: '<rect x="4" y="8" width="16" height="8" rx="4"/><path d="M9 12h6"/>'
+    button: '<rect x="4" y="8" width="16" height="8" rx="4"/><path d="M9 12h6"/>',
+    modal: '<rect x="3" y="4" width="18" height="16" rx="2" opacity=".45"/><rect x="6" y="8" width="12" height="9" rx="2"/><path d="M9 14h2.5M13 14h2"/>',
+    input: '<path d="M7 6h4"/><rect x="3" y="10" width="18" height="8" rx="2"/><path d="M6.5 12.5v3"/>'
   };
   function paletteOptions() {
     const out = [{ id: 'project', name: 'Project palette', colors: S.rolesFrom(projectPalette.slice(0, 8)) || null, dots: projectPalette.slice(0, 5) }];

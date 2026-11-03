@@ -254,7 +254,7 @@ Every component lives in `components/<id>/`; `components/registry.js` and `compo
   python new-component.py <component-id> --kind card --category cards --tags purpose:card,interaction:hover --license original
   python tools/check-components.py          # re-validate + regenerate index.json / registry.js
   ```
-  *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `animated-background`, `list`, `button`.)*
+  *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `animated-background`, `list`, `button`, `modal`, `input`.)*
 - **Component Folder Structure:**
   ```text
   components/<id>/

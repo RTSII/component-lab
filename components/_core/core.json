@@ -753,7 +753,8 @@
       "icon",
       "modal",
       "tooltip",
-      "chart"
+      "chart",
+      "input"
     ],
     "interaction": [
       "hover",
@@ -803,6 +804,7 @@
     "loaders",
     "icons",
     "backgrounds",
+    "forms",
     "created",
     "templates"
   ],
