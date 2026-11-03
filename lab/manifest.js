@@ -196,6 +196,47 @@
     return src;
   }
 
+  // ---------- kinds (components/_template/kinds.json) ----------
+  // The blank template set up as one kind. JS twin of tools/check-components.py apply_kind() (the two must
+  // stay in step; tools/test/resolve-test.js compares them for every kind). Pure: returns a new manifest.
+  // kindId is passed explicitly because kinds.json entries are keyed by id and carry no "id" field.
+  const BODY_COLOURS = ['COLOR_BORDER', 'COLOR_FILL', 'COLOR_FILL_2'];
+  function applyKindSpec(m, kindId, spec, core) {
+    const man = clone(m);
+    spec = spec || {};
+    core = core || { controls: [], optional: [] };
+    man.meta = man.meta || {};
+    man.meta.kind = kindId;
+    if (spec.frames && Object.keys(spec.frames).length) man.frames = clone(spec.frames);
+    const c = man.core = man.core || {};
+    if (Array.isArray(spec.opt)) c.opt = spec.opt.slice();
+    if (Array.isArray(spec.freePicks)) c.freePicks = spec.freePicks.slice();
+    const baseIds = (core.controls || []).map((x) => x.id);
+    const picks = c.freePicks || [];
+    c.hide = (spec.hide || []).filter((h) => baseIds.includes(h) && !picks.includes(h));
+    const resolvedIds = baseIds.filter((i) => !c.hide.includes(i)).concat((c.opt || []).filter((i) => !baseIds.includes(i)));
+    const ov = {};
+    const featured = new Set(spec.featured || []);
+    resolvedIds.forEach((id) => { if (featured.has(id)) (ov[id] = ov[id] || {}).featured = true; });
+    Object.keys(spec.defaults || {}).forEach((id) => { (ov[id] = ov[id] || {}).default = clone(spec.defaults[id]); });
+    const cg = spec.colorGroup;
+    const coreBody = ((core.groups && core.groups.color) || ['Card'])[0];
+    if (typeof cg === 'string' && cg && cg !== coreBody) {
+      BODY_COLOURS.forEach((id) => { if (resolvedIds.includes(id)) (ov[id] = ov[id] || {}).group = cg; });
+      const order = ((man.groups && man.groups.color) || (core.groups && core.groups.color) || []).slice();
+      man.groups = man.groups || {};
+      man.groups.color = [cg].concat(order.filter((g) => g !== coreBody && g !== cg));
+    }
+    Object.keys(c.override || {}).forEach((id) => {
+      const rest = Object.assign({}, c.override[id] || {});
+      delete rest.featured;
+      if (!Object.keys(rest).length) return;
+      ov[id] = id in ov ? Object.assign(rest, ov[id]) : rest;
+    });
+    c.override = ov;
+    return man;
+  }
+
   // ---------- Pro section layout (pure; lab.js groupsFor() / fillPro() and tools/test use these) ----------
   // Groups of one section in display order: component-section groups first (componentGroup flag), then groups
   // with a front-face signature control, then the manifest / core order list, then the rest as they appear.
@@ -245,7 +286,7 @@
     return out;
   }
 
-  const api = { resolve, renameKeys, sourceForSave, widgetOf, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
+  const api = { resolve, renameKeys, sourceForSave, widgetOf, applyKindSpec, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LabManifest = api;
 })(typeof window !== 'undefined' ? window : globalThis);
