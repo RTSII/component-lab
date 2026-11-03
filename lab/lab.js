@@ -210,6 +210,10 @@
   let previewDefaults = false;
   let scanHovering = false, scanHoverTouch = false, scanKbdPause = false;
   let projectPalette = [], presets = [], kindsInfo = null;
+  // Blank-template kind (components/_template/kinds.json id), or null = the template's own manifest (card).
+  // Backend only for now: switched from the console with __lab.setTemplateKind('modal'); no UI yet.
+  let tplKind = null, kindCarry = null;
+  const validKind = (k) => !!(k && kindsInfo && kindsInfo.kinds && kindsInfo.kinds[k]);
   let navStack = [{ type: 'cat', cat: 'color' }];
   let dockState = 'closed', dockOpen = false, pinned = false, hoverTimer = 0, leaveTimer = 0;
   let dockHidden = false, lastFrom = 'closed';
@@ -295,6 +299,7 @@
   function writeHash() {
     if (!def) return;
     const parts = ['c=' + encodeURIComponent(def.id)];
+    if (def.id === '_template' && tplKind) parts.push('kind=' + encodeURIComponent(tplKind));   // lowercase key: control ids are UPPER_SNAKE
     if (def.animated && !playing) parts.push('o=' + wrap(offset).toFixed(3));
     vars.forEach((v) => { if (!same(P[v.id], v.default)) parts.push(v.id + '=' + encodeURIComponent(P[v.id])); });
     history.replaceState(null, '', '#' + parts.join('&'));
@@ -628,6 +633,7 @@
       auto = true;
     }
     if (m.schema === 3) {
+      if (id === '_template' && validKind(tplKind)) m = window.LabManifest.applyKindSpec(m, tplKind, kindsInfo.kinds[tplKind], await loadCore());
       m = window.LabManifest.resolve(m, await loadCore());
       if (m.loaderNotes) console.warn('[lab] ' + id + '/manifest.json:', m.loaderNotes.join(' | '));
       migrateIds(id, m.aliases, m.source && m.source.aliasVersion);
@@ -663,7 +669,11 @@
     vars.forEach((v) => { P[v.id] = v.default; });
     const saved = store.get('values:' + id, null);
     const hash = fromHash ? aliasHash(readHash(), m.aliases) : {};
-    if (saved) vars.forEach((v) => { if (saved[v.id] !== undefined) P[v.id] = coerce(v, saved[v.id]); });
+    // a kind switch carries over only the values the user changed (the new kind's defaults fill the rest)
+    const carry = id === '_template' ? kindCarry : null;
+    kindCarry = null;
+    if (carry) { vars.forEach((v) => { if (carry[v.id] !== undefined) P[v.id] = coerce(v, carry[v.id]); }); store.set('values:' + id, P); }
+    else if (saved) vars.forEach((v) => { if (saved[v.id] !== undefined) P[v.id] = coerce(v, saved[v.id]); });
     // a shared URL can only set the controls this tier shows (the hidden ones keep their defaults)
     const seen = tier === 'pro' ? null : new Set(tierVars().map((v) => v.id));
     vars.forEach((v) => { if (hash[v.id] !== undefined && hash[v.id] !== '' && (!seen || seen.has(v.id))) P[v.id] = coerce(v, hash[v.id]); });
@@ -3197,6 +3207,23 @@
     return cur.length ? cur.length + ' saved' : 'Not set';
   }
 
+  // ---------- blank-template kind switch (backend; console: __lab.setTemplateKind('input')) ----------
+  // Reloads components/_template with the kind applied (lab/manifest.js applyKindSpec), so markup, frame, rail
+  // and pages rebuild the normal way. Changed values carry over; untouched ones take the new kind's defaults.
+  // Undo history resets on a switch. Snapshots / stars are still per component, not per kind (deferred).
+  async function setTemplateKind(kind) {
+    if (kind != null && !validKind(kind)) { console.warn('[lab] unknown kind ' + kind + '; kinds: ' + Object.keys((kindsInfo && kindsInfo.kinds) || {}).join(', ')); return false; }
+    if (def && def.id === '_template') {
+      const ch = {};
+      vars.forEach((v) => { if (!same(P[v.id], v.default)) ch[v.id] = P[v.id]; });
+      kindCarry = ch;
+    }
+    tplKind = kind || null;
+    store.set('tplKind', tplKind);
+    await loadComponent('_template', false);
+    return true;
+  }
+
   // ---------- new component stepper: kind -> palette -> name ----------
   const STEP_NAMES = ['Kind', 'Palette', 'Name'];
   function startNew() {
@@ -4262,7 +4289,9 @@
     addEventListener('hashchange', () => {
       const h = readHash();
       const reg = window.LAB_REGISTRY || [];
-      if (h.c && reg.includes(h.c) && (!def || h.c !== def.id)) loadComponent(h.c, true);
+      const kindChange = h.c === '_template' && validKind(h.kind) && h.kind !== tplKind;
+      if (kindChange) tplKind = h.kind;
+      if (h.c && reg.includes(h.c) && (!def || h.c !== def.id || kindChange)) loadComponent(h.c, true);
     });
   }
 
@@ -4293,6 +4322,7 @@
     const reg = window.LAB_REGISTRY || [];
     const h = readHash();
     const first = h.c && reg.includes(h.c) ? h.c : reg[0];
+    { const sk = h.c === '_template' && h.kind ? h.kind : store.get('tplKind', null); tplKind = validKind(sk) ? sk : null; }
     if (!first) { toast('No components in components/registry.js', 8000); return; }
     requestAnimationFrame(tick);
     try {
@@ -4312,6 +4342,6 @@
       }
     } catch (_) {}
   }
-  window.__lab = { openDock, closeDock, setDockState, Dock: { setStage, stepDock, hideDock, showDock, get stage() { return dockStage(); }, get hidden() { return dockHidden; }, edge: dockEdge, PRO_FEATURES, KEYS }, go, push, back, setMode, setTier, upgrade, TIER, CAPS, get tier() { return tier; }, get plan() { return plan; }, startNew, get state() { return { dockState, dockOpen, pinned, mode, tier, plan, shown: tierVars().map((v) => v.id), navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Help: { show: () => Help.show(), hide: () => Help.hide(), get isOpen() { return Help.isOpen; } }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
+  window.__lab = { openDock, closeDock, setDockState, Dock: { setStage, stepDock, hideDock, showDock, get stage() { return dockStage(); }, get hidden() { return dockHidden; }, edge: dockEdge, PRO_FEATURES, KEYS }, go, push, back, setMode, setTier, upgrade, TIER, CAPS, get tier() { return tier; }, get plan() { return plan; }, startNew, setTemplateKind, get templateKind() { return tplKind; }, get state() { return { dockState, dockOpen, pinned, mode, tier, plan, shown: tierVars().map((v) => v.id), navStack: navStack.slice(), ui: Object.assign({}, ui), id: def && def.id, P: Object.assign({}, P), offset, rate: rateNow, playing, scan: man && man.scan, railCats: railCats().map((c) => c.id), sections: visibleCats().map((c) => c.id) }; }, Help: { show: () => Help.show(), hide: () => Help.hide(), get isOpen() { return Help.isOpen; } }, Arc, TB, setView, layoutStage, setValue, workingFile, changesText, Log, Acc, Pop, Hist, resetAll, runSelfTest };
   init();
 })();
