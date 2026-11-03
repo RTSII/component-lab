@@ -196,7 +196,56 @@
     return src;
   }
 
-  const api = { resolve, renameKeys, sourceForSave, widgetOf, WIDGET, TIER_MAP };
+  // ---------- Pro section layout (pure; lab.js groupsFor() / fillPro() and tools/test use these) ----------
+  // Groups of one section in display order: component-section groups first (componentGroup flag), then groups
+  // with a front-face signature control, then the manifest / core order list, then the rest as they appear.
+  function orderGroups(list, order, autoGroup) {
+    order = order || [];
+    const sigFirst = (items) => items.filter((v) => v.signature).concat(items.filter((v) => !v.signature));
+    const map = new Map();
+    list.forEach((v) => { const g = v.group || (autoGroup ? autoGroup(v) : 'Other'); if (!map.has(g)) map.set(g, []); map.get(g).push(v); });
+    const gs = [...map.entries()].map(([name, items], i) => ({ name, items: sigFirst(items), i }));
+    const rank = (g) => (g.items.some((v) => v.componentGroup) ? -2000 : 0) + (g.items.some((v) => v.signature && !v.advanced) ? -1000 : 0) +
+      (order.includes(g.name) ? order.indexOf(g.name) : 500 + g.i);
+    return gs.sort((a, b) => rank(a) - rank(b));
+  }
+  // Which all-advanced ("back") group flips onto which all-front group, per section. Keyed by section because
+  // group names repeat across sections (Size in Type and Layout, Glow in Color and Surface). A manifest can add
+  // or replace pairs with "flipPairs": { "<section>": { "<front group>": "<back group>" } }.
+  const FLIP_PAIRS = {
+    surface: { Shape: 'Effects' },
+    interact: { Pointer: 'Touch & keys' },
+    type: { Size: 'Style' },
+    motion: { Loop: 'Depth' }
+  };
+  // Card plan for one Pro section: [{ type: 'flip', front, back } | { type: 'mini', group, inAdv }].
+  // 1) explicit pairs for this section (a front group with no advanced items of its own + a back group);
+  // 2) if none matched, the original rule: a single back group flips onto the first all-front group;
+  // 3) any backs left pair two by two (e.g. Text fade <-> Shell dim); a lone leftover is an Advanced card.
+  function flipPlan(groups, cat, pairs) {
+    const map = Object.assign({}, FLIP_PAIRS[cat] || {}, (pairs && pairs[cat]) || {});
+    const allFront = (g) => g.items.every((v) => !v.advanced);
+    const front = groups.filter((g) => g.items.some((v) => !v.advanced));
+    let back = groups.filter((g) => g.items.every((v) => v.advanced));
+    const partner = new Map();
+    Object.keys(map).forEach((fn) => {
+      const f = front.find((g) => g.name === fn && allFront(g) && !partner.has(g));
+      const b = back.find((g) => g.name === map[fn]);
+      if (f && b) { partner.set(f, b); back = back.filter((x) => x !== b); }
+    });
+    if (!partner.size && back.length === 1) {
+      const f = front.find(allFront);
+      if (f) { partner.set(f, back[0]); back = []; }
+    }
+    const out = front.map((g) => (partner.has(g) ? { type: 'flip', front: g, back: partner.get(g) } : { type: 'mini', group: g }));
+    for (let i = 0; i < back.length; i += 2) {
+      if (back[i + 1]) out.push({ type: 'flip', front: back[i], back: back[i + 1] });
+      else out.push({ type: 'mini', group: back[i], inAdv: true });
+    }
+    return out;
+  }
+
+  const api = { resolve, renameKeys, sourceForSave, widgetOf, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LabManifest = api;
 })(typeof window !== 'undefined' ? window : globalThis);

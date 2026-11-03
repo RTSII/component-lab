@@ -1842,14 +1842,8 @@
   // Card layouts named by the manifest ("layout": { "deck": [...], "pads": [...] }), not by component group names
   const isDeckGroup = (name) => !!(man && Array.isArray(man.deckGroups) && man.deckGroups.includes(name));
   const isPadGroup = (name) => !!(man && Array.isArray(man.padGroups) && man.padGroups.includes(name));
-  const sigFirst = (items) => items.filter((v) => v.signature).concat(items.filter((v) => !v.signature));
   function groupsFor(list, cat) {
-    const order = (man.groups && man.groups[cat]) || [];
-    const map = new Map();
-    list.forEach((v) => { const g = v.group || autoGroup(v); if (!map.has(g)) map.set(g, []); map.get(g).push(v); });
-    const gs = [...map.entries()].map(([name, items], i) => ({ name, items: sigFirst(items), i }));
-    const rank = (g) => (g.items.some((v) => v.signature && !v.advanced) ? -1000 : 0) + (order.includes(g.name) ? order.indexOf(g.name) : 500 + g.i);
-    return gs.sort((a, b) => rank(a) - rank(b));
+    return window.LabManifest.orderGroups(list, (man.groups && man.groups[cat]) || [], autoGroup);
   }
   function buildFlipCard(spec) {
     const { frontTitle, frontItems, backTitle, backItems, group } = spec;
@@ -1975,41 +1969,22 @@
     const front = groups.filter((g) => g.items.some((v) => !v.advanced));
     const back = groups.filter((g) => g.items.every((v) => v.advanced));
     const advN = all.filter((v) => v.advanced).length;
-    // Pair a single trailing back (advanced) group onto a front group that has no advanced items of its own
-    // (e.g. Interaction: Pointer <-> Touch & keys, Motion: Loop <-> Depth, Layout: Size <-> Depth).
-    const pairedFrontIdx = back.length === 1 ? front.findIndex((g) => g.items.every((v) => !v.advanced)) : -1;
     const bare = front.length === 1 && front[0].items.length <= 3 && !back.length;
-    front.forEach((g, idx) => {
-      if (idx === pairedFrontIdx) {
+    // Flip pairs per section (lab/manifest.js flipPlan): explicit pairs such as Surface: Shape <-> Effects,
+    // else a single back group onto the first all-front group, then the remaining backs two by two.
+    window.LabManifest.flipPlan(groups, cat, man.source && man.source.flipPairs).forEach((p) => {
+      if (p.type === 'flip') {
         inner.appendChild(buildFlipCard({
-          frontTitle: g.name,
-          frontItems: g.items,
-          backTitle: back[0].name,
-          backItems: back[0].items,
-          backBadgeLabel: back[0].name,
-          group: g.name
+          frontTitle: p.front.name,
+          frontItems: p.front.items,
+          backTitle: p.back.name,
+          backItems: p.back.items,
+          backBadgeLabel: p.back.name,
+          group: p.front.name
         }));
-      } else {
-        inner.appendChild(miniCard(g, bare));
-      }
+      } else if (p.inAdv) inner.appendChild(miniCard(p.group, false, true));
+      else inner.appendChild(miniCard(p.group, bare));
     });
-    const remBack = pairedFrontIdx >= 0 ? [] : back;
-    // Pair remaining back (advanced) groups two-by-two into dual-sided 3D flip cards (e.g. Text fade <-> Shell dim, End fade <-> Border fill)
-    for (let i = 0; i < remBack.length; i += 2) {
-      const gA = remBack[i], gB = remBack[i + 1];
-      if (gB) {
-        inner.appendChild(buildFlipCard({
-          frontTitle: gA.name,
-          frontItems: gA.items,
-          backTitle: gB.name,
-          backItems: gB.items,
-          backBadgeLabel: gB.name,
-          group: gA.name
-        }));
-      } else {
-        inner.appendChild(miniCard(gA, false, true));
-      }
-    }
     return { n: all.length, adv: advN };
   }
   function proStrip() {
