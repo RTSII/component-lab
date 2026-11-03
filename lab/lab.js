@@ -118,6 +118,7 @@
     reset: '<path d="M15.6 4.4l4 4-8.8 8.8H6.7l-2.2-2.2a1.4 1.4 0 0 1 0-2z"/><path d="M10.4 20h9.1"/><path d="M10.9 9.1l4 4"/>',
     sig: '<path d="M12 3.5l2 6.5 6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2z" class="fill"/>',
     up: '<path d="M12 19V6"/><path d="M6.5 11.5L12 6l5.5 5.5"/>',
+    down: '<path d="M12 5v13"/><path d="M6.5 12.5L12 18l5.5-5.5"/>',
     flip: '<path d="M17 4l3 3-3 3"/><path d="M4 11V9a2 2 0 0 1 2-2h14"/><path d="M7 20l-3-3 3-3"/><path d="M20 13v2a2 2 0 0 1-2 2H4"/>'
   };
   const svg = (n, cls) => '<svg class="ico' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICON[n] + '</svg>';
@@ -381,6 +382,7 @@
     writeHash();
     refreshChanged();
     if (!opts || !opts.quiet) syncRow(id);
+    if (v.control === 'swatch-role') syncColorExtras(id);
     if (v.category === 'interact') syncQuick();
   }
 
@@ -1966,10 +1968,163 @@
     card.appendChild(body);
     return card;
   }
+  // ---------- Color section (t652u): palettes drawer, one gradient Fill row, one switchable Text row ----------
+  // Rendered for the color section only (Mid + Pro accordion). No flips here: a body group's fill pair
+  // (role surface + surface2, e.g. COLOR_FILL / COLOR_FILL_2) becomes ONE Fill row with up / down "elevator"
+  // buttons that pick which end of the gradient the swatches edit; any other colour group with 2+ colours
+  // becomes ONE row with a selector on the left (labels from the controls' short / label, never hard-coded).
+  // Every control keeps its own .ctl row (same id, star, chips, chevron), only the selected one is shown,
+  // so saved values, palettes, snapshots and undo are untouched. The selection is session-only (like flips).
+  const colorSel = {};
+  const PAL_ICON = '<svg class="ico pal-ico" viewBox="0 0 24 24" aria-hidden="true">'
+    + '<path class="pal-body" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M12 3.4C6.6 3.4 2.6 7.1 2.6 11.7c0 4.7 4.1 8.9 9 8.9 1.7 0 2.4-1.1 1.9-2.3-.5-1.3.2-2.6 1.8-2.6h2.2c2.3 0 3.9-1.6 3.9-3.9 0-4.8-4-8.4-9.4-8.4z"/>'
+    + '<circle class="pal-hole" cx="17.3" cy="11.6" r="1.45" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+    + '<circle class="pal-dab d1" cx="7.1" cy="11.2" r="1.55"/><circle class="pal-dab d2" cx="9.3" cy="7.6" r="1.55"/>'
+    + '<circle class="pal-dab d3" cx="13.8" cy="7.1" r="1.55"/><circle class="pal-dab d4" cx="8.3" cy="15.4" r="1.55"/></svg>';
+  function commonWords(a, b) {
+    const x = String(a || '').split(/\s+/), y = String(b || '').split(/\s+/), out = [];
+    for (let i = 0; i < Math.min(x.length, y.length) && x[i].toLowerCase() === y[i].toLowerCase(); i++) out.push(x[i]);
+    return out.join(' ').replace(/[\s(\-\u00b7]+$/, '');
+  }
+  function paintGrad(sw) {
+    const t = P[sw.dataset.top], b = P[sw.dataset.bottom];
+    if (t && b) sw.style.background = 'linear-gradient(180deg, ' + t + ', ' + b + ')';
+  }
+  function syncColorExtras(id) {
+    document.querySelectorAll('.csw-grad').forEach((sw) => { if (sw.dataset.top === id || sw.dataset.bottom === id) paintGrad(sw); });
+  }
+  // One row, many colours: picker buttons (left) + the selected colour's own row (right).
+  function colorSwitchRow(items, key, mode, title) {
+    const wrap = el('div', 'csw is-' + mode);
+    const pick = el('div', 'csw-pick');
+    pick.setAttribute('role', 'group');
+    pick.setAttribute('aria-label', title);
+    const rows = el('div', 'csw-rows');
+    let cur = items.some((v) => v.id === colorSel[key]) ? colorSel[key] : items[0].id;
+    const btns = items.map((v, i) => {
+      const name = v.short || v.label;
+      const inner = mode === 'grad' ? svg(i === 0 ? 'up' : 'down') : '<span>' + esc(name) + '</span>';
+      const b = el('button', 'csw-opt', inner);
+      b.type = 'button';
+      b.dataset.id = v.id;
+      b.title = (mode === 'grad' ? (i === 0 ? 'Edit the top colour: ' : 'Edit the bottom colour: ') : 'Edit ') + v.label + ' \u00b7 Double-click to reset';
+      b.setAttribute('aria-label', mode === 'grad' ? (i === 0 ? 'Top colour' : 'Bottom colour') + ' (' + v.label + ')' : v.label);
+      b.addEventListener('click', () => select(v.id, true));
+      b.addEventListener('dblclick', () => setValue(v.id, v.default));
+      b.addEventListener('keydown', (e) => {
+        const d = (e.key === 'ArrowDown' || e.key === 'ArrowRight') ? 1 : (e.key === 'ArrowUp' || e.key === 'ArrowLeft') ? -1 : 0;
+        if (!d) return;
+        e.preventDefault();
+        const j = Math.max(0, Math.min(items.length - 1, i + d));
+        select(items[j].id, true);
+        btns[j].focus();
+      });
+      pick.appendChild(b);
+      const row = ctlRow(v, { compact: true });
+      rows.appendChild(row);
+      return b;
+    });
+    function select(id, user) {
+      cur = id;
+      colorSel[key] = id;
+      btns.forEach((b) => { const on = b.dataset.id === id; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      [...rows.children].forEach((r) => { r.hidden = r.dataset.id !== id; });
+      if (user && M.level() === 'full') { const r = rows.querySelector('.ctl[data-id="' + id + '"]'); if (r) r.animate([{ opacity: 0, transform: 'translateY(' + (mode === 'grad' ? '3px' : '0') + ')' }, { opacity: 1, transform: 'none' }], { duration: 160, easing: M.easeOut }); }
+    }
+    select(cur, false);
+    if (mode === 'grad') {
+      const lab = el('div', 'csw-lead');
+      const name = commonWords(items[0].short, items[1].short) || commonWords(items[0].label, items[1].label) || 'Fill';
+      lab.appendChild(el('span', 'csw-name', esc(name)));
+      const sw = el('span', 'csw-grad');
+      sw.dataset.top = items[0].id;
+      sw.dataset.bottom = items[1].id;
+      sw.title = 'Gradient: ' + items[0].label + ' \u2192 ' + items[1].label;
+      paintGrad(sw);
+      lab.append(pick, sw);
+      wrap.append(lab, rows);
+    } else wrap.append(pick, rows);
+    return wrap;
+  }
+  function colorCard(g, bare) {
+    const card = el('div', 'mini is-color' + (bare ? ' is-bare' : ''));
+    card.dataset.group = g.name;
+    if (!bare) card.appendChild(el('div', 'mini-head', '<span>' + esc(g.name) + '</span>'));
+    const body = el('div', 'mini-body');
+    const key = (def ? def.id : '') + ':' + g.name;
+    const bottom = g.items.find((v) => v.role === 'surface2');
+    const top = bottom && g.items.find((v) => v.role === 'surface');
+    const isBody = g.items.some((v) => ['surface', 'surface2', 'border'].includes(v.role));
+    if (top) {
+      g.items.forEach((v) => {
+        if (v === top) body.appendChild(colorSwitchRow([top, bottom], key + ':grad', 'grad', g.name + ' gradient: top or bottom colour'));
+        else if (v !== bottom) body.appendChild(ctlRow(v, { compact: true }));
+      });
+    } else if (!isBody && g.items.length > 1) {
+      body.appendChild(colorSwitchRow(g.items, key, 'pick', g.name + ' colour to edit'));
+    } else g.items.forEach((v) => body.appendChild(ctlRow(v, { compact: true })));
+    card.appendChild(body);
+    return card;
+  }
+  // The palettes drawer: closed by default, opened from the palette button on the Color header (Acc.build).
+  function paletteDrawer() {
+    const d = el('div', 'pal-drawer');
+    d.id = 'pal-drawer-' + (++palSeq);
+    d.setAttribute('inert', '');
+    const inn = el('div', 'pal-drawer-in');
+    inn.appendChild(buildPresets({ caption: false }));
+    d.appendChild(inn);
+    return d;
+  }
+  let palSeq = 0;
+  let palPinned = false;   // session only (flip faces are not saved either)
+  function wirePalette(box, head, drawer) {
+    const btn = el('button', 'acc-pal', PAL_ICON);
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Palettes');
+    btn.setAttribute('aria-controls', drawer.id);
+    btn.title = 'Palettes \u00b7 hover to peek, click to pin';
+    box.classList.add('has-pal');
+    head.after(btn);
+    let hover = false, t = 0;
+    const sync = () => {
+      const accOn = box.classList.contains('is-open');
+      const on = accOn && (palPinned || hover);
+      drawer.classList.toggle('is-open', on);
+      if (on) drawer.removeAttribute('inert'); else drawer.setAttribute('inert', '');
+      btn.classList.toggle('is-on', on);
+      btn.classList.toggle('is-pinned', accOn && palPinned);
+      btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      btn.setAttribute('aria-pressed', palPinned ? 'true' : 'false');
+      btn.tabIndex = accOn ? 0 : -1;
+    };
+    const enter = (e) => { if (e.pointerType === 'touch') return; clearTimeout(t); if (!hover && (e.currentTarget === btn || drawer.classList.contains('is-open'))) { hover = true; sync(); } };
+    const leave = (e) => { if (e.pointerType === 'touch') return; clearTimeout(t); t = setTimeout(() => { hover = false; sync(); }, 280); };
+    btn.addEventListener('pointerenter', enter);
+    btn.addEventListener('pointerleave', leave);
+    drawer.addEventListener('pointerenter', enter);
+    drawer.addEventListener('pointerleave', leave);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      palPinned = !palPinned;
+      if (!palPinned) hover = false;
+      sync();
+    });
+    box._palSync = sync;
+    sync();
+  }
+  function fillColor(all, inner) {
+    const drawer = vars.some((v) => v.control === 'swatch-role') ? paletteDrawer() : null;
+    if (drawer) inner.appendChild(drawer);
+    const groups = groupsFor(all, 'color');
+    const bare = groups.length === 1 && groups[0].items.length <= 3;
+    groups.forEach((g) => inner.appendChild(colorCard(g, bare)));
+    return { n: all.length, adv: all.filter((v) => v.advanced).length, pal: drawer };
+  }
   function fillPro(cat, inner) {
     const all = tierVars().filter((v) => v.category === cat);
     if (!all.length) { inner.appendChild(el('p', 'empty', 'No ' + (CATS.find((c) => c.id === cat) || {}).label + ' controls for this component.')); return { n: 0, adv: 0 }; }
-    if (cat === 'color' && vars.some((v) => v.control === 'swatch-role')) inner.appendChild(buildPresets());
+    if (cat === 'color') return fillColor(all, inner);
     const groups = groupsFor(all, cat);
     if (tier === 'mid') {   // Mid: plain cards, no flip / Advanced folds (those are Pro)
       const bareM = groups.length === 1 && groups[0].items.length <= 3;
@@ -2137,6 +2292,7 @@
         if (c.id === 'interact') box.classList.add('acc-interact');
         body.appendChild(bin);
         box.append(head, body);
+        if (r.pal) wirePalette(box, head, r.pal);
         head.addEventListener('click', () => toggle(c.id));
         wrapEl.appendChild(box);
         return { id: c.id, n: r.n, box };
@@ -2158,6 +2314,7 @@
       const head = box.querySelector('.acc-head'), body = box.querySelector('.acc-body');
       head.setAttribute('aria-expanded', on ? 'true' : 'false');
       if (on) body.removeAttribute('inert'); else body.setAttribute('inert', '');
+      if (box._palSync) box._palSync();
     }
     function cancelAll(box) {
       box.querySelectorAll('.acc-body, .acc-inner, .acc-inner > *').forEach((n) => n.getAnimations().forEach((a) => { if (!a.__keep) a.cancel(); }));

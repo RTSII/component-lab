@@ -25,9 +25,9 @@
       return +val.toFixed(Math.max(decimals(st), decimals(min)));
     }
 
-    function buildPresets() {
+    function buildPresets(opts) {
       const wrapEl = el('div', 'presets');
-      wrapEl.appendChild(el('div', 'ctl-label sub', 'Palettes from this project'));
+      if (!opts || opts.caption !== false) wrapEl.appendChild(el('div', 'ctl-label sub', 'Palettes from this project'));
       const row = el('div', 'preset-row');
       allPresets().forEach((p) => {
         const b = el('button', 'preset', '<span class="preset-dots">' + presetDots(p).map((c) => '<i style="background:' + c + '"></i>').join('') + '</span><span>' + esc(p.name) + '</span>');
