@@ -113,28 +113,16 @@ def create(name, kind="card", palette=None, title=None, category=None, tags=None
             "tags": tag_map or ({"purpose": [kind]} if kind in core.get("tagVocab", {}).get("purpose", []) else {}),
             "license": license, "status": "draft", "created": today, "updated": today,
             "source": {"origin": "original" if license == "original" else "open-source", "author": "Rob", "url": None, "vaultId": None, "note": ""}})
-        man["frames"] = k.get("frames", man.get("frames"))
-        c = man.setdefault("core", {})
-        core_ids = {cc["id"] for cc in core.get("controls", [])}
-        c["hide"] = [h for h in (k.get("hide") or []) if h in core_ids and h not in (c.get("freePicks") or [])]
-        ov = {}
-        featured = set(k.get("featured", []))
+        man = _checker().apply_kind(man, kind, k, core)   # frames, hide, stars, kind defaults (one shared merge)
+        c = man["core"]
+        ov = c["override"]
         resolved_ids = [cc["id"] for cc in core.get("controls", []) if cc["id"] not in c["hide"]] + list(c.get("opt") or [])
-        for cid in resolved_ids:
-            if cid in featured:
-                ov.setdefault(cid, {})["featured"] = True
-        for cid, val in (k.get("defaults") or {}).items():
-            ov.setdefault(cid, {})["default"] = val
         if palette:
             for cc in core.get("controls", []) + core.get("optional", []):
                 if cc["id"] in resolved_ids and cc.get("widget") == "swatches":
                     role = cc.get("role")
                     if role in palette and HEX_RE.match(str(palette[role])):
                         ov.setdefault(cc["id"], {})["default"] = palette[role].lower()
-        keep = {kk: vv for kk, vv in (c.get("override") or {}).items() if kk not in ov and set(vv) - {"featured"}}
-        for kk, vv in keep.items():
-            ov[kk] = {a: b for a, b in vv.items() if a != "featured"}
-        c["override"] = ov
         with open(mpath, "w", encoding="utf-8", newline="\n") as f:
             json.dump(man, f, indent=2)
             f.write("\n")

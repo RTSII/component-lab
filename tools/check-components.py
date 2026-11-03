@@ -3,6 +3,7 @@
 Usage (from the component-lab folder):
     python tools/check-components.py           # check + regenerate components/index.json and registry.js
     python tools/check-components.py --check   # check only, write nothing (exit 1 on errors)
+    python tools/check-components.py --kinds-json   # print _template merged with every kind (for tools/test)
 
 What it checks (schema 3 = core@1 + overrides + extras; schema 2 = legacy "vars" list, checked lightly):
   - required meta fields, kind / category / license / status / tags from components/_core/core.json
@@ -13,10 +14,16 @@ What it checks (schema 3 = core@1 + overrides + extras; schema 2 = legacy "vars"
   - tier budget: Free <= 6 controls, Free + Mid <= 22 (core.json "budget")
   - licence guard: no "licensed-private" component and no licensed / Aceternity source in the public tree
     (components/ and lab/); those live in the private vault only
+  - kinds (components/_template/kinds.json, WARNINGS only): every id a kind names (featured / defaults / hide /
+    opt / freePicks) is a real core control; defaults are in range and on a control the kind actually shows
+    (no dead defaults); the kind has starter markup in _template/component.js; opted-in CSS controls are used
+    by _template/style.css; the kind resolves inside the tier budget (see apply_kind(), the one shared merge
+    of a kind into the template; new-component.py and lab/manifest.js applyKindSpec() use the same rules)
 Writes (unless --check): components/index.json (library index) and components/registry.js (picker order:
 existing order kept, new folders appended, _template last). Runs from serve.py at start and from
 new-component.py after a scaffold. Standard library only.
 """
+import copy
 import json
 import os
 import re
@@ -185,6 +192,156 @@ def check_manifest(cid, man, core, errs, warns):
     return vars_
 
 
+# ---------- kinds (components/_template/kinds.json) ----------
+KINDS_PATH = os.path.join(COMP, "_template", "kinds.json")
+TEMPLATE_DIR = os.path.join(COMP, "_template")
+# core controls whose colour group is the component body ("Card" in core@1); a kind's "colorGroup" renames it
+BODY_COLOURS = ("COLOR_BORDER", "COLOR_FILL", "COLOR_FILL_2")
+
+
+def apply_kind(man, kind_id, spec, core):
+    """Return a copy of the template manifest set up as one kind (the one shared merge; JS twin:
+    lab/manifest.js applyKindSpec). Kind fields: frames, featured, defaults, hide, and optionally opt,
+    freePicks and colorGroup. The template's own non-star overrides (e.g. a css hook) are kept; the kind's
+    values win on the same key. Template stars are replaced by the kind's "featured" list."""
+    man = copy.deepcopy(man)
+    spec = spec or {}
+    man.setdefault("meta", {})["kind"] = kind_id
+    if spec.get("frames"):
+        man["frames"] = copy.deepcopy(spec["frames"])
+    c = man.setdefault("core", {})
+    if isinstance(spec.get("opt"), list):
+        c["opt"] = list(spec["opt"])
+    if isinstance(spec.get("freePicks"), list):
+        c["freePicks"] = list(spec["freePicks"])
+    base_ids = [cc["id"] for cc in core.get("controls", [])]
+    picks = c.get("freePicks") or []
+    c["hide"] = [h for h in (spec.get("hide") or []) if h in base_ids and h not in picks]
+    resolved_ids = [i for i in base_ids if i not in c["hide"]] + [i for i in (c.get("opt") or []) if i not in base_ids]
+    ov = {}
+    featured = set(spec.get("featured") or [])
+    for cid in resolved_ids:
+        if cid in featured:
+            ov.setdefault(cid, {})["featured"] = True
+    for cid, val in (spec.get("defaults") or {}).items():
+        ov.setdefault(cid, {})["default"] = val
+    cg = spec.get("colorGroup")
+    core_body = ((core.get("groups") or {}).get("color") or ["Card"])[0]
+    if isinstance(cg, str) and cg and cg != core_body:
+        for cid in BODY_COLOURS:
+            if cid in resolved_ids:
+                ov.setdefault(cid, {})["group"] = cg
+        order = list((man.get("groups") or {}).get("color") or (core.get("groups") or {}).get("color") or [])
+        man.setdefault("groups", {})["color"] = [cg] + [g for g in order if g not in (core_body, cg)]
+    for kk, vv in (c.get("override") or {}).items():
+        rest = {a: b for a, b in (vv or {}).items() if a != "featured"}
+        if not rest:
+            continue
+        if kk in ov:
+            merged = dict(rest)
+            merged.update(ov[kk])
+            ov[kk] = merged
+        else:
+            ov[kk] = rest
+    c["override"] = ov
+    return man
+
+
+def load_kinds():
+    try:
+        return load_json(KINDS_PATH).get("kinds") or {}
+    except (OSError, ValueError):
+        return {}
+
+
+def template_sources():
+    out = {}
+    for fn in ("component.js", "style.css"):
+        try:
+            with open(os.path.join(TEMPLATE_DIR, fn), encoding="utf-8") as f:
+                out[fn] = f.read()
+        except OSError:
+            out[fn] = ""
+    return out
+
+
+def check_kinds(core, warns, errs=None):
+    """Warnings for components/_template/kinds.json (nothing here blocks a start or a save)."""
+    if not os.path.exists(KINDS_PATH):
+        return
+    try:
+        kinds = load_json(KINDS_PATH).get("kinds")
+    except ValueError as e:
+        (errs if errs is not None else warns).append("components/_template/kinds.json: JSON error %s" % e)
+        return
+    if not isinstance(kinds, dict) or not kinds:
+        warns.append("components/_template/kinds.json: no kinds")
+        return
+    try:
+        tpl = load_json(os.path.join(TEMPLATE_DIR, "manifest.json"))
+    except (OSError, ValueError):
+        return
+    src = template_sources()
+    all_ids = {cc["id"] for cc in core.get("controls", []) + core.get("optional", [])}
+    where = "components/_template/kinds.json"
+    bud = core.get("budget", {})
+    for kid, spec in kinds.items():
+        w = "%s %s" % (where, kid)
+        if not NAME_RE.match(kid) or kid == "_template":
+            warns.append("%s: kind id should be lowercase letters, numbers and dashes" % w)
+        if not isinstance(spec, dict):
+            warns.append("%s: entry must be an object" % w)
+            continue
+        for k in ("label", "desc", "category", "frames"):
+            if not spec.get(k):
+                warns.append("%s: missing %s" % (w, k))
+        if spec.get("category") and spec["category"] not in core.get("categories", []):
+            warns.append("%s: unknown category %r" % (w, spec["category"]))
+        for fld in ("featured", "hide", "opt", "freePicks"):
+            for x in spec.get(fld) or []:
+                if x not in all_ids:
+                    warns.append("%s: %s names unknown core control %s" % (w, fld, x))
+        for x in (spec.get("defaults") or {}):
+            if x not in all_ids:
+                warns.append("%s: default for unknown core control %s" % (w, x))
+        if not re.search(r"(^|[\s{,])['\"]?%s['\"]?\s*:" % re.escape(kid), src["component.js"]):
+            warns.append("%s: no starter markup for this kind in _template/component.js (it would mount card markup)" % w)
+        man = apply_kind(tpl, kid, spec, core)
+        vars_ = resolve(man, core)
+        by = {v["id"]: v for v in vars_}
+        for x, val in (spec.get("defaults") or {}).items():
+            if x in all_ids and x not in by:
+                warns.append("%s: dead default %s (the kind does not show that control)" % (w, x))
+            elif x in by:
+                tmp = []
+                check_control(x, dict(by[x], default=val), w, tmp)
+                warns.extend(tmp)
+        for x in spec.get("featured") or []:
+            if x in all_ids and x not in by:
+                warns.append("%s: featured %s is not shown for this kind" % (w, x))
+        for v in vars_:
+            css = v.get("css")
+            if isinstance(css, str) and css.startswith("--") and v["id"] in (man.get("core") or {}).get("opt", []) \
+                    and ("var(%s)" % css) not in src["style.css"] and ("var(%s," % css) not in src["style.css"]:
+                warns.append("%s: %s (%s) is opted in but _template/style.css never uses it" % (w, v["id"], css))
+        nf = sum(1 for v in vars_ if v["tier"] == "free")
+        nm = sum(1 for v in vars_ if v["tier"] in ("free", "mid"))
+        if "free" in bud and nf > bud["free"]:
+            warns.append("%s: Free has %d controls (budget %d)" % (w, nf, bud["free"]))
+        if "mid" in bud and nm > bud["mid"]:
+            warns.append("%s: Mid has %d controls (budget %d)" % (w, nm, bud["mid"]))
+        cg = spec.get("colorGroup")
+        if cg is not None and (not isinstance(cg, str) or not cg.strip()):
+            warns.append("%s: colorGroup must be a non-empty name" % w)
+
+
+def kinds_json():
+    """_template merged with every kind (apply_kind), as JSON, for tools/test/resolve-test.js."""
+    core = load_json(CORE_PATH)
+    tpl = load_json(os.path.join(TEMPLATE_DIR, "manifest.json"))
+    return json.dumps({k: apply_kind(tpl, k, s, core) for k, s in load_kinds().items()})
+
+
 def license_guard(errs):
     for top in ("components", "lab"):
         base = os.path.join(HERE, top)
@@ -266,6 +423,7 @@ def run(write=True, quiet=False):
             "inherits": man.get("inherits"), "controls": {"free": tiers["free"], "mid": tiers["free"] + tiers["mid"], "pro": len(vars_)},
             "thumbnail": meta.get("thumbnail"), "updated": meta.get("updated")})
     license_guard(errs)
+    check_kinds(core, warns)
     if write and not errs:
         changed = write_if_changed(os.path.join(COMP, "index.json"), json.dumps({
             "$comment": "GENERATED by tools/check-components.py from components/*/manifest.json. Do not edit by hand.",
@@ -288,4 +446,7 @@ def run(write=True, quiet=False):
 
 
 if __name__ == "__main__":
+    if "--kinds-json" in sys.argv[1:]:
+        print(kinds_json())
+        sys.exit(0)
     sys.exit(run(write="--check" not in sys.argv[1:]))
