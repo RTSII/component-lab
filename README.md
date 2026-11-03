@@ -255,6 +255,17 @@ Every component lives in `components/<id>/`; `components/registry.js` and `compo
   python tools/check-components.py          # re-validate + regenerate index.json / registry.js
   ```
   *(Supported `--kind` templates in `components/_template/kinds.json`: `card`, `nav`, `hero`, `animated-background`, `list`, `button`, `modal`, `input`.)*
+- **Import from your computer:** check one folder, a batch or a zip first (report only, nothing installed):
+  ```powershell
+  python tools/import-component.py C:\path\to\component-or-folder-or.zip
+  ```
+  Required files, limits and what blocks an import: [docs/COMPONENT-IMPORT.md](docs/COMPONENT-IMPORT.md).
+  Group / subcard names: [docs/NAMING-STANDARD.md](docs/NAMING-STANDARD.md).
+- **Blank template kinds (console, no UI yet):** on `#c=_template`, `await __lab.setTemplateKind('modal')`
+  reloads the template as that kind (hash `kind=modal`); `/api/new` also takes optional validated
+  `overrides: { CONTROL_ID: value }` applied after the palette. `_template` stays last in the picker.
+- **Regression check after manifest / resolver edits:** `node tools/test/resolve-test.js` (helix must stay
+  byte-identical). Branch notes: [CHANGELOG-blank-core.md](CHANGELOG-blank-core.md).
 - **Component Folder Structure:**
   ```text
   components/<id>/
