@@ -9,6 +9,7 @@ the component or which parameter moves before touching the control.
 |---|---|---|
 | Colour groups that paint the component body (`COLOR_BORDER`, `COLOR_FILL`, `COLOR_FILL_2`) | the element being painted | `Card` (card kind, helix), `Button`, `Nav`, `Hero`, `List`, `Modal`, `Field` (input), `Backdrop` (animated background) |
 | Other colour groups | the role | `Text`, `Glow`, `Accent` |
+| Color section single rows (no flips) | Fill row: the words the two fill labels share (`Fill top` / `Fill bottom` -> `Fill`); Text selector: each control's `short`, else `label` | `Fill`, `Number \| Label \| Zero value` (helix), `Text \| Muted` (template) |
 | Flip-card front / back | the two halves of one topic | `Size <-> Style` (type), `Shape <-> Effects` (surface), `Pointer <-> Touch & keys` (interact), `Loop <-> Depth` (motion) |
 | A component's own controls (`extras` with `"section": "component"`) | the component's part | `Button` (glow-button: icon, sheen, pulse, case) |
 | Advanced back of a flip | `<front>·Adv` only when the back is the same topic in more depth | `Turn·Adv`, `Tempo·Adv` (helix) |
