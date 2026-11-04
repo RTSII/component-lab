@@ -2105,7 +2105,7 @@
      "default": 0.94,
      "unit": "×",
      "css": "--type-k",
-     "short": "Text",
+     "short": "Scale",
      "category": "layout",
      "control": "slider",
      "core": "SCALE_TEXT",

@@ -396,7 +396,7 @@
       "default": 1,
       "unit": "×",
       "css": "--type-k",
-      "short": "Text"
+      "short": "Scale"
     },
     {
       "id": "MOTION_SPEED",
