@@ -126,7 +126,7 @@
   const CATS = [
     { id: 'color', label: 'Color', icon: 'color' },
     { id: 'interact', label: 'Interaction', icon: 'interact' },
-    { id: 'surface', label: 'Surface', icon: 'surface' },
+    { id: 'surface', label: 'Style', icon: 'surface' },
     { id: 'motion', label: 'Motion', icon: 'motion' },
     { id: 'layout', label: 'Layout', icon: 'layout' }
   ];
