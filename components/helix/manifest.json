@@ -246,9 +246,6 @@
       "Glow",
       "Fades"
     ],
-    "type": [
-      "Size"
-    ],
     "motion": [
       "Loop",
       "Depth"
@@ -264,7 +261,8 @@
     ],
     "layout": [
       "Size",
-      "Spacing & Radius"
+      "Spacing & Radius",
+      "Text"
     ]
   },
   "order": [

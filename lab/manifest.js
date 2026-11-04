@@ -48,7 +48,7 @@
       delete v.modes;
     }
     // section "component" = the component's own controls: shown in Layout, ranked first there (componentGroup)
-    if (v.section !== undefined) { if (v.section === 'component') v.componentGroup = true; v.category = v.section === 'component' ? 'layout' : v.section; delete v.section; }
+    if (v.section !== undefined) { if (v.section === 'component') v.componentGroup = true; v.category = v.section === 'component' || v.section === 'type' ? 'layout' : v.section; delete v.section; }
     if (v.tier !== undefined) v.tier = TIER_MAP[v.tier] || v.tier;
     const w = v.widget && WIDGET[v.widget];
     if (w) {
@@ -88,7 +88,7 @@
       v.widget = cc.widget;
       if (ov[cc.id]) {
         const o = ov[cc.id];
-        if (o.section !== undefined) { v.category = o.section; }
+        if (o.section !== undefined) { v.category = o.section === 'type' ? 'layout' : o.section; }
         const rest = Object.assign({}, o); delete rest.section;
         if (rest.tier !== undefined) rest.tier = TIER_MAP[rest.tier] || rest.tier;
         if (rest.widget && WIDGET[rest.widget]) {
@@ -252,12 +252,11 @@
     return gs.sort((a, b) => rank(a) - rank(b));
   }
   // Which all-advanced ("back") group flips onto which all-front group, per section. Keyed by section because
-  // group names repeat across sections (Size in Type and Layout, Glow in Color and Surface). A manifest can add
+  // group names repeat across sections (Size in Layout and helix extras, Glow in Color and Surface). A manifest can add
   // or replace pairs with "flipPairs": { "<section>": { "<front group>": "<back group>" } }.
   const FLIP_PAIRS = {
     surface: { Shape: 'Effects' },
     interact: { Pointer: 'Touch & keys' },
-    type: { Size: 'Style' },
     motion: { Loop: 'Depth' }
   };
   // Card plan for one Pro section: [{ type: 'flip', front, back } | { type: 'mini', group, inAdv }].

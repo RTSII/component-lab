@@ -76,9 +76,6 @@
      "Glow",
      "Fades"
     ],
-    "type": [
-     "Size"
-    ],
     "motion": [
      "Loop",
      "Depth"
@@ -94,7 +91,8 @@
     ],
     "layout": [
      "Size",
-     "Spacing & Radius"
+     "Spacing & Radius",
+     "Text"
     ]
    },
    "deckGroups": [
@@ -484,7 +482,7 @@
      "unit": "×",
      "css": "--hx-num-k",
      "short": "Number",
-     "category": "type",
+     "category": "layout",
      "control": "slider",
      "core": "SCALE_TEXT",
      "was": "NUM_SCALE",
@@ -503,7 +501,7 @@
      "unit": "×",
      "css": "--hx-lbl-k",
      "short": "Label",
-     "category": "type",
+     "category": "layout",
      "control": "slider",
      "core": "SCALE_LABEL",
      "was": "LABEL_SCALE",
@@ -1233,9 +1231,6 @@
       "Glow",
       "Fades"
      ],
-     "type": [
-      "Size"
-     ],
      "motion": [
       "Loop",
       "Depth"
@@ -1251,7 +1246,8 @@
      ],
      "layout": [
       "Size",
-      "Spacing & Radius"
+      "Spacing & Radius",
+      "Text"
      ]
     },
     "order": [
@@ -1702,12 +1698,14 @@
      "CARD Fades(TEXT_FADE_ON,END_FADE_ON)"
     ]
    },
-   "type": {
+   "layout": {
     "groups": [
-     "Size"
+     "Size",
+     "Spacing & Radius"
     ],
     "cards": [
-     "CARD Size(SCALE_TEXT,SCALE_LABEL)"
+     "CARD Size(SCALE_TEXT,SCALE_LABEL,N,SIZE_W,SCALE_MIN)",
+     "FLIP Spacing & Radius(RADIUS_MAX,TRAVEL,WAVE) <-> Spacing & Radius · Adv(RADIUS_FRAC*,RADIUS_PAD*)"
     ]
    },
    "motion": {
@@ -1733,16 +1731,6 @@
      "FLIP Tempo(MOTION_SPEED) <-> Tempo · Adv(MOTION_INTENSITY*,MOTION_CYCLE*)",
      "FLIP Text fade(TEXT_FADE_A*,TEXT_FADE_B*) <-> Shell dim(BACK_FADE_A*,BACK_FADE_B*)",
      "FLIP End fade(END_FADE_A*,END_FADE_B*) <-> Border fill(FILL_FULL_AT*,FILL_EMPTY_AT*)"
-    ]
-   },
-   "layout": {
-    "groups": [
-     "Size",
-     "Spacing & Radius"
-    ],
-    "cards": [
-     "CARD Size(N,SIZE_W,SCALE_MIN)",
-     "FLIP Spacing & Radius(RADIUS_MAX,TRAVEL,WAVE) <-> Spacing & Radius · Adv(RADIUS_FRAC*,RADIUS_PAD*)"
     ]
    }
   }
@@ -1816,7 +1804,7 @@
    },
    "groups": {
     "color": [
-     "Card",
+     "Button",
      "Text",
      "Glow",
      "Accent"
@@ -1831,10 +1819,6 @@
      "Shape",
      "Effects"
     ],
-    "type": [
-     "Size",
-     "Style"
-    ],
     "motion": [
      "Loop",
      "Depth",
@@ -1845,7 +1829,8 @@
     ],
     "layout": [
      "Size",
-     "Spacing"
+     "Spacing",
+     "Text"
     ]
    },
    "deckGroups": [],
@@ -1857,7 +1842,7 @@
     {
      "id": "COLOR_BORDER",
      "label": "Button border",
-     "group": "Card",
+     "group": "Button",
      "widget": "swatches",
      "tier": "ga",
      "role": "border",
@@ -1874,7 +1859,7 @@
     {
      "id": "COLOR_FILL",
      "label": "Button fill",
-     "group": "Card",
+     "group": "Button",
      "widget": "swatches",
      "tier": "ga",
      "role": "surface",
@@ -2121,7 +2106,7 @@
      "unit": "×",
      "css": "--type-k",
      "short": "Text",
-     "category": "type",
+     "category": "layout",
      "control": "slider",
      "core": "SCALE_TEXT",
      "_featured0": false
@@ -2213,9 +2198,10 @@
     {
      "id": "WEIGHT",
      "label": "Weight",
-     "group": "Style",
+     "group": "Text",
      "widget": "seg-pads",
      "tier": "pro",
+     "advanced": true,
      "default": "700",
      "css": "--fw",
      "short": "Weight",
@@ -2233,7 +2219,7 @@
        "label": "Bold"
       }
      ],
-     "category": "type",
+     "category": "layout",
      "control": "segmented",
      "core": "WEIGHT",
      "_featured0": false
@@ -2241,9 +2227,10 @@
     {
      "id": "TRACKING",
      "label": "Letter spacing",
-     "group": "Style",
+     "group": "Text",
      "widget": "h-slider",
      "tier": "pro",
+     "advanced": true,
      "min": -0.05,
      "max": 0.3,
      "step": 0.01,
@@ -2251,7 +2238,7 @@
      "unit": "em",
      "css": "--track",
      "short": "Tracking",
-     "category": "type",
+     "category": "layout",
      "control": "slider",
      "core": "TRACKING",
      "_featured0": false
@@ -2339,6 +2326,7 @@
      ],
      "short": "Icon",
      "where": "component.js render(): .gb-icon",
+     "componentGroup": true,
      "category": "layout",
      "control": "segmented",
      "_featured0": false
@@ -2354,6 +2342,7 @@
      "padSub": "On hover",
      "short": "Sheen",
      "where": "style.css .gb-sheen",
+     "componentGroup": true,
      "category": "layout",
      "control": "switch",
      "variant": "pad",
@@ -2372,6 +2361,7 @@
      "unit": "deg",
      "css": "--shine-angle",
      "short": "Sheen angle",
+     "componentGroup": true,
      "category": "layout",
      "control": "radial",
      "_featured0": false
@@ -2387,6 +2377,7 @@
      "padSub": "Idle halo",
      "short": "Pulse",
      "where": "style.css .gb::after",
+     "componentGroup": true,
      "category": "layout",
      "control": "switch",
      "variant": "pad",
@@ -2410,6 +2401,7 @@
       }
      ],
      "short": "Case",
+     "componentGroup": true,
      "category": "layout",
      "control": "segmented",
      "_featured0": false
@@ -2499,11 +2491,13 @@
      "override": {
       "COLOR_BORDER": {
        "label": "Button border",
-       "featured": true
+       "featured": true,
+       "group": "Button"
       },
       "COLOR_FILL": {
        "label": "Button fill",
-       "featured": true
+       "featured": true,
+       "group": "Button"
       },
       "COLOR_TEXT": {
        "label": "Label text",
@@ -2548,6 +2542,14 @@
        "where": "component.js tabIndex + :focus-visible"
       }
      }
+    },
+    "groups": {
+     "color": [
+      "Button",
+      "Text",
+      "Glow",
+      "Accent"
+     ]
     },
     "layout": {
      "deck": [],
@@ -2658,13 +2660,13 @@
   "layout": {
    "color": {
     "groups": [
-     "Card",
+     "Button",
      "Text",
      "Glow",
      "Accent"
     ],
     "cards": [
-     "CARD Card(COLOR_BORDER,COLOR_FILL)",
+     "CARD Button(COLOR_BORDER,COLOR_FILL)",
      "CARD Text(COLOR_TEXT)",
      "CARD Glow(COLOR_GLOW)",
      "CARD Accent(COLOR_ACCENT)"
@@ -2692,14 +2694,17 @@
      "CARD Opacity(OPACITY_FILL,OPACITY_BORDER)"
     ]
    },
-   "type": {
+   "layout": {
     "groups": [
      "Size",
-     "Style"
+     "Spacing",
+     "Text",
+     "Button"
     ],
     "cards": [
-     "CARD Size(SCALE_TEXT)",
-     "CARD Style(WEIGHT,TRACKING)"
+     "FLIP Size(SCALE_TEXT) <-> Text(WEIGHT*,TRACKING*)",
+     "CARD Spacing(SPACE_PAD)",
+     "CARD Button(BTN_ICON,BTN_SHEEN,BTN_SHEEN_ANGLE,BTN_PULSE,BTN_CASE)"
     ]
    },
    "rate": {
@@ -2718,16 +2723,6 @@
     "cards": [
      "CARD Loop(MOTION_EASING)",
      "CARD Hover(HOVER_LIFT,IDLE)"
-    ]
-   },
-   "layout": {
-    "groups": [
-     "Spacing",
-     "Button"
-    ],
-    "cards": [
-     "CARD Spacing(SPACE_PAD)",
-     "CARD Button(BTN_ICON,BTN_SHEEN,BTN_SHEEN_ANGLE,BTN_PULSE,BTN_CASE)"
     ]
    }
   }

@@ -127,7 +127,6 @@
     { id: 'color', label: 'Color', icon: 'color' },
     { id: 'interact', label: 'Interaction', icon: 'interact' },
     { id: 'surface', label: 'Surface', icon: 'surface' },
-    { id: 'type', label: 'Type', icon: 'type' },
     { id: 'motion', label: 'Motion', icon: 'motion' },
     { id: 'rate', label: 'Rate', icon: 'rate' },
     { id: 'layout', label: 'Layout', icon: 'layout' }

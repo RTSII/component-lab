@@ -7,7 +7,6 @@
     "color",
     "interact",
     "surface",
-    "type",
     "motion",
     "rate",
     "layout",
@@ -91,10 +90,6 @@
       "Shape",
       "Effects"
     ],
-    "type": [
-      "Size",
-      "Style"
-    ],
     "motion": [
       "Loop",
       "Depth",
@@ -105,7 +100,8 @@
     ],
     "layout": [
       "Size",
-      "Spacing"
+      "Spacing",
+      "Text"
     ]
   },
   "controls": [
@@ -389,8 +385,8 @@
     },
     {
       "id": "SCALE_TEXT",
-      "label": "Text size",
-      "section": "type",
+      "label": "Scale",
+      "section": "layout",
       "group": "Size",
       "widget": "h-slider",
       "tier": "mid",
@@ -525,8 +521,8 @@
     {
       "id": "WEIGHT",
       "label": "Weight",
-      "section": "type",
-      "group": "Style",
+      "section": "layout",
+      "group": "Text",
       "widget": "seg-pads",
       "tier": "pro",
       "advanced": true,
@@ -552,8 +548,8 @@
     {
       "id": "TRACKING",
       "label": "Letter spacing",
-      "section": "type",
-      "group": "Style",
+      "section": "layout",
+      "group": "Text",
       "widget": "h-slider",
       "tier": "pro",
       "advanced": true,
@@ -569,7 +565,7 @@
     {
       "id": "SCALE_LABEL",
       "label": "Label size",
-      "section": "type",
+      "section": "layout",
       "group": "Size",
       "widget": "h-slider",
       "tier": "pro",
