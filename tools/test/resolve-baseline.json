@@ -77,10 +77,9 @@
      "Fades"
     ],
     "motion": [
-     "Loop",
-     "Depth"
-    ],
-    "rate": [
+     "Timing",
+     "Movement",
+     "Depth",
      "Tempo",
      "Turn",
      "Loop time",
@@ -509,12 +508,12 @@
     },
     {
      "id": "MOTION_EASING",
-     "label": "Easing",
-     "group": "Loop",
+     "label": "Movement feel",
+     "group": "Movement",
      "widget": "seg-pads",
      "tier": "vip",
      "default": "linear",
-     "short": "Easing",
+     "short": "Feel",
      "options": [
       {
        "value": "linear",
@@ -539,8 +538,8 @@
     },
     {
      "id": "MOTION_DIRECTION",
-     "label": "Direction",
-     "group": "Loop",
+     "label": "Play direction",
+     "group": "Timing",
      "widget": "seg-pads",
      "tier": "vip",
      "default": 1,
@@ -573,7 +572,7 @@
      "step": 10,
      "default": 900,
      "unit": "px",
-     "short": "Perspective",
+     "short": "3D strength",
      "advanced": true,
      "category": "motion",
      "control": "slider",
@@ -585,7 +584,7 @@
     {
      "id": "MOTION_SPEED",
      "label": "Speed",
-     "group": "Tempo",
+     "group": "Timing",
      "widget": "tempo-deck",
      "tier": "vip",
      "min": 0.25,
@@ -595,7 +594,7 @@
      "unit": "×",
      "master": "speed",
      "short": "Speed",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "core": "MOTION_SPEED",
      "featured": true,
@@ -605,8 +604,8 @@
     },
     {
      "id": "MOTION_INTENSITY",
-     "label": "Intensity",
-     "group": "Tempo",
+     "label": "Movement strength",
+     "group": "Movement",
      "widget": "h-slider",
      "tier": "pro",
      "min": 0,
@@ -615,9 +614,9 @@
      "default": 1,
      "unit": "×",
      "master": "intensity",
-     "short": "Intensity",
+     "short": "Strength",
      "advanced": true,
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "core": "MOTION_INTENSITY",
      "where": "scales STEP, TILT, WAVE and depth scaling together",
@@ -627,7 +626,7 @@
     {
      "id": "MOTION_CYCLE",
      "label": "Seconds per full loop",
-     "group": "Tempo",
+     "group": "Timing",
      "widget": "h-slider",
      "tier": "pro",
      "min": 4,
@@ -637,7 +636,7 @@
      "timeRole": "cycle",
      "short": "Seconds per loop",
      "advanced": true,
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "core": "MOTION_CYCLE",
      "was": "CYCLE",
@@ -658,7 +657,7 @@
      "unit": "°",
      "signature": true,
      "widget": "knob",
-     "category": "rate",
+     "category": "motion",
      "control": "radial",
      "_featured0": false
     },
@@ -675,7 +674,7 @@
      "group": "Turn",
      "short": "Card twist",
      "widget": "h-slider",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "_featured0": false
     },
@@ -694,7 +693,7 @@
      "unit": "°",
      "widget": "knob",
      "pair": "TEXT_FADE_B",
-     "category": "rate",
+     "category": "motion",
      "control": "radial",
      "_featured0": false
     },
@@ -712,7 +711,7 @@
      "short": "Gone",
      "unit": "°",
      "widget": "knob",
-     "category": "rate",
+     "category": "motion",
      "control": "radial",
      "_featured0": false
     },
@@ -732,7 +731,7 @@
      "unit": "°",
      "widget": "knob",
      "pair": "BACK_FADE_B",
-     "category": "rate",
+     "category": "motion",
      "control": "radial",
      "_featured0": false
     },
@@ -751,7 +750,7 @@
      "short": "Full",
      "unit": "°",
      "widget": "knob",
-     "category": "rate",
+     "category": "motion",
      "control": "radial",
      "_featured0": false
     },
@@ -769,7 +768,7 @@
      "short": "Starts (slots)",
      "widget": "h-slider",
      "pair": "END_FADE_B",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "_featured0": false
     },
@@ -786,7 +785,7 @@
      "group": "End fade",
      "short": "Done (slots)",
      "widget": "h-slider",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "_featured0": false
     },
@@ -805,7 +804,7 @@
      "short": "Full within",
      "widget": "h-slider",
      "pair": "FILL_EMPTY_AT",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "_featured0": false
     },
@@ -823,7 +822,7 @@
      "group": "Border fill",
      "short": "Empty beyond",
      "widget": "h-slider",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "_featured0": false
     },
@@ -1232,7 +1231,8 @@
       "Fades"
      ],
      "motion": [
-      "Loop",
+      "Timing",
+      "Movement",
       "Depth"
      ],
      "rate": [
@@ -1710,17 +1710,10 @@
    },
    "motion": {
     "groups": [
-     "Loop",
-     "Depth"
-    ],
-    "cards": [
-     "FLIP Loop(MOTION_EASING,MOTION_DIRECTION) <-> Depth(DEPTH_PERSPECTIVE*)"
-    ]
-   },
-   "rate": {
-    "groups": [
      "Turn",
-     "Tempo",
+     "Timing",
+     "Movement",
+     "Depth",
      "Text fade",
      "Shell dim",
      "End fade",
@@ -1728,9 +1721,11 @@
     ],
     "cards": [
      "FLIP Turn(STEP) <-> Turn · Adv(TILT*)",
-     "FLIP Tempo(MOTION_SPEED) <-> Tempo · Adv(MOTION_INTENSITY*,MOTION_CYCLE*)",
-     "FLIP Text fade(TEXT_FADE_A*,TEXT_FADE_B*) <-> Shell dim(BACK_FADE_A*,BACK_FADE_B*)",
-     "FLIP End fade(END_FADE_A*,END_FADE_B*) <-> Border fill(FILL_FULL_AT*,FILL_EMPTY_AT*)"
+     "FLIP Timing(MOTION_DIRECTION,MOTION_SPEED) <-> Timing · Adv(MOTION_CYCLE*)",
+     "FLIP Movement(MOTION_EASING) <-> Movement · Adv(MOTION_INTENSITY*)",
+     "FLIP Depth(DEPTH_PERSPECTIVE*) <-> Text fade(TEXT_FADE_A*,TEXT_FADE_B*)",
+     "FLIP Shell dim(BACK_FADE_A*,BACK_FADE_B*) <-> End fade(END_FADE_A*,END_FADE_B*)",
+     "CARD Border fill(FILL_FULL_AT*,FILL_EMPTY_AT*)"
     ]
    }
   }
@@ -1820,12 +1815,10 @@
      "Effects"
     ],
     "motion": [
-     "Loop",
+     "Timing",
+     "Movement",
      "Depth",
      "Hover"
-    ],
-    "rate": [
-     "Tempo"
     ],
     "layout": [
      "Size",
@@ -2114,7 +2107,7 @@
     {
      "id": "MOTION_SPEED",
      "label": "Speed",
-     "group": "Tempo",
+     "group": "Timing",
      "widget": "tempo-deck",
      "tier": "vip",
      "min": 0.25,
@@ -2125,20 +2118,20 @@
      "css": "--speed",
      "master": "speed",
      "short": "Speed",
-     "category": "rate",
+     "category": "motion",
      "control": "slider",
      "core": "MOTION_SPEED",
      "_featured0": false
     },
     {
      "id": "MOTION_EASING",
-     "label": "Easing",
-     "group": "Loop",
+     "label": "Movement feel",
+     "group": "Movement",
      "widget": "seg-pads",
      "tier": "vip",
      "default": "settle",
      "css": "--ease",
-     "short": "Easing",
+     "short": "Feel",
      "options": [
       {
        "value": "settle",
@@ -2282,8 +2275,8 @@
     },
     {
      "id": "IDLE",
-     "label": "Idle animation",
-     "group": "Hover",
+     "label": "Move when idle",
+     "group": "Movement",
      "widget": "pad",
      "tier": "pro",
      "default": true,
@@ -2292,7 +2285,7 @@
       "true": "running",
       "false": "paused"
      },
-     "short": "Idle",
+     "short": "When idle",
      "category": "motion",
      "control": "switch",
      "variant": "pad",
@@ -2707,22 +2700,16 @@
      "CARD Button(BTN_ICON,BTN_SHEEN,BTN_SHEEN_ANGLE,BTN_PULSE,BTN_CASE)"
     ]
    },
-   "rate": {
-    "groups": [
-     "Tempo"
-    ],
-    "cards": [
-     "CARD Tempo(MOTION_SPEED)"
-    ]
-   },
    "motion": {
     "groups": [
-     "Loop",
+     "Timing",
+     "Movement",
      "Hover"
     ],
     "cards": [
-     "CARD Loop(MOTION_EASING)",
-     "CARD Hover(HOVER_LIFT,IDLE)"
+     "CARD Timing(MOTION_SPEED)",
+     "CARD Movement(MOTION_EASING,IDLE)",
+     "CARD Hover(HOVER_LIFT)"
     ]
    }
   }

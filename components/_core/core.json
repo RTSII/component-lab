@@ -8,11 +8,10 @@
     "interact",
     "surface",
     "motion",
-    "rate",
     "layout",
     "component"
   ],
-  "sectionNote": "Rate stays its own section for now (Rob t590u); a later Rate->Motion merge remaps ui.railOrder once.",
+  "sectionNote": "Rate merged into Motion (Rob t685u): old 'rate' sections load into Motion; 'type' loads into Layout.",
   "tierOrder": [
     "free",
     "mid",
@@ -91,12 +90,10 @@
       "Effects"
     ],
     "motion": [
-      "Loop",
+      "Timing",
+      "Movement",
       "Depth",
       "Hover"
-    ],
-    "rate": [
-      "Tempo"
     ],
     "layout": [
       "Size",
@@ -384,6 +381,22 @@
       "short": "Radius"
     },
     {
+      "id": "SIZE_W",
+      "label": "Width",
+      "section": "layout",
+      "group": "Size",
+      "widget": "v-fader",
+      "tier": "mid",
+      "min": 120,
+      "max": 520,
+      "step": 1,
+      "default": 300,
+      "unit": "px",
+      "css": "--w",
+      "short": "Width",
+      "deckLabel": "CH 1"
+    },
+    {
       "id": "SCALE_TEXT",
       "label": "Scale",
       "section": "layout",
@@ -401,8 +414,8 @@
     {
       "id": "MOTION_SPEED",
       "label": "Speed",
-      "section": "rate",
-      "group": "Tempo",
+      "section": "motion",
+      "group": "Timing",
       "widget": "tempo-deck",
       "tier": "mid",
       "min": 0.25,
@@ -416,14 +429,14 @@
     },
     {
       "id": "MOTION_EASING",
-      "label": "Easing",
+      "label": "Movement feel",
       "section": "motion",
-      "group": "Loop",
+      "group": "Movement",
       "widget": "seg-pads",
       "tier": "mid",
       "default": "settle",
       "css": "--ease",
-      "short": "Easing",
+      "short": "Feel",
       "options": [
         {
           "value": "settle",
@@ -441,22 +454,6 @@
           "css": "linear"
         }
       ]
-    },
-    {
-      "id": "SIZE_W",
-      "label": "Width",
-      "section": "layout",
-      "group": "Size",
-      "widget": "v-fader",
-      "tier": "mid",
-      "min": 120,
-      "max": 520,
-      "step": 1,
-      "default": 300,
-      "unit": "px",
-      "css": "--w",
-      "short": "Width",
-      "deckLabel": "CH 1"
     }
   ],
   "optional": [
@@ -629,9 +626,9 @@
     },
     {
       "id": "MOTION_DIRECTION",
-      "label": "Direction",
+      "label": "Play direction",
       "section": "motion",
-      "group": "Loop",
+      "group": "Timing",
       "widget": "seg-pads",
       "tier": "pro",
       "default": 1,
@@ -651,9 +648,9 @@
     },
     {
       "id": "MOTION_INTENSITY",
-      "label": "Intensity",
-      "section": "rate",
-      "group": "Tempo",
+      "label": "Movement strength",
+      "section": "motion",
+      "group": "Movement",
       "widget": "h-slider",
       "tier": "pro",
       "min": 0,
@@ -662,15 +659,15 @@
       "default": 1,
       "unit": "×",
       "master": "intensity",
-      "short": "Intensity",
+      "short": "Strength",
       "advanced": true,
       "optional": true
     },
     {
       "id": "MOTION_CYCLE",
       "label": "Seconds per loop",
-      "section": "rate",
-      "group": "Tempo",
+      "section": "motion",
+      "group": "Timing",
       "widget": "h-slider",
       "tier": "pro",
       "min": 2,
@@ -679,13 +676,13 @@
       "default": 26,
       "unit": "s",
       "timeRole": "cycle",
-      "short": "Loop",
+      "short": "Loop time",
       "advanced": true,
       "optional": true
     },
     {
       "id": "DEPTH_PERSPECTIVE",
-      "label": "Perspective",
+      "label": "3D depth strength",
       "section": "motion",
       "group": "Depth",
       "widget": "h-slider",
@@ -696,7 +693,7 @@
       "default": 900,
       "unit": "px",
       "css": "--perspective",
-      "short": "Perspective",
+      "short": "3D strength",
       "advanced": true,
       "optional": true
     },
@@ -718,9 +715,9 @@
     },
     {
       "id": "IDLE",
-      "label": "Idle animation",
+      "label": "Move when idle",
       "section": "motion",
-      "group": "Hover",
+      "group": "Movement",
       "widget": "pad",
       "tier": "pro",
       "default": true,
@@ -729,7 +726,7 @@
         "true": "running",
         "false": "paused"
       },
-      "short": "Idle",
+      "short": "When idle",
       "optional": true
     }
   ],

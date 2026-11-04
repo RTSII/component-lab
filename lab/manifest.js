@@ -40,6 +40,9 @@
   }
 
   // one schema-3 control -> one lab var
+  // Retired main menus: old files that still say section "type" or "rate" load into Layout / Motion.
+  const SECTION_MAP = { component: 'layout', type: 'layout', rate: 'motion' };
+  const mapSection = (s) => SECTION_MAP[s] || s;
   function toVar(src, mode) {
     const v = clone(src);
     if (v.modes) {
@@ -48,7 +51,7 @@
       delete v.modes;
     }
     // section "component" = the component's own controls: shown in Layout, ranked first there (componentGroup)
-    if (v.section !== undefined) { if (v.section === 'component') v.componentGroup = true; v.category = v.section === 'component' || v.section === 'type' ? 'layout' : v.section; delete v.section; }
+    if (v.section !== undefined) { if (v.section === 'component') v.componentGroup = true; v.category = mapSection(v.section); delete v.section; }
     if (v.tier !== undefined) v.tier = TIER_MAP[v.tier] || v.tier;
     const w = v.widget && WIDGET[v.widget];
     if (w) {
@@ -88,7 +91,7 @@
       v.widget = cc.widget;
       if (ov[cc.id]) {
         const o = ov[cc.id];
-        if (o.section !== undefined) { v.category = o.section === 'type' ? 'layout' : o.section; }
+        if (o.section !== undefined) { v.category = mapSection(o.section); }
         const rest = Object.assign({}, o); delete rest.section;
         if (rest.tier !== undefined) rest.tier = TIER_MAP[rest.tier] || rest.tier;
         if (rest.widget && WIDGET[rest.widget]) {
@@ -144,6 +147,14 @@
       direction: find((v) => v.timeRole === 'direction')
     };
     const groups = Object.assign({}, core.groups || {}, m.groups || {});
+    // group order lists keyed by a retired menu join the menu it now loads into (after that menu's own list)
+    Object.keys(groups).forEach((k) => {
+      const to = SECTION_MAP[k];
+      if (!to || k === 'component') return;
+      const add = groups[k] || [];
+      groups[to] = (groups[to] || []).concat(add.filter((x) => !(groups[to] || []).includes(x)));
+      delete groups[k];
+    });
     const out = {
       schema: 3,
       meta: clone(meta),
@@ -257,7 +268,7 @@
   const FLIP_PAIRS = {
     surface: { Shape: 'Effects' },
     interact: { Pointer: 'Touch & keys' },
-    motion: { Loop: 'Depth' }
+    motion: { Movement: 'Depth' }
   };
   // Card plan for one Pro section: [{ type: 'flip', front, back } | { type: 'mini', group, inAdv }].
   // 1) explicit pairs for this section (a front group with no advanced items of its own + a back group);

@@ -333,6 +333,7 @@
         v.id = cid;
       }
       if (cid) v.core = cid;
+      if (v.category === 'rate') v.category = 'motion';   // Rate merged into Motion (t685u)
       if (seen.has(v.id)) return null; seen.add(v.id); vars.push(v); return v;
     };
     const uniq = (base) => { let id = base, n = 2; while (seen.has(id)) id = base + '_' + (n++); return id; };

@@ -247,7 +247,8 @@
       "Fades"
     ],
     "motion": [
-      "Loop",
+      "Timing",
+      "Movement",
       "Depth"
     ],
     "rate": [

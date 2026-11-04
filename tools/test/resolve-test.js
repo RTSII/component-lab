@@ -34,8 +34,7 @@ function autoGroup(v) {
       if (/GLOW|BLUR|SHADOW/.test(id)) return 'Effects';
       return 'Opacity';
     case 'type': return /WEIGHT|TRACK|FAMILY|CASE/.test(id) ? 'Style' : 'Size';
-    case 'motion': return /EAS|CURVE|DIRECTION/.test(id) ? 'Curve' : 'Movement';
-    case 'rate': return v.master || /SPEED|TEMPO|INTENSITY/.test(id) ? 'Tempo' : 'Timing';
+    case 'motion': return v.master === 'speed' || v.speedScaled || /SPEED|TEMPO|CYCLE|DUR|DIRECTION/.test(id) ? 'Timing' : 'Movement';
     default:
       if (/RADIUS|ROUND/.test(id)) return 'Radius';
       if (/PAD|GAP|MARGIN|TRAVEL|SPACE/.test(id)) return 'Spacing';

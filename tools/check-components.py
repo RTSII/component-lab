@@ -39,6 +39,7 @@ TEXT_EXT = (".js", ".css", ".html", ".json", ".svg", ".mjs", ".ts", ".tsx", ".js
 LICENSE_MARKERS = re.compile(r"aceternity|ui\.aceternity\.com|licensed-private|all rights reserved", re.I)
 TIER_IN = {"free": "free", "mid": "mid", "pro": "pro", "ga": "free", "vip": "mid"}
 SECTIONS_LEGACY = {"color", "interact", "surface", "type", "motion", "rate", "layout"}
+RETIRED_SECTIONS = {"type": "layout", "rate": "motion"}  # old menus; the lab loads them into Layout / Motion
 
 
 def load_json(path):
@@ -160,7 +161,7 @@ def check_manifest(cid, man, core, errs, warns):
                 errs.append("%s: extra %s needs %s" % (where, eid, k))
         if e.get("widget") and e["widget"] not in widgets:
             errs.append("%s: extra %s has unknown widget %r" % (where, eid, e["widget"]))
-        if e.get("section") and e["section"] not in core.get("sectionOrder", []):
+        if e.get("section") and e["section"] not in core.get("sectionOrder", []) and e["section"] not in RETIRED_SECTIONS:
             errs.append("%s: extra %s has unknown section %r" % (where, eid, e["section"]))
         if e.get("tier") and e["tier"] not in TIER_IN:
             errs.append("%s: extra %s has unknown tier %r" % (where, eid, e["tier"]))
