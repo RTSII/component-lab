@@ -71,3 +71,6 @@ lab Import button / `--install`.
 - Motion flip pair: Movement <-> Depth. Helix motion group order set to Timing, Movement, Depth.
 - Layout > Size: Width before Scale (Height is Pro, sorts after Mid controls).
 - Ids, saved values, tiers unchanged. resolve-baseline rewritten on purpose for this change.
+
+## feat/blank-default: Surface titled Style (Rob t688u)
+- Main menu title "Surface" -> "Style" (`CATS` label only). Id stays `surface`, so control ids, saved values, tiers, rail order and old `"section": "surface"` files are unchanged. Submenu names unchanged.

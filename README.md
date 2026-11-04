@@ -440,4 +440,4 @@ mvp-decision-selector.html      # Interactive HTML decision selector for the MVP
 ## Default component
 A fresh load (no `#c=` in the link) opens the blank template. Set `START_COMPONENT` in `lab/lab.js` to change it (the `work/simple-button` branch uses `glow-button`).
 
-Menus: Color, Interaction, Surface, Motion, Layout (Motion: Timing, Movement, Depth, Hover; Layout: Size, Spacing, Text). Rate merged into Motion (t685u); old `"section": "rate"` files load into Motion, `"type"` into Layout.
+Menus: Color, Interaction, Style (id `surface`, was titled Surface, t688u), Motion, Layout (Motion: Timing, Movement, Depth, Hover; Layout: Size, Spacing, Text). Rate merged into Motion (t685u); old `"section": "rate"` files load into Motion, `"type"` into Layout.

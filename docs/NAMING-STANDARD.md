@@ -42,5 +42,5 @@ keyed by **control id** (`UPPER_SNAKE`), never by group name. Renaming a group c
 - Labels name the parameter in the component's terms ("Button border", not "Border colour 1").
 
 ## Menus (applied, feat/blank-default)
-Five menus: Color, Interaction, Surface, Motion, Layout. There is no Type or Rate menu; Rate's controls are in Motion > Timing (Speed, Loop time, Direction) and Motion > Movement (Feel, Strength, When idle), 3D strength in Motion > Depth.
+Five menus: Color, Interaction, Style, Motion, Layout (Style = id `surface`, retitled t688u). There is no Type or Rate menu; Rate's controls are in Motion > Timing (Speed, Loop time, Direction) and Motion > Movement (Feel, Strength, When idle), 3D strength in Motion > Depth.
 There is no Type menu. Size controls (Scale, Label size, Width, Height) are Layout > Size; Weight and Letter spacing are Layout > Text.

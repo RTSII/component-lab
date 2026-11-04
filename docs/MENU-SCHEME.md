@@ -1,11 +1,11 @@
 # Menu scheme: menus, submenus and variables
 
-**Applied on feat/blank-default (Rob t681u, t685u):** 5 main menus: Color, Interaction, Surface, Motion, Layout.
+**Applied on feat/blank-default (Rob t681u, t685u):** 5 main menus: Color, Interaction, Style, Motion, Layout.
 "Type" and "Rate" are gone as main menus. Motion groups, in order: **Timing** (Speed, Loop time = Seconds per loop,
 Direction = Play direction), **Movement** (Feel = Movement feel, Strength = Movement strength [was Rate "Intensity"],
 When idle = Move when idle), **Depth** (3D strength = 3D depth strength), then **Hover** (Lift; still in Motion until
 the Interaction › Hover move is approved). Old files using `"section": "rate"` are read as Motion.
-Surface keeps its name for now (Rob is deciding Surface vs Style).
+Surface is titled **Style** (Rob t688u); its internal id stays `surface`, so old files load into Style unchanged.
 Layout groups, in order: **Size** (Width, Scale, Label size, Height; Mid controls sort before Pro, so Height stays last),
 **Spacing** (Padding, Gap), **Text** (Weight, Letter spacing). Control ids, saved values, tiers unchanged;
 old manifests using `"section": "type"` are read as Layout. The rest of this doc below is still a proposal.
