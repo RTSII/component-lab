@@ -131,6 +131,8 @@
     { id: 'rate', label: 'Rate', icon: 'rate' },
     { id: 'layout', label: 'Layout', icon: 'layout' }
   ];
+  // Which component opens when the link names none. Main branch: the blank template ('_template').
+  const START_COMPONENT = '_template';
   const CAT_IDS = CATS.map((c) => c.id);
   const ANCHORS = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
   const VIEWS = [{ id: 'fit', label: 'Fit' }, { id: '1600x770', label: '1600\u00d7770', w: 1600, h: 770 }, { id: '1366x768', label: '1366\u00d7768', w: 1366, h: 768 }];
@@ -4488,7 +4490,8 @@
     try { kindsInfo = JSON.parse(await fetchText('components/_template/kinds.json')); } catch (e) { kindsInfo = null; }
     const reg = window.LAB_REGISTRY || [];
     const h = readHash();
-    const first = h.c && reg.includes(h.c) ? h.c : reg[0];
+    // Default component on a fresh load (no #c= in the link): the blank template, never a specific component.
+    const first = h.c && reg.includes(h.c) ? h.c : (reg.includes(START_COMPONENT) ? START_COMPONENT : reg[0]);
     { const sk = h.c === '_template' && h.kind ? h.kind : store.get('tplKind', null); tplKind = validKind(sk) ? sk : null; }
     if (!first) { toast('No components in components/registry.js', 8000); return; }
     requestAnimationFrame(tick);
