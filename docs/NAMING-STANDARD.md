@@ -10,7 +10,7 @@ the component or which parameter moves before touching the control.
 | Colour groups that paint the component body (`COLOR_BORDER`, `COLOR_FILL`, `COLOR_FILL_2`) | the element being painted | `Card` (card kind, helix), `Button`, `Nav`, `Hero`, `List`, `Modal`, `Field` (input), `Backdrop` (animated background) |
 | Other colour groups | the role | `Text`, `Glow`, `Accent` |
 | Color section single rows (no flips) | Fill row: the words the two fill labels share (`Fill top` / `Fill bottom` -> `Fill`); Text selector: each control's `short`, else `label` | `Fill`, `Number \| Label \| Zero value` (helix), `Text \| Muted` (template) |
-| Flip-card front / back | the two halves of one topic | `Size <-> Style` (type), `Shape <-> Effects` (surface), `Pointer <-> Touch & keys` (interact), `Movement <-> Depth` (motion) |
+| Flip-card front / back | the two halves of one topic | `Size <-> Style` (type), `Corners <-> Glass` (Style, id surface), `Pointer <-> Touch & keys` (interact), `Movement <-> Depth` (motion) |
 | A component's own controls (`extras` with `"section": "component"`) | the component's part | `Button` (glow-button: icon, sheen, pulse, case) |
 | Advanced back of a flip | `<front>·Adv` only when the back is the same topic in more depth | `Turn·Adv`, `Tempo·Adv` (helix) |
 
@@ -43,4 +43,6 @@ keyed by **control id** (`UPPER_SNAKE`), never by group name. Renaming a group c
 
 ## Menus (applied, feat/blank-default)
 Five menus: Color, Interaction, Style, Motion, Layout (Style = id `surface`, retitled t688u). There is no Type or Rate menu; Rate's controls are in Motion > Timing (Speed, Loop time, Direction) and Motion > Movement (Feel, Strength, When idle), 3D strength in Motion > Depth.
-There is no Type menu. Size controls (Scale, Label size, Width, Height) are Layout > Size; Weight and Letter spacing are Layout > Text.
+There is no Type menu. Layout > Size: Width, Height, Scale. Layout > Text: Secondary text size, Weight, Letter spacing. Style: Opacity, Glow, Corners, Glass.
+A component must not relabel a general control so it reads like another one (glow-button no longer calls Scale "Label size"). tools/test/resolve-test.js fails if two controls in one menu show the same label or short label (8 kinds, glow-button, helix).
+Order inside a group = core.order (Pro scheme order); tier never reorders.

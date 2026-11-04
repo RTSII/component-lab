@@ -1,3 +1,5 @@
+**Update (t689u, feat/blank-default):** applied: Shape→Corners, Effects→Glass, Backdrop blur→Background blur, Corner radius→Corner roundness, Tracking→Letter spacing, Label size→Secondary text size (now Layout › Text). Rows below are the original audit.
+
 # Label audit: blank template (8 kinds) + core controls vs LABEL-RUBRIC.md
 
 Read-only audit on `feat/blank-core` (HEAD `e6faa08`), Nov 3, 2026 (ET). No code or labels were changed.

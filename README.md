@@ -110,7 +110,7 @@ Full background, the 43-control audit table, risks and the remaining P1–P3 che
 | `IX_TOUCH` / `IX_KEY` | Interact › Touch & keys | seg-pads / pad | hover·ignore / on | Mid (back) |
 | `OPACITY_FILL` / `OPACITY_BORDER` | Surface › Opacity | h-slider | 0–1, 0.86 / 0.6 | Mid |
 | `GLOW_STRENGTH` | Surface › Glow | fx-unit | 0–3 ×, 1 | Free pick / Mid |
-| `RADIUS` | Surface › Shape | knob | 0–48 px, 14 | Free pick / Mid |
+| `RADIUS` | Style › Corners (Corner roundness) | knob | 0–48 px, 14 | Free pick / Mid |
 | `SCALE_TEXT` | Type › Size | h-slider | 0.5–2 ×, 1 | Mid |
 | `MOTION_SPEED` | Motion › Timing | Mid slider + pads · Pro tempo deck | 0.25–3 ×, 1 | Mid |
 | `MOTION_EASING` | Motion › Loop | seg-pads | settle / spring / linear | Mid |

@@ -6,7 +6,12 @@ Direction = Play direction), **Movement** (Feel = Movement feel, Strength = Move
 When idle = Move when idle), **Depth** (3D strength = 3D depth strength), then **Hover** (Lift; still in Motion until
 the Interaction › Hover move is approved). Old files using `"section": "rate"` are read as Motion.
 Surface is titled **Style** (Rob t688u); its internal id stays `surface`, so old files load into Style unchanged.
-Layout groups, in order: **Size** (Width, Scale, Label size, Height; Mid controls sort before Pro, so Height stays last),
+**Pro first (Rob t689u):** Pro (all controls) is the design; Mid and Free are later subsets. Inside a group the order is
+the scheme order (`core.order` in core.json), never tier. Style groups: **Opacity** (Fill opacity, Border opacity),
+**Glow** (Glow strength), **Corners** (Corner roundness), **Glass** (Background blur).
+Layout groups, in order: **Size** (Width, Height, Scale), **Spacing** (Padding, Gap), **Text** (Secondary text size, Weight,
+Letter spacing). Secondary text size (SCALE_LABEL) moved from Size to Text: it sizes the smaller text, not the component.
+Old line for reference: **Size** (Width, Scale, Label size, Height),
 **Spacing** (Padding, Gap), **Text** (Weight, Letter spacing). Control ids, saved values, tiers unchanged;
 old manifests using `"section": "type"` are read as Layout. The rest of this doc below is still a proposal.
 
