@@ -112,7 +112,7 @@ Full background, the 43-control audit table, risks and the remaining P1–P3 che
 | `GLOW_STRENGTH` | Surface › Glow | fx-unit | 0–3 ×, 1 | Free pick / Mid |
 | `RADIUS` | Surface › Shape | knob | 0–48 px, 14 | Free pick / Mid |
 | `SCALE_TEXT` | Type › Size | h-slider | 0.5–2 ×, 1 | Mid |
-| `MOTION_SPEED` | Rate › Tempo (Rate kept for now) | Mid slider + pads · Pro tempo deck | 0.25–3 ×, 1 | Mid |
+| `MOTION_SPEED` | Motion › Timing | Mid slider + pads · Pro tempo deck | 0.25–3 ×, 1 | Mid |
 | `MOTION_EASING` | Motion › Loop | seg-pads | settle / spring / linear | Mid |
 | `SIZE_W` | Layout › Size | v-fader | 120–520 px, 300 | Mid |
 
@@ -440,4 +440,4 @@ mvp-decision-selector.html      # Interactive HTML decision selector for the MVP
 ## Default component
 A fresh load (no `#c=` in the link) opens the blank template. Set `START_COMPONENT` in `lab/lab.js` to change it (the `work/simple-button` branch uses `glow-button`).
 
-Menus: Color, Interaction, Surface, Motion, Rate, Layout (Layout: Size, Spacing, Text).
+Menus: Color, Interaction, Surface, Motion, Layout (Motion: Timing, Movement, Depth, Hover; Layout: Size, Spacing, Text). Rate merged into Motion (t685u); old `"section": "rate"` files load into Motion, `"type"` into Layout.

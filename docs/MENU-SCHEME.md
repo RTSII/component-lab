@@ -1,7 +1,12 @@
 # Menu scheme: menus, submenus and variables
 
-**Applied on feat/blank-default (Rob t681u):** 6 main menus: Color, Interaction, Surface, Motion, Rate, Layout.
-"Type" is gone as a main menu. Layout groups, in order: **Size** (Scale, Label size, Width, Height),
+**Applied on feat/blank-default (Rob t681u, t685u):** 5 main menus: Color, Interaction, Surface, Motion, Layout.
+"Type" and "Rate" are gone as main menus. Motion groups, in order: **Timing** (Speed, Loop time = Seconds per loop,
+Direction = Play direction), **Movement** (Feel = Movement feel, Strength = Movement strength [was Rate "Intensity"],
+When idle = Move when idle), **Depth** (3D strength = 3D depth strength), then **Hover** (Lift; still in Motion until
+the Interaction › Hover move is approved). Old files using `"section": "rate"` are read as Motion.
+Surface keeps its name for now (Rob is deciding Surface vs Style).
+Layout groups, in order: **Size** (Width, Scale, Label size, Height; Mid controls sort before Pro, so Height stays last),
 **Spacing** (Padding, Gap), **Text** (Weight, Letter spacing). Control ids, saved values, tiers unchanged;
 old manifests using `"section": "type"` are read as Layout. The rest of this doc below is still a proposal.
 
@@ -31,6 +36,7 @@ Their plain names are Card, Menu bar, Banner, Background, List, Button, Popup an
 | 5 | **Motion** | How it moves on its own: speed, loop, feel, depth | All self-running movement sits in one menu. |
 | 6 | **Layout** | The kind's own parts first, then size and spacing | Covers where things go and how big they are, with the kind's own parts on top. |
 
+**Rate vs Motion: decided (t685u): merged into Motion.** Original text:
 **Rate vs Motion: decision needed. Recommendation: merge Rate into Motion as the submenu "Timing".**
 - Today, Rate holds Speed, Intensity and Seconds per loop. Intensity is not a rate. A user also has to look in two menus to change one movement.
 - Merging gives 6 menus, and every speed/loop setting ends up in one place.
@@ -173,7 +179,7 @@ Interaction no longer needs a flip. Touch and Keyboard (both Mid) sit on the fro
 ---
 
 ## (e) Not decided: needs Rob (max 5)
-1. **Rate:** merge it into Motion › Timing (recommended), or keep it as its own menu renamed "Timing"? You said "keep the rate section the same for now" on t590u.
+1. ~~**Rate:**~~ decided t685u: merged into Motion. Was: merge it into Motion › Timing (recommended), or keep it as its own menu renamed "Timing"? You said "keep the rate section the same for now" on t590u.
 2. **Color body submenu name:** a fixed **Body** on every kind (recommended, no per-kind fixes), or the kind's plain name (Card, Button, Menu bar…)?
 3. **Mid size:** move Secondary text, Accent, When idle, Inside and Between into Mid (22, the cap), or keep Mid at today's 17?
 4. **Free picks per kind:** use the per-kind picks shown above (from blank-component.md §3.3), or keep Glow strength + Roundness on every kind as today?

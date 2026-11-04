@@ -63,3 +63,11 @@ lab Import button / `--install`.
 ## feat/blank-default
 - Fresh load opens the blank template (`START_COMPONENT` in lab/lab.js), not helix. Helix stays in the library.
 - Type menu removed: Scale + Label size -> Layout > Size; Weight + Letter spacing -> Layout > Text. 6 menus: Color, Interaction, Surface, Motion, Rate, Layout.
+
+## feat/blank-default: Rate merged into Motion (Rob t685u)
+- 5 main menus: Color, Interaction, Surface, Motion, Layout. `rate` removed from `CATS` and `core.sectionOrder`.
+- Motion groups: Timing (Speed, Seconds per loop, Play direction), Movement (Movement feel, Movement strength, Move when idle), Depth (3D depth strength), Hover (Lift). Short labels: Speed, Loop time, Direction, Feel, Strength, When idle, 3D strength.
+- Old files: `section`/override `rate` -> Motion, `type` -> Layout (`SECTION_MAP` in lab/manifest.js; `groups.rate` order joins `groups.motion`); scan.js emits Motion; checker accepts retired sections.
+- Motion flip pair: Movement <-> Depth. Helix motion group order set to Timing, Movement, Depth.
+- Layout > Size: Width before Scale (Height is Pro, sorts after Mid controls).
+- Ids, saved values, tiers unchanged. resolve-baseline rewritten on purpose for this change.

@@ -10,7 +10,7 @@ the component or which parameter moves before touching the control.
 | Colour groups that paint the component body (`COLOR_BORDER`, `COLOR_FILL`, `COLOR_FILL_2`) | the element being painted | `Card` (card kind, helix), `Button`, `Nav`, `Hero`, `List`, `Modal`, `Field` (input), `Backdrop` (animated background) |
 | Other colour groups | the role | `Text`, `Glow`, `Accent` |
 | Color section single rows (no flips) | Fill row: the words the two fill labels share (`Fill top` / `Fill bottom` -> `Fill`); Text selector: each control's `short`, else `label` | `Fill`, `Number \| Label \| Zero value` (helix), `Text \| Muted` (template) |
-| Flip-card front / back | the two halves of one topic | `Size <-> Style` (type), `Shape <-> Effects` (surface), `Pointer <-> Touch & keys` (interact), `Loop <-> Depth` (motion) |
+| Flip-card front / back | the two halves of one topic | `Size <-> Style` (type), `Shape <-> Effects` (surface), `Pointer <-> Touch & keys` (interact), `Movement <-> Depth` (motion) |
 | A component's own controls (`extras` with `"section": "component"`) | the component's part | `Button` (glow-button: icon, sheen, pulse, case) |
 | Advanced back of a flip | `<front>·Adv` only when the back is the same topic in more depth | `Turn·Adv`, `Tempo·Adv` (helix) |
 
@@ -42,4 +42,5 @@ keyed by **control id** (`UPPER_SNAKE`), never by group name. Renaming a group c
 - Labels name the parameter in the component's terms ("Button border", not "Border colour 1").
 
 ## Menus (applied, feat/blank-default)
+Five menus: Color, Interaction, Surface, Motion, Layout. There is no Type or Rate menu; Rate's controls are in Motion > Timing (Speed, Loop time, Direction) and Motion > Movement (Feel, Strength, When idle), 3D strength in Motion > Depth.
 There is no Type menu. Size controls (Scale, Label size, Width, Height) are Layout > Size; Weight and Letter spacing are Layout > Text.
