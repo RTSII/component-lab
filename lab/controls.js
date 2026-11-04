@@ -453,7 +453,7 @@
       });
       jog.addEventListener('dblclick', (e) => { e.stopPropagation(); put(defVal); });
 
-      // Keyboard & wheel on both fader and jog
+      // Keyboard on both fader and jog. No wheel: the mouse wheel always scrolls the dock (Rob t691u)
       const onKey = (e) => {
         const st = step * (e.shiftKey ? 5 : 1);
         const k = { ArrowUp: st, ArrowRight: st, ArrowDown: -st, ArrowLeft: -st }[e.key];
@@ -461,16 +461,8 @@
         else if (e.key === 'Home') { e.preventDefault(); put(min); }
         else if (e.key === 'End') { e.preventDefault(); put(max); }
       };
-      const onWheel = (e) => {
-        if (document.activeElement !== fader && document.activeElement !== jog && !deck.matches(':hover')) return;
-        e.preventDefault();
-        const dir = e.deltaY < 0 ? 1 : -1;
-        put(Number(getP()[v.id]) + dir * step * (e.shiftKey ? 0.5 : 1));
-      };
       fader.addEventListener('keydown', onKey);
       jog.addEventListener('keydown', onKey);
-      fader.addEventListener('wheel', onWheel, { passive: false });
-      jog.addEventListener('wheel', onWheel, { passive: false });
 
       // Hardware deck buttons
       resetBtn.addEventListener('click', () => put(defVal));
@@ -881,12 +873,7 @@
         e.stopPropagation();
         put(v.default);
       });
-      d.addEventListener('wheel', (e) => {
-        if (document.activeElement !== d && !d.matches(':hover')) return;
-        e.preventDefault();
-        const st = (v.step || 1) * (e.shiftKey ? 0.5 : 1);
-        put(Number(getP()[v.id]) + (e.deltaY < 0 ? st : -st));
-      }, { passive: false });
+      // No wheel handler: the mouse wheel scrolls the dock, never changes a knob (Rob t691u)
       d.addEventListener('keydown', (e) => {
         const st = (v.step || 1) * (e.shiftKey ? 10 : 1);
         const k = { ArrowUp: st, ArrowRight: st, ArrowDown: -st, ArrowLeft: -st }[e.key];

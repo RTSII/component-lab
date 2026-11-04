@@ -189,4 +189,10 @@ if (typeof LM.applyKindSpec === 'function') {
   const kinds = read('components/_template/kinds.json').kinds;
   Object.keys(kinds).forEach((k) => dupLabels('kind ' + k, LM.resolve(LM.applyKindSpec(tpl, k, kinds[k], core), core)));
 }
+// Rob t691u: the mouse wheel never changes a dock control (it must scroll the dock). Only the stage / scaler may listen.
+{
+  const src = fs.readFileSync(path.join(ROOT, 'lab', 'controls.js'), 'utf8');
+  if (/addEventListener\(\s*['"]wheel['"]/.test(src)) fail('lab/controls.js has a wheel listener on a control');
+  else console.log('ok   no wheel listeners on dock controls');
+}
 if (!process.exitCode) console.log('resolve-test: all checks passed');

@@ -81,3 +81,6 @@ lab Import button / `--install`.
 - Duplicates fixed: glow-button relabelled SCALE_TEXT "Label size", next to core SCALE_LABEL "Label size" (both text sizes). Override removed (Scale everywhere); SCALE_LABEL is now "Secondary text size" in Layout > Text; TRACKING short "Tracking" -> "Letter spacing". Helix: Text fade/Shell dim shorts "Starts" -> "Text starts"/"Dim starts".
 - Blank template (Pro) now opts in Height (min-height on card, hero, list, modal; default 80px, no visual change) and Secondary text size (scales .cmp-text / field hint); hidden on kinds where they do nothing.
 - resolve-test: new duplicate-visible-label check per menu (8 kinds, glow-button, helix). Baseline rewritten on purpose. Ids, saved values, tiers unchanged.
+
+## feat/blank-default: no mouse-wheel on dock controls (Rob t691u)
+- Removed the wheel handlers that changed values on knobs (radial dial) and the tempo deck (fader + jog). The wheel now always scrolls the dock; keyboard and drag still work. resolve-test fails if lab/controls.js gets a wheel listener again; tools/test/wheel-scroll-check.py is the browser check.
