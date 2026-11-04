@@ -1,4 +1,11 @@
-# Menu scheme: menus, submenus and variables (PROPOSAL, NOT APPLIED)
+# Menu scheme: menus, submenus and variables
+
+**Applied on feat/blank-default (Rob t681u):** 6 main menus: Color, Interaction, Surface, Motion, Rate, Layout.
+"Type" is gone as a main menu. Layout groups, in order: **Size** (Scale, Label size, Width, Height),
+**Spacing** (Padding, Gap), **Text** (Weight, Letter spacing). Control ids, saved values, tiers unchanged;
+old manifests using `"section": "type"` are read as Layout. The rest of this doc below is still a proposal.
+
+(Original proposal follows.)
 
 Status: proposal only. No code, labels or ids have changed. Once Rob approves it, this doc becomes the
 naming source for every kind and replaces LABEL-RUBRIC rules 3, 5 and 6 and the naming examples in

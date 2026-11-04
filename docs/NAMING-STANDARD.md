@@ -40,3 +40,6 @@ keyed by **control id** (`UPPER_SNAKE`), never by group name. Renaming a group c
   component extras use a short component prefix, e.g. `BTN_`, `HX_`). Never rename an id without an
   `aliases` entry.
 - Labels name the parameter in the component's terms ("Button border", not "Border colour 1").
+
+## Menus (applied, feat/blank-default)
+There is no Type menu. Size controls (Scale, Label size, Width, Height) are Layout > Size; Weight and Letter spacing are Layout > Text.

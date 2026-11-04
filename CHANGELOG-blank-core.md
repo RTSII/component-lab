@@ -59,3 +59,7 @@ Helix safety copy: tag `pre-blank-core` + `component-lab-backups/helix-2026-11-0
 Boot / registry order change (`_template` stays last), empty sandbox, chooser overlay, header slide-down
 drawer, VIP blank-template icon, kind picker UI, grouped toolbar menu, wizard, per-kind snapshots/stars,
 lab Import button / `--install`.
+
+## feat/blank-default
+- Fresh load opens the blank template (`START_COMPONENT` in lab/lab.js), not helix. Helix stays in the library.
+- Type menu removed: Scale + Label size -> Layout > Size; Weight + Letter spacing -> Layout > Text. 6 menus: Color, Interaction, Surface, Motion, Rate, Layout.
