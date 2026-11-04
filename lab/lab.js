@@ -1950,14 +1950,14 @@
       const body = el('div', 'mini-body is-mixed-deck');
       const topArea = el('div', 'mini-deck-top');
       topItems.forEach((v) => topArea.appendChild(ctlRow(v, { compact: !bare })));
-      body.appendChild(topArea);
 
       const faderArea = el('div', 'mini-deck-faders' + (faderItems.length === 2 ? ' is-2col' : faderItems.length === 1 ? ' is-single' : ''));
       faderItems.forEach((v, idx) => {
         v.deckCh = v.deckCh || (idx + 1);
         faderArea.appendChild(ctlRow(v, { compact: true }));
       });
-      body.appendChild(faderArea);
+      // scheme order: whichever comes first in the group goes on top (Size: Width + Height faders, then Scale)
+      if (faderItems.includes(lead[0])) body.append(faderArea, topArea); else body.append(topArea, faderArea);
       card.appendChild(body);
       return card;
     }
