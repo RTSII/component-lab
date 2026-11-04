@@ -53,7 +53,9 @@
         "RADIUS": 16
       },
       "hide": [
-        "IX_DRAG"
+        "IX_DRAG",
+        "SIZE_H",
+        "SCALE_LABEL"
       ],
       "colorGroup": "Nav"
     },
@@ -118,7 +120,9 @@
       "hide": [
         "SIZE_W",
         "IX_DRAG",
-        "IX_PRESS"
+        "IX_PRESS",
+        "SIZE_H",
+        "SCALE_LABEL"
       ],
       "colorGroup": "Backdrop"
     },
@@ -150,7 +154,10 @@
         "SPACE_GAP": 8,
         "SCALE_TEXT": 0.94
       },
-      "colorGroup": "List"
+      "colorGroup": "List",
+      "hide": [
+        "SCALE_LABEL"
+      ]
     },
     "button": {
       "label": "Button",
@@ -182,7 +189,9 @@
       },
       "hide": [
         "SIZE_W",
-        "IX_DRAG"
+        "IX_DRAG",
+        "SIZE_H",
+        "SCALE_LABEL"
       ],
       "colorGroup": "Button"
     },
@@ -250,7 +259,8 @@
       },
       "hide": [
         "IX_DRAG",
-        "IX_PRESS"
+        "IX_PRESS",
+        "SIZE_H"
       ],
       "colorGroup": "Field"
     }

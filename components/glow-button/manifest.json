@@ -112,8 +112,7 @@
         "signature": true
       },
       "SCALE_TEXT": {
-        "default": 0.94,
-        "label": "Label size"
+        "default": 0.94
       },
       "IX_HOVER": {
         "default": "both",

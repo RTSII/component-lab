@@ -60,7 +60,9 @@
       "SPACE_GAP",
       "HOVER_LIFT",
       "IDLE",
-      "MOTION_INTENSITY"
+      "MOTION_INTENSITY",
+      "SIZE_H",
+      "SCALE_LABEL"
     ],
     "freePicks": [
       "GLOW_STRENGTH",
@@ -94,6 +96,9 @@
       },
       "MOTION_EASING": {
         "featured": true
+      },
+      "SIZE_H": {
+        "default": 80
       }
     }
   },

@@ -123,22 +123,12 @@
     Object.keys(aliases).forEach((old) => { was[aliases[old]] = old; });
     vars.forEach((v) => { if (was[v.id]) v.was = was[v.id]; v._featured0 = !!v.featured; });
     // order: explicit "order" list first (a component keeps its own card order), the rest after, as listed
-    let list = vars;
-    if (Array.isArray(m.order) && m.order.length) {
-      const idx = (v) => { const i = m.order.indexOf(v.id); return i < 0 ? 1e6 + vars.indexOf(v) : i; };
-      list = vars.slice().sort((a, b) => idx(a) - idx(b));
-    }
-    // inside each section + group: Free first, then Mid, then Pro (stable; the slots the group uses stay put)
-    const buckets = new Map();
-    list.forEach((v, i) => { const k = (v.category || '') + '\u0000' + (v.group || ''); if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(i); });
-    const sorted = list.slice();
-    buckets.forEach((slots) => {
-      const items = slots.map((i) => list[i]);
-      const rank = (v) => (v.tier in TIER_RANK ? TIER_RANK[v.tier] : 1);
-      const ord = items.map((v, i) => ({ v, i })).sort((a, b) => rank(a.v) - rank(b.v) || a.i - b.i).map((x) => x.v);
-      slots.forEach((s, j) => { sorted[s] = ord[j]; });
-    });
-    list = sorted;
+    // then core.order (the Pro scheme order), then as listed. Tier never reorders: Pro is designed first and
+    // Mid / Free show a subset in the same order.
+    const mOrd = Array.isArray(m.order) ? m.order : [];
+    const cOrd = Array.isArray(core.order) ? core.order : [];
+    const idx = (v) => { const i = mOrd.indexOf(v.id); if (i >= 0) return i; const j = cOrd.indexOf(v.core || v.id); return j >= 0 ? 1e6 + j : 2e6 + vars.indexOf(v); };
+    let list = vars.slice().sort((a, b) => idx(a) - idx(b));
     // the clock: role flags replace manifest.time { cycle, speed, direction }
     const find = (fn) => { const v = list.find(fn); return v ? v.id : null; };
     const time = m.time || {
@@ -266,7 +256,7 @@
   // group names repeat across sections (Size in Layout and helix extras, Glow in Color and Surface). A manifest can add
   // or replace pairs with "flipPairs": { "<section>": { "<front group>": "<back group>" } }.
   const FLIP_PAIRS = {
-    surface: { Shape: 'Effects' },
+    surface: { Corners: 'Glass' },
     interact: { Pointer: 'Touch & keys' },
     motion: { Movement: 'Depth' }
   };

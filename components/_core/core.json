@@ -86,8 +86,8 @@
     "surface": [
       "Opacity",
       "Glow",
-      "Shape",
-      "Effects"
+      "Corners",
+      "Glass"
     ],
     "motion": [
       "Timing",
@@ -367,9 +367,9 @@
     },
     {
       "id": "RADIUS",
-      "label": "Corner radius",
+      "label": "Corner roundness",
       "section": "surface",
-      "group": "Shape",
+      "group": "Corners",
       "widget": "knob",
       "tier": "mid",
       "min": 0,
@@ -378,7 +378,7 @@
       "default": 14,
       "unit": "px",
       "css": "--radius",
-      "short": "Radius"
+      "short": "Roundness"
     },
     {
       "id": "SIZE_W",
@@ -500,9 +500,9 @@
     },
     {
       "id": "BLUR",
-      "label": "Backdrop blur",
+      "label": "Background blur",
       "section": "surface",
-      "group": "Effects",
+      "group": "Glass",
       "widget": "h-slider",
       "tier": "pro",
       "min": 0,
@@ -556,14 +556,14 @@
       "default": 0.02,
       "unit": "em",
       "css": "--track",
-      "short": "Tracking",
+      "short": "Letter spacing",
       "optional": true
     },
     {
       "id": "SCALE_LABEL",
-      "label": "Label size",
+      "label": "Secondary text size",
       "section": "layout",
-      "group": "Size",
+      "group": "Text",
       "widget": "h-slider",
       "tier": "pro",
       "min": 0.5,
@@ -572,7 +572,7 @@
       "default": 1,
       "unit": "×",
       "css": "--label-k",
-      "short": "Label",
+      "short": "Secondary text",
       "optional": true
     },
     {
@@ -815,5 +815,41 @@
     "ready",
     "deprecated",
     "template"
-  ]
+  ],
+  "order": [
+    "COLOR_BORDER",
+    "COLOR_FILL",
+    "COLOR_FILL_2",
+    "COLOR_TEXT",
+    "COLOR_MUTED",
+    "COLOR_GLOW",
+    "COLOR_ACCENT",
+    "IX_HOVER",
+    "IX_PRESS",
+    "IX_DRAG",
+    "IX_TOUCH",
+    "IX_KEY",
+    "OPACITY_FILL",
+    "OPACITY_BORDER",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "BLUR",
+    "MOTION_SPEED",
+    "MOTION_CYCLE",
+    "MOTION_DIRECTION",
+    "MOTION_EASING",
+    "MOTION_INTENSITY",
+    "IDLE",
+    "DEPTH_PERSPECTIVE",
+    "HOVER_LIFT",
+    "SIZE_W",
+    "SIZE_H",
+    "SCALE_TEXT",
+    "SPACE_PAD",
+    "SPACE_GAP",
+    "SCALE_LABEL",
+    "WEIGHT",
+    "TRACKING"
+  ],
+  "orderNote": "Pro display order inside each group (the scheme order). Mid/Free show subsets of it in the same order; tier never reorders."
 }

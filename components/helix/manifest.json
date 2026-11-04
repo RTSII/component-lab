@@ -412,7 +412,7 @@
       "advanced": true,
       "featured": false,
       "group": "Text fade",
-      "short": "Starts",
+      "short": "Text starts",
       "unit": "°",
       "widget": "knob",
       "pair": "TEXT_FADE_B"
@@ -446,7 +446,7 @@
       "where": "body in layout()",
       "featured": false,
       "group": "Shell dim",
-      "short": "Starts",
+      "short": "Dim starts",
       "unit": "°",
       "widget": "knob",
       "pair": "BACK_FADE_B"

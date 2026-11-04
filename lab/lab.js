@@ -1839,7 +1839,7 @@
       case 'interact': return ['touch', 'key'].includes(v.interaction) ? 'Touch & keys' : 'Pointer';
       case 'surface':
         if (v.control === 'switch') return 'Toggles';
-        if (/GLOW|BLUR|SHADOW/.test(id)) return 'Effects';
+        if (/GLOW|BLUR|SHADOW/.test(id)) return 'Glass';
         return 'Opacity';
       case 'type': return /WEIGHT|TRACK|FAMILY|CASE/.test(id) ? 'Style' : 'Size';
       case 'motion': return v.master === 'speed' || v.speedScaled || /SPEED|TEMPO|CYCLE|DUR|DIRECTION/.test(id) ? 'Timing' : 'Movement';
@@ -1847,7 +1847,7 @@
         if (/RADIUS|ROUND/.test(id)) return 'Radius';
         if (/PAD|GAP|MARGIN|TRAVEL|SPACE/.test(id)) return 'Spacing';
         if (/^N$|COUNT|W$|WIDTH|H$|HEIGHT|SIZE/.test(id)) return 'Size';
-        return 'Shape';
+        return 'Corners';
     }
   }
   // Card layouts named by the manifest ("layout": { "deck": [...], "pads": [...] }), not by component group names
@@ -2134,7 +2134,7 @@
     const back = groups.filter((g) => g.items.every((v) => v.advanced));
     const advN = all.filter((v) => v.advanced).length;
     const bare = front.length === 1 && front[0].items.length <= 3 && !back.length;
-    // Flip pairs per section (lab/manifest.js flipPlan): explicit pairs such as Surface: Shape <-> Effects,
+    // Flip pairs per section (lab/manifest.js flipPlan): explicit pairs such as Surface: Corners <-> Glass,
     // else a single back group onto the first all-front group, then the remaining backs two by two.
     window.LabManifest.flipPlan(groups, cat, man.source && man.source.flipPairs).forEach((p) => {
       if (p.type === 'flip') {

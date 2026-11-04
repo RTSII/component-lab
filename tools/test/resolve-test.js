@@ -31,7 +31,7 @@ function autoGroup(v) {
     case 'interact': return ['touch', 'key'].includes(v.interaction) ? 'Touch & keys' : 'Pointer';
     case 'surface':
       if (v.control === 'switch') return 'Toggles';
-      if (/GLOW|BLUR|SHADOW/.test(id)) return 'Effects';
+      if (/GLOW|BLUR|SHADOW/.test(id)) return 'Glass';
       return 'Opacity';
     case 'type': return /WEIGHT|TRACK|FAMILY|CASE/.test(id) ? 'Style' : 'Size';
     case 'motion': return v.master === 'speed' || v.speedScaled || /SPEED|TEMPO|CYCLE|DUR|DIRECTION/.test(id) ? 'Timing' : 'Movement';
@@ -39,7 +39,7 @@ function autoGroup(v) {
       if (/RADIUS|ROUND/.test(id)) return 'Radius';
       if (/PAD|GAP|MARGIN|TRAVEL|SPACE/.test(id)) return 'Spacing';
       if (/^N$|COUNT|W$|WIDTH|H$|HEIGHT|SIZE/.test(id)) return 'Size';
-      return 'Shape';
+      return 'Corners';
   }
 }
 // --- the pre-blank-core (fda87c8) group order + flip pairing, kept here as the reference ---
@@ -171,4 +171,22 @@ if (typeof LM.applyKindSpec === 'function') {
     else console.log('ok   kind ' + k.padEnd(20) + nf + '/' + nm + '/' + r.vars.length + '  colour group: ' + (r.vars.find((v) => v.id === 'COLOR_FILL') || {}).group);
   });
 } else console.log('skip kinds (LabManifest.applyKindSpec not present yet)');
+// Pro: no two controls in one section may show the same label (full label or short label).
+function dupLabels(name, r) {
+  const errs = [];
+  const bySec = {};
+  r.vars.forEach((v) => { (bySec[v.category] = bySec[v.category] || []).push(v); });
+  Object.keys(bySec).forEach((sec) => ['label', 'short'].forEach((k) => {
+    const seen = {};
+    bySec[sec].forEach((v) => { const t = String(v[k] || '').trim().toLowerCase(); if (!t) return; if (seen[t]) errs.push(sec + ' ' + k + ' "' + v[k] + '": ' + seen[t] + ' + ' + v.id); else seen[t] = v.id; });
+  }));
+  if (errs.length) fail('duplicate visible labels in ' + name + ': ' + errs.join('; '));
+  else console.log('ok   labels ' + name);
+}
+['helix', 'glow-button'].forEach((id) => dupLabels(id, LM.resolve(read('components/' + id + '/manifest.json'), core)));
+if (typeof LM.applyKindSpec === 'function') {
+  const tpl = read('components/_template/manifest.json');
+  const kinds = read('components/_template/kinds.json').kinds;
+  Object.keys(kinds).forEach((k) => dupLabels('kind ' + k, LM.resolve(LM.applyKindSpec(tpl, k, kinds[k], core), core)));
+}
 if (!process.exitCode) console.log('resolve-test: all checks passed');

@@ -489,8 +489,8 @@
     },
     {
      "id": "SCALE_LABEL",
-     "label": "Label size",
-     "group": "Size",
+     "label": "Secondary text size",
+     "group": "Text",
      "widget": "h-slider",
      "tier": "vip",
      "min": 0.5,
@@ -499,7 +499,7 @@
      "default": 1,
      "unit": "×",
      "css": "--hx-lbl-k",
-     "short": "Label",
+     "short": "Secondary text",
      "category": "layout",
      "control": "slider",
      "core": "SCALE_LABEL",
@@ -689,7 +689,7 @@
      "advanced": true,
      "featured": false,
      "group": "Text fade",
-     "short": "Starts",
+     "short": "Text starts",
      "unit": "°",
      "widget": "knob",
      "pair": "TEXT_FADE_B",
@@ -727,7 +727,7 @@
      "where": "body in layout()",
      "featured": false,
      "group": "Shell dim",
-     "short": "Starts",
+     "short": "Dim starts",
      "unit": "°",
      "widget": "knob",
      "pair": "BACK_FADE_B",
@@ -1396,7 +1396,7 @@
       "advanced": true,
       "featured": false,
       "group": "Text fade",
-      "short": "Starts",
+      "short": "Text starts",
       "unit": "°",
       "widget": "knob",
       "pair": "TEXT_FADE_B"
@@ -1430,7 +1430,7 @@
       "where": "body in layout()",
       "featured": false,
       "group": "Shell dim",
-      "short": "Starts",
+      "short": "Dim starts",
       "unit": "°",
       "widget": "knob",
       "pair": "BACK_FADE_B"
@@ -1701,11 +1701,13 @@
    "layout": {
     "groups": [
      "Size",
-     "Spacing & Radius"
+     "Spacing & Radius",
+     "Text"
     ],
     "cards": [
-     "CARD Size(SCALE_TEXT,SCALE_LABEL,N,SIZE_W,SCALE_MIN)",
-     "FLIP Spacing & Radius(RADIUS_MAX,TRAVEL,WAVE) <-> Spacing & Radius · Adv(RADIUS_FRAC*,RADIUS_PAD*)"
+     "CARD Size(SCALE_TEXT,N,SIZE_W,SCALE_MIN)",
+     "FLIP Spacing & Radius(RADIUS_MAX,TRAVEL,WAVE) <-> Spacing & Radius · Adv(RADIUS_FRAC*,RADIUS_PAD*)",
+     "CARD Text(SCALE_LABEL)"
     ]
    },
    "motion": {
@@ -1811,8 +1813,8 @@
     "surface": [
      "Opacity",
      "Glow",
-     "Shape",
-     "Effects"
+     "Corners",
+     "Glass"
     ],
     "motion": [
      "Timing",
@@ -1899,6 +1901,21 @@
      "featured": true,
      "advanced": false,
      "_featured0": true
+    },
+    {
+     "id": "COLOR_ACCENT",
+     "label": "Icon / focus ring",
+     "group": "Accent",
+     "widget": "swatches",
+     "tier": "pro",
+     "role": "accent",
+     "default": "#00e5ff",
+     "css": "--c-accent",
+     "short": "Accent",
+     "category": "color",
+     "control": "swatch-role",
+     "core": "COLOR_ACCENT",
+     "_featured0": false
     },
     {
      "id": "IX_HOVER",
@@ -2067,8 +2084,8 @@
     },
     {
      "id": "RADIUS",
-     "label": "Corner radius",
-     "group": "Shape",
+     "label": "Corner roundness",
+     "group": "Corners",
      "widget": "knob",
      "tier": "ga",
      "min": 0,
@@ -2077,7 +2094,7 @@
      "default": 12,
      "unit": "px",
      "css": "--radius",
-     "short": "Radius",
+     "short": "Roundness",
      "category": "surface",
      "control": "radial",
      "core": "RADIUS",
@@ -2087,21 +2104,22 @@
      "_featured0": true
     },
     {
-     "id": "SCALE_TEXT",
-     "label": "Label size",
-     "group": "Size",
+     "id": "BLUR",
+     "label": "Background blur",
+     "group": "Glass",
      "widget": "h-slider",
-     "tier": "vip",
-     "min": 0.5,
-     "max": 2,
-     "step": 0.05,
-     "default": 0.94,
-     "unit": "×",
-     "css": "--type-k",
-     "short": "Scale",
-     "category": "layout",
+     "tier": "pro",
+     "min": 0,
+     "max": 30,
+     "step": 1,
+     "default": 0,
+     "unit": "px",
+     "css": "--blur",
+     "short": "Blur",
+     "advanced": true,
+     "category": "surface",
      "control": "slider",
-     "core": "SCALE_TEXT",
+     "core": "BLUR",
      "_featured0": false
     },
     {
@@ -2155,37 +2173,77 @@
      "_featured0": false
     },
     {
-     "id": "COLOR_ACCENT",
-     "label": "Icon / focus ring",
-     "group": "Accent",
-     "widget": "swatches",
+     "id": "IDLE",
+     "label": "Move when idle",
+     "group": "Movement",
+     "widget": "pad",
      "tier": "pro",
-     "role": "accent",
-     "default": "#00e5ff",
-     "css": "--c-accent",
-     "short": "Accent",
-     "category": "color",
-     "control": "swatch-role",
-     "core": "COLOR_ACCENT",
+     "default": true,
+     "css": "--idle",
+     "cssMap": {
+      "true": "running",
+      "false": "paused"
+     },
+     "short": "When idle",
+     "category": "motion",
+     "control": "switch",
+     "variant": "pad",
+     "core": "IDLE",
      "_featured0": false
     },
     {
-     "id": "BLUR",
-     "label": "Backdrop blur",
-     "group": "Effects",
-     "widget": "h-slider",
+     "id": "HOVER_LIFT",
+     "label": "Hover lift",
+     "group": "Hover",
+     "widget": "knob",
      "tier": "pro",
      "min": 0,
-     "max": 30,
+     "max": 16,
      "step": 1,
-     "default": 0,
+     "default": 4,
      "unit": "px",
-     "css": "--blur",
-     "short": "Blur",
-     "advanced": true,
-     "category": "surface",
+     "css": "--lift",
+     "short": "Lift",
+     "category": "motion",
+     "control": "radial",
+     "core": "HOVER_LIFT",
+     "_featured0": false
+    },
+    {
+     "id": "SCALE_TEXT",
+     "label": "Scale",
+     "group": "Size",
+     "widget": "h-slider",
+     "tier": "vip",
+     "min": 0.5,
+     "max": 2,
+     "step": 0.05,
+     "default": 0.94,
+     "unit": "×",
+     "css": "--type-k",
+     "short": "Scale",
+     "category": "layout",
      "control": "slider",
-     "core": "BLUR",
+     "core": "SCALE_TEXT",
+     "_featured0": false
+    },
+    {
+     "id": "SPACE_PAD",
+     "label": "Padding",
+     "group": "Spacing",
+     "widget": "v-fader",
+     "tier": "pro",
+     "min": 0,
+     "max": 48,
+     "step": 1,
+     "default": 20,
+     "unit": "px",
+     "css": "--pad",
+     "short": "Padding",
+     "category": "layout",
+     "control": "fader",
+     "variant": "channel",
+     "core": "SPACE_PAD",
      "_featured0": false
     },
     {
@@ -2230,66 +2288,10 @@
      "default": 0.02,
      "unit": "em",
      "css": "--track",
-     "short": "Tracking",
+     "short": "Letter spacing",
      "category": "layout",
      "control": "slider",
      "core": "TRACKING",
-     "_featured0": false
-    },
-    {
-     "id": "SPACE_PAD",
-     "label": "Padding",
-     "group": "Spacing",
-     "widget": "v-fader",
-     "tier": "pro",
-     "min": 0,
-     "max": 48,
-     "step": 1,
-     "default": 20,
-     "unit": "px",
-     "css": "--pad",
-     "short": "Padding",
-     "category": "layout",
-     "control": "fader",
-     "variant": "channel",
-     "core": "SPACE_PAD",
-     "_featured0": false
-    },
-    {
-     "id": "HOVER_LIFT",
-     "label": "Hover lift",
-     "group": "Hover",
-     "widget": "knob",
-     "tier": "pro",
-     "min": 0,
-     "max": 16,
-     "step": 1,
-     "default": 4,
-     "unit": "px",
-     "css": "--lift",
-     "short": "Lift",
-     "category": "motion",
-     "control": "radial",
-     "core": "HOVER_LIFT",
-     "_featured0": false
-    },
-    {
-     "id": "IDLE",
-     "label": "Move when idle",
-     "group": "Movement",
-     "widget": "pad",
-     "tier": "pro",
-     "default": true,
-     "css": "--idle",
-     "cssMap": {
-      "true": "running",
-      "false": "paused"
-     },
-     "short": "When idle",
-     "category": "motion",
-     "control": "switch",
-     "variant": "pad",
-     "core": "IDLE",
      "_featured0": false
     },
     {
@@ -2514,8 +2516,7 @@
        "signature": true
       },
       "SCALE_TEXT": {
-       "default": 0.94,
-       "label": "Label size"
+       "default": 0.94
       },
       "IX_HOVER": {
        "default": "both",
@@ -2677,14 +2678,26 @@
    "surface": {
     "groups": [
      "Glow",
-     "Shape",
+     "Corners",
      "Opacity",
-     "Effects"
+     "Glass"
     ],
     "cards": [
-     "FLIP Glow(GLOW_STRENGTH) <-> Effects(BLUR*)",
-     "CARD Shape(RADIUS)",
+     "FLIP Glow(GLOW_STRENGTH) <-> Glass(BLUR*)",
+     "CARD Corners(RADIUS)",
      "CARD Opacity(OPACITY_FILL,OPACITY_BORDER)"
+    ]
+   },
+   "motion": {
+    "groups": [
+     "Timing",
+     "Movement",
+     "Hover"
+    ],
+    "cards": [
+     "CARD Timing(MOTION_SPEED)",
+     "CARD Movement(MOTION_EASING,IDLE)",
+     "CARD Hover(HOVER_LIFT)"
     ]
    },
    "layout": {
@@ -2698,18 +2711,6 @@
      "FLIP Size(SCALE_TEXT) <-> Text(WEIGHT*,TRACKING*)",
      "CARD Spacing(SPACE_PAD)",
      "CARD Button(BTN_ICON,BTN_SHEEN,BTN_SHEEN_ANGLE,BTN_PULSE,BTN_CASE)"
-    ]
-   },
-   "motion": {
-    "groups": [
-     "Timing",
-     "Movement",
-     "Hover"
-    ],
-    "cards": [
-     "CARD Timing(MOTION_SPEED)",
-     "CARD Movement(MOTION_EASING,IDLE)",
-     "CARD Hover(HOVER_LIFT)"
     ]
    }
   }
