@@ -118,38 +118,71 @@
       const isFxUnit = (v.control === 'fx' || v.widget === 'fx-unit' || (v.variant === 'fx' && v.control !== 'swatch-role')) && (hasPro('accordion') || v.control === 'fx' || v.variant === 'fx');
       const isPadSwitch = v.control === 'switch' && (v.variant === 'pad' || v.control === 'pad' || v.variant === 'button');
       const isPadBtn = !isPadSwitch && (v.control === 'pad' || v.variant === 'pad' || v.variant === 'button');
-      if ((v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader || isFxUnit)) wireClickToType(v, out);
+      // Width / Height (sizePair): one vertical tempo fader, with a Width | Height switch when both show.
+      // Not the horizontal slider commit c42a210 drew, and not Motion Speed's full tempo deck.
+      const pairB = !isTempoDeck && ctx.pairPartner ? ctx.pairPartner(v) : null;
+      const isSizeFader = !isTempoDeck && !!(pairB || v.sizePair || v.sizePairOf) && (v.control === 'slider' || v.control === 'fader');
+      if (!isSizeFader && (v.control === 'slider' || v.control === 'radial' || isTempoDeck || isVertFader || isFxUnit)) wireClickToType(v, out);
       head.append(lab, out);
       if (hasPro('starCurate')) head.appendChild(starBtn(v));
       row.appendChild(head);
       const uid = 'c-' + v.id;
 
-      const pairB = !isTempoDeck && v.control === 'slider' && ctx.pairPartner ? ctx.pairPartner(v) : null;
-      if (pairB) {
-        // Width | Height: a mixer-style switch picks the side; the label names it; one slider drives it
-        row.classList.add('ctl-pair');
-        row.dataset.pairB = pairB.id;
-        lab.htmlFor = uid;
+      if (isSizeFader) {
+        // Mixer switch (only when both sides show) + the active side's name + one tempo-deck fader strip.
+        row.classList.add('ctl-size-fader');
+        if (pairB) row.classList.add('ctl-pair');
+        if (pairB) row.dataset.pairB = pairB.id;
         let side = v;
-        const sw = el('div', 'seg seg-sm pair-seg');
-        sw.setAttribute('role', 'radiogroup');
-        sw.setAttribute('aria-label', 'Which size the slider sets');
-        const r = el('input', 'range');
-        r.type = 'range'; r.id = uid;
+        const fader = tempoFaderCol(() => side, {
+          title: (s) => String(s.short || s.label || '').toUpperCase(),
+          aria: (s) => s.label + ' vertical tempo fader',
+          ledTitle: 'Default',
+          out: out
+        });
         const sync = () => {
-          const Pn = getP();
-          Object.assign(r, { min: side.min, max: side.max, step: side.step });
-          r.value = Pn[side.id];
-          r.style.setProperty('--p', ((Pn[side.id] - side.min) / (side.max - side.min || 1) * 100).toFixed(2) + '%');
-          lab.textContent = compact && side.short ? side.short : side.label;
-          if (!out.querySelector('.val-in')) out.textContent = fmt(side, Pn[side.id]);
-          r.setAttribute('aria-label', side.label);
+          if (pairB) lab.textContent = compact && side.short ? side.short : side.label;
+          if (!out.querySelector('.val-in')) out.textContent = fmt(side, getP()[side.id]);
+          if (fader._paint) fader._paint();
         };
         row._sync = sync;
-        buildSeg(sw, [{ value: v.id, label: v.short || v.label }, { value: pairB.id, label: pairB.short || pairB.label }], v.id, (id) => { side = id === v.id ? v : pairB; sync(); }, { equal: true });
-        r.addEventListener('input', () => { setValue(side.id, r.value, { quiet: true }); sync(); });
-        lab.addEventListener('dblclick', (e) => { if (side !== v) { e.stopImmediatePropagation(); setValue(side.id, side.default); } }, true);
-        row.append(sw, r);
+        if (pairB) {
+          const sw = el('div', 'seg seg-sm pair-seg');
+          sw.setAttribute('role', 'radiogroup');
+          sw.setAttribute('aria-label', 'Width or Height');
+          buildSeg(sw, [{ value: v.id, label: v.short || v.label }, { value: pairB.id, label: pairB.short || pairB.label }], v.id, (id) => { side = id === v.id ? v : pairB; sync(); }, { equal: true });
+          row.insertBefore(sw, head);
+          out.classList.add('is-editable');
+          out.title = 'Click to type an exact value';
+          out.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (out.querySelector('.val-in')) return;
+            const s = side;
+            const inp = el('input', 'val-in');
+            Object.assign(inp, { type: 'number', step: s.step || 1, min: s.min, max: s.max, value: getP()[s.id] });
+            out.textContent = '';
+            out.appendChild(inp);
+            inp.focus();
+            inp.select();
+            let done = false;
+            const finish = (commit) => {
+              if (done) return;
+              done = true;
+              if (commit && inp.value !== '' && !isNaN(Number(inp.value))) setValue(s.id, snapStep(Number(inp.value), s.min, s.max, s.step || 1));
+              if (!out.querySelector('.val-in')) return;
+              out.textContent = fmt(s, getP()[s.id]);
+            };
+            inp.addEventListener('keydown', (ke) => {
+              if (ke.key === 'Enter') { ke.preventDefault(); finish(true); }
+              else if (ke.key === 'Escape') { ke.preventDefault(); finish(false); }
+            });
+            inp.addEventListener('blur', () => finish(true));
+          });
+          lab.addEventListener('dblclick', (e) => { if (side !== v) { e.stopImmediatePropagation(); setValue(side.id, side.default); } }, true);
+        } else {
+          wireClickToType(v, out);
+        }
+        row.appendChild(fader);
         sync();
       } else if (v.steps && v.control === 'slider' && !isTempoDeck) {
         // Padding / Gap: named presets (None / Tight / Normal / Roomy) over a fine-tune slider
@@ -272,7 +305,7 @@
         }
       }
       // Deck caption: the manifest's deckLabel first ("MASTER" / "CH 1" / "CH 2"), then the generic variant / channel rule
-      if (v.deckLabel) {
+      if (v.deckLabel && !isSizeFader) {
         row.appendChild(el('div', 'xdj-deck-sub', esc(v.deckLabel)));
       } else if (v.variant === 'master' || v.variant === 'gain') {
         row.appendChild(el('div', 'xdj-deck-sub', 'MASTER'));
@@ -282,6 +315,120 @@
         row.appendChild(el('div', 'xdj-deck-sub', 'CH 1'));
       }
       return row;
+    }
+
+    // The vertical strip from the MOTION_SPEED tempo deck (ticks, detent, cap). `getSpec()` is the live
+    // control so one strip can drive Width or Height. `hooks.onInput` lets the tempo deck keep its jog wheel.
+    function tempoFaderCol(getSpec, hooks) {
+      hooks = hooks || {};
+      const col = el('div', 'xdj-fader-col');
+      let ticksHtml = '';
+      for (let i = 0; i <= 18; i++) {
+        const p = (i / 18) * 100;
+        const isMajor = i === 0 || i === 9 || i === 18;
+        ticksHtml += '<span class="xdj-tick' + (isMajor ? ' is-major' : '') + '" style="top:' + p.toFixed(2) + '%"><i></i><i></i></span>';
+      }
+      const first = getSpec();
+      const title0 = typeof hooks.title === 'function' ? hooks.title(first) : (hooks.title || 'TEMPO');
+      col.innerHTML =
+        '<div class="xdj-fader-head"><span class="xdj-fader-title">' + esc(title0) + '</span></div>' +
+        '<div class="xdj-fader-pole"><span>+</span><small></small></div>' +
+        '<div class="xdj-fader" tabindex="0" role="slider">' +
+          '<div class="xdj-scale">' + ticksHtml + '</div>' +
+          '<span class="xdj-zero-led"></span>' +
+          '<span class="xdj-detent-mark"></span>' +
+          '<div class="xdj-slot"><div class="xdj-fill"></div></div>' +
+          '<div class="xdj-cap"><span class="xdj-cap-grip"></span><span class="xdj-cap-line"></span><span class="xdj-cap-grip"></span></div>' +
+        '</div>' +
+        '<div class="xdj-fader-pole"><span>\u2212</span><small></small></div>';
+      const fader = col.querySelector('.xdj-fader');
+      const cap = col.querySelector('.xdj-cap');
+      const fill = col.querySelector('.xdj-fill');
+      const zeroLed = col.querySelector('.xdj-zero-led');
+      const detent = col.querySelector('.xdj-detent-mark');
+      const titleEl = col.querySelector('.xdj-fader-title');
+      const poles = col.querySelectorAll('.xdj-fader-pole small');
+      const specNow = () => {
+        const s = getSpec();
+        const min = s.min != null ? s.min : 0;
+        const max = s.max != null ? s.max : 1;
+        const step = s.step || (s.master === 'speed' ? 0.05 : 1);
+        const defVal = s.default != null ? s.default : min;
+        return { s, min, max, step, defVal, span: (max - min) || 1 };
+      };
+      const paint = () => {
+        const { s, min, max, defVal, span } = specNow();
+        const cur = Number(getP()[s.id]);
+        const norm = (Math.min(max, Math.max(min, isFinite(cur) ? cur : defVal)) - min) / span;
+        const defPct = Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
+        const topPct = (1 - norm) * 100;
+        const zeroTop = 100 - defPct;
+        cap.style.top = topPct.toFixed(2) + '%';
+        const fTop = Math.min(topPct, zeroTop);
+        const fH = Math.max(1.5, Math.abs(topPct - zeroTop));
+        fill.style.top = fTop.toFixed(2) + '%';
+        fill.style.height = fH.toFixed(2) + '%';
+        zeroLed.style.top = zeroTop.toFixed(2) + '%';
+        detent.style.top = zeroTop.toFixed(2) + '%';
+        const led = hooks.ledTitle != null ? hooks.ledTitle : 'TEMPO RESET LED';
+        zeroLed.title = led + ' (default ' + fmt(s, defVal) + ')';
+        zeroLed.classList.toggle('is-on', same(cur, defVal));
+        poles[0].textContent = fmt(s, max);
+        poles[1].textContent = fmt(s, min);
+        const title = typeof hooks.title === 'function' ? hooks.title(s) : (hooks.title || 'TEMPO');
+        if (titleEl) titleEl.textContent = title;
+        const aria = hooks.aria ? hooks.aria(s) : (s.label + ' vertical tempo fader');
+        fader.setAttribute('aria-label', aria);
+        fader.setAttribute('aria-valuemin', min);
+        fader.setAttribute('aria-valuemax', max);
+        fader.setAttribute('aria-valuenow', String(cur));
+        fader.setAttribute('aria-valuetext', fmt(s, cur));
+      };
+      const emit = (raw) => {
+        if (hooks.onInput) { hooks.onInput(raw); return; }
+        const { s, min, max, step } = specNow();
+        setValue(s.id, snapStep(raw, min, max, step), { quiet: true });
+        paint();
+        if (hooks.out && !hooks.out.querySelector('.val-in')) hooks.out.textContent = fmt(s, getP()[s.id]);
+      };
+      fader.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        fader.focus({ preventScroll: true });
+        fader.setPointerCapture(e.pointerId);
+        fader.classList.add('is-drag');
+        const fromEv = (ev) => {
+          const box = specNow();
+          const r = fader.getBoundingClientRect();
+          const norm = 1 - Math.min(1, Math.max(0, (ev.clientY - r.top) / Math.max(20, r.height)));
+          emit(box.min + Math.min(1, Math.max(0, norm)) * box.span);
+        };
+        fromEv(e);
+        const mv = (ev) => fromEv(ev);
+        const up = () => {
+          fader.classList.remove('is-drag');
+          fader.removeEventListener('pointermove', mv);
+          fader.removeEventListener('pointerup', up);
+          fader.removeEventListener('pointercancel', up);
+        };
+        fader.addEventListener('pointermove', mv);
+        fader.addEventListener('pointerup', up);
+        fader.addEventListener('pointercancel', up);
+      });
+      fader.addEventListener('dblclick', (e) => { e.stopPropagation(); emit(specNow().defVal); });
+      if (hooks.bindKeys !== false) {
+        fader.addEventListener('keydown', (e) => {
+          const box = specNow();
+          const st = box.step * (e.shiftKey ? 5 : 1);
+          const k = { ArrowUp: st, ArrowRight: st, ArrowDown: -st, ArrowLeft: -st }[e.key];
+          if (k != null) { e.preventDefault(); emit(Number(getP()[box.s.id]) + k); }
+          else if (e.key === 'Home') { e.preventDefault(); emit(box.min); }
+          else if (e.key === 'End') { e.preventDefault(); emit(box.max); }
+        });
+      }
+      col._paint = paint;
+      paint();
+      return col;
     }
 
     // Pioneer XDJ-XZ / DDJ-Controller style vertical Tempo Deck
@@ -295,16 +442,6 @@
       // Linear mapping, exactly like the original range slider: bottom = min, top = max, evenly in between.
       // (Styling only: the default is NOT forced to the middle; its RESET LED / detent sit where the default really is.)
       const valToNorm = (val) => (Math.min(max, Math.max(min, Number(val))) - min) / span;
-      const normToVal = (n) => min + Math.min(1, Math.max(0, n)) * span;
-      const defPct = Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
-
-      // 19 XDJ-XZ silkscreen ticks spread evenly over the travel (majors at the ends and the middle of travel)
-      let ticksHtml = '';
-      for (let i = 0; i <= 18; i++) {
-        const p = (i / 18) * 100;
-        const isMajor = i === 0 || i === 9 || i === 18;
-        ticksHtml += '<span class="xdj-tick' + (isMajor ? ' is-major' : '') + '" style="top:' + p.toFixed(2) + '%"><i></i><i></i></span>';
-      }
 
       const pt = (cx, cy, a, r) => [(cx + r * Math.sin(a * Math.PI / 180)).toFixed(2), (cy - r * Math.cos(a * Math.PI / 180)).toFixed(2)];
       const arc = (cx, cy, a1, a2, r) => {
@@ -353,30 +490,9 @@
             '</button>' +
             '<button type="button" class="xdj-btn xdj-nudge-up" title="Pitch bend up (+' + step + ')" aria-label="Increase tempo">+</button>' +
           '</div>' +
-        '</div>' +
-        '<div class="xdj-fader-col">' +
-          '<div class="xdj-fader-head"><span class="xdj-fader-title">TEMPO</span></div>' +
-          '<div class="xdj-fader-pole"><span>+</span><small>' + esc(fmt(v, max)) + '</small></div>' +
-          '<div class="xdj-fader" tabindex="0" role="slider" aria-label="' + esc(v.label) + ' vertical tempo fader" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' +
-            '<div class="xdj-scale">' + ticksHtml + '</div>' +
-            '<span class="xdj-zero-led" title="TEMPO RESET LED (default ' + esc(fmt(v, defVal)) + ')" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
-            '<span class="xdj-detent-mark" style="top:' + (100 - defPct).toFixed(2) + '%"></span>' +
-            '<div class="xdj-slot">' +
-              '<div class="xdj-fill"></div>' +
-            '</div>' +
-            '<div class="xdj-cap">' +
-              '<span class="xdj-cap-grip"></span>' +
-              '<span class="xdj-cap-line"></span>' +
-              '<span class="xdj-cap-grip"></span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="xdj-fader-pole"><span>&minus;</span><small>' + esc(fmt(v, min)) + '</small></div>' +
         '</div>';
 
       const jog = deck.querySelector('.xdj-jog');
-      const fader = deck.querySelector('.xdj-fader');
-      const cap = deck.querySelector('.xdj-cap');
-      const fill = deck.querySelector('.xdj-fill');
       const lcdVal = deck.querySelector('.xdj-lcd-val');
       const lcdPct = deck.querySelector('.xdj-lcd-pct');
       const resetBtn = deck.querySelector('.xdj-reset');
@@ -393,16 +509,15 @@
         if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]);
       };
 
+      // Same vertical strip Width/Height uses. Keys stay on this deck so Shift-step matches the jog wheel.
+      const faderCol = tempoFaderCol(() => v, { title: 'TEMPO', onInput: put, bindKeys: false });
+      deck.appendChild(faderCol);
+      const fader = faderCol.querySelector('.xdj-fader');
+
       const paint = () => {
         const cur = Number(getP()[v.id]);
         const norm = valToNorm(cur);
-        const topPct = (1 - norm) * 100;
-        const zeroTop = 100 - defPct;
-        cap.style.top = topPct.toFixed(2) + '%';
-        const fTop = Math.min(topPct, zeroTop);
-        const fH = Math.max(1.5, Math.abs(topPct - zeroTop));
-        fill.style.top = fTop.toFixed(2) + '%';
-        fill.style.height = fH.toFixed(2) + '%';
+        if (faderCol._paint) faderCol._paint();
 
         const ang = -135 + norm * 270;
         jogArc.setAttribute('d', arc(56, 56, -135, ang, 43));
@@ -417,40 +532,10 @@
         resetBtn.classList.toggle('is-zero', atDef);
         mtBadge.classList.toggle('is-active', !atDef);
         deck.classList.toggle('is-modified', !atDef);
-        const zeroLed = deck.querySelector('.xdj-zero-led');
-        if (zeroLed) zeroLed.classList.toggle('is-on', atDef);
 
-        fader.setAttribute('aria-valuenow', cur);
-        fader.setAttribute('aria-valuetext', fmt(v, cur));
         jog.setAttribute('aria-valuenow', cur);
         jog.setAttribute('aria-valuetext', fmt(v, cur));
       };
-
-      // Vertical Fader pointer drag
-      const fromFaderEvent = (e) => {
-        const r = fader.getBoundingClientRect();
-        const norm = 1 - Math.min(1, Math.max(0, (e.clientY - r.top) / Math.max(20, r.height)));
-        put(normToVal(norm));
-      };
-      fader.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        fader.focus({ preventScroll: true });
-        fader.setPointerCapture(e.pointerId);
-        fader.classList.add('is-drag');
-        fromFaderEvent(e);
-        const mv = (ev) => fromFaderEvent(ev);
-        const up = () => {
-          fader.classList.remove('is-drag');
-          fader.removeEventListener('pointermove', mv);
-          fader.removeEventListener('pointerup', up);
-          fader.removeEventListener('pointercancel', up);
-        };
-        fader.addEventListener('pointermove', mv);
-        fader.addEventListener('pointerup', up);
-        fader.addEventListener('pointercancel', up);
-      });
-      fader.addEventListener('dblclick', (e) => { e.stopPropagation(); put(defVal); });
 
       // Jog wheel drag (supports both vertical drag & circular platter spin)
       jog.addEventListener('pointerdown', (e) => {
@@ -943,8 +1028,8 @@
       const byId = getById(), P = getP();
       const v = byId[id];
       if (!v) return;
-      document.querySelectorAll('.ctl-pair[data-id="' + id + '"], .ctl-pair[data-pair-b="' + id + '"]').forEach((row) => row._sync && row._sync());
-      document.querySelectorAll('.ctl[data-id="' + id + '"]:not(.ctl-pair)').forEach((row) => {
+      document.querySelectorAll('.ctl-size-fader[data-id="' + id + '"], .ctl-size-fader[data-pair-b="' + id + '"]').forEach((row) => row._sync && row._sync());
+      document.querySelectorAll('.ctl[data-id="' + id + '"]:not(.ctl-size-fader)').forEach((row) => {
         const out = row.querySelector('.ctl-val');
         if (out && !row.querySelector('.swatch-trigger') && !out.querySelector('.val-in')) out.textContent = fmt(v, P[id]);
         const r = row.querySelector('input.range');

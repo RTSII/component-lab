@@ -68,7 +68,8 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   (keep the id as a component setting for the base loop length), or repurpose it as "Loop length" only for animated
   kinds with no Speed.
 - **Width / Height → one control:** a mixer-style channel switch (two-position, label shows the active side:
-  "Width" / "Height") that drives one slider. **PROPOSED.**
+  "Width" / "Height") that drives one vertical tempo fader (the Motion Speed fader strip). **APPLIED**
+  (§5.5). A horizontal slider on that row was a mistake and is not the design.
 - **Padding / Gap → stepped presets:** None / Tight / Normal / Roomy pads plus a small fine-tune, instead of the
   tempo-deck faders (`v-fader` widget today). **PROPOSED.**
 
@@ -83,7 +84,7 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 ## 4. Open decisions (only ones that change what a user can do)
 1. Movement strength: move to Interaction as "reaction strength" (and stop it driving idle glow), or keep it in Motion for idle breathing?
 2. Seconds per loop: remove from the menu (Speed only), or keep it for animated kinds?
-3. Width / Height: one switch + one slider, or keep two faders?
+3. Width / Height: **resolved** — one Width | Height mixer switch, a label of the active side, and one vertical tempo fader (§5.5). Not two faders, and not a horizontal slider.
 4. Padding / Gap: preset pads + fine-tune, or sliders?
 5. Dependents when the primary is off: grey out (recommended for Pro) or hide?
 6. Kinds: explicit `show` lists (recommended) or keep `hide` lists?
@@ -133,14 +134,19 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   scales it). A component with a loop but no Speed still shows Loop time.
 - User-visible change: helix's Motion menu loses "Seconds per full loop". Needs Rob's call (keep or bring back).
 
-### 5.5 Size and spacing rows (commit 5)
-- Width and Height share one row: a Width | Height switch, a label naming the active side, one slider
-  (`"sizePair"` on Width, `"sizePairOf"` on Height). Ids stay SIZE_W / SIZE_H, so saved values load unchanged.
-  Where the tier shows only Width (Mid), Width is a plain slider.
-- Padding and Gap: presets None / Tight / Normal / Roomy (`"steps"`; padding 0/8/20/32 px, gap 0/6/10/18 px) over a
-  fine-tune slider. Any in-between value still saves and loads; no preset lights up for it.
-- These four were vertical faders; they are now horizontal sliders. Resolve baseline rewritten for that
-  (and for commit 4's `replacedBy`).
+### 5.5 Size and spacing rows (commit 5, Width/Height corrected)
+- Width and Height share one row when both are in the tier: a mixer switch (**Width | Height**), a text label
+  naming the active side, and **one vertical tempo fader** — the same strip Motion Speed uses on the tempo deck
+  (`tempoFaderCol` in `lab/controls.js`). `"sizePair"` on Width, `"sizePairOf"` on Height. Ids stay SIZE_W / SIZE_H,
+  so saved values load unchanged. Switching sides does not copy the value; each id keeps its own number.
+- Where the tier shows only Width (Mid, or a component that does not include Height), there is no switch: Width
+  is that same vertical tempo fader. It is not a horizontal slider.
+- The horizontal Width/Height slider from commit c42a210 was a mistake (unauthorized relative to the mixer +
+  tempo-fader ask). The `h-slider` widget token stays on the two controls so the resolver still treats the value
+  as a ranged number; the lab overrides the drawing.
+- Padding and Gap are unchanged: presets None / Tight / Normal / Roomy (`"steps"`; padding 0/8/20/32 px, gap
+  0/6/10/18 px) over a fine-tune horizontal slider. Any in-between value still saves and loads; no preset lights
+  up for it. Motion Speed is unchanged (full tempo deck, not this row).
 
 ### 5.6 New component + kind picker (commit 6)
 - The template shows as "New component" (picker, title, index). Folder `_template` and `START_COMPONENT` are unchanged.

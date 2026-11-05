@@ -3554,6 +3554,12 @@ body {
     width: 100%;
   }
 
+  /* Width | Height: the tempo-deck fader strip, one column, not a horizontal slider */
+  .ctl-size-fader .xdj-fader-col {
+    width: 86px;
+    align-self: center;
+  }
+
   .mixer-pad {
     width: 100%;
     height: 34px;

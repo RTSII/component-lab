@@ -24,6 +24,8 @@ Related: [LABEL-RUBRIC.md](LABEL-RUBRIC.md) (naming), [MENU-SCHEME.md](MENU-SCHE
 8. **Pro first.** Pro is the full tier and covers every function of the app. Design and approve Pro first; Mid and Free are later subsets cut from Pro, in the same order. Tier never reorders controls.
 9. **General app first.** Rules, labels and code key on the general menus and core controls, never on one component (not helix, not the simple button).
 
+**Layout › Size (applied).** Width and Height are one control when both are shown: a Width | Height mixer switch, a text label of the active side, and one vertical tempo fader (the Motion Speed fader strip). Ids stay `SIZE_W` / `SIZE_H`. A horizontal slider for that pair was a mistake. Width alone (no Height in the tier) is the same vertical fader with no switch. Detail: [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) §5.5.
+
 ## 3. Kind flow ("New component")
 1. The entry is called **New component** (replaces "Blank template" in the picker and dock title).
 2. The user picks one kind from a short list (3-5 shown at once; the full set is card, nav, hero, animated background, list, button, modal, input).
