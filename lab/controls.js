@@ -140,18 +140,37 @@
           ledTitle: 'Default',
           out: out
         });
+        let paintThrow = function () {};
+        let sw = null;
         const sync = () => {
           if (pairB) lab.textContent = compact && side.short ? side.short : side.label;
           if (!out.querySelector('.val-in')) out.textContent = fmt(side, getP()[side.id]);
           if (fader._paint) fader._paint();
+          paintThrow();
         };
         row._sync = sync;
         if (pairB) {
-          const sw = el('div', 'seg seg-sm pair-seg');
-          sw.setAttribute('role', 'radiogroup');
-          sw.setAttribute('aria-label', 'Width or Height');
-          buildSeg(sw, [{ value: v.id, label: v.short || v.label }, { value: pairB.id, label: pairB.short || pairB.label }], v.id, (id) => { side = id === v.id ? v : pairB; sync(); }, { equal: true });
-          row.insertBefore(sw, head);
+          // One metal throw under the fader floor. Left = Width, right = Height. Not a pill pair.
+          const mark = (s) => /height/i.test(s.short || s.label || '') ? 'H' : 'W';
+          sw = el('button', 'mix-throw');
+          sw.type = 'button';
+          sw.setAttribute('role', 'switch');
+          sw.innerHTML =
+            '<i class="mix-throw-silk" aria-hidden="true">' + mark(v) + '</i>' +
+            '<span class="mix-throw-well" aria-hidden="true"><span class="mix-throw-bat"><i></i></span></span>' +
+            '<i class="mix-throw-silk" aria-hidden="true">' + mark(pairB) + '</i>';
+          paintThrow = () => {
+            const right = side !== v;
+            sw.classList.toggle('is-right', right);
+            sw.setAttribute('aria-checked', right ? 'true' : 'false');
+            sw.setAttribute('aria-label', side.label + ', mixer throw, left ' + v.label + ', right ' + pairB.label);
+          };
+          const pick = (next) => { side = next; sync(); };
+          sw.addEventListener('click', () => pick(side === v ? pairB : v));
+          sw.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') { e.preventDefault(); pick(v); }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); pick(pairB); }
+          });
           out.classList.add('is-editable');
           out.title = 'Click to type an exact value';
           out.addEventListener('click', (e) => {
@@ -183,6 +202,7 @@
           wireClickToType(v, out);
         }
         row.appendChild(fader);
+        if (pairB) row.appendChild(sw);
         sync();
       } else if (v.steps && v.control === 'slider' && !isTempoDeck) {
         // Padding / Gap: named presets (None / Tight / Normal / Roomy) over a fine-tune slider
