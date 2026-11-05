@@ -1373,6 +1373,52 @@ body {
     transform: scale(1.15);
   }
 
+  /* Notch marks from the control's declared spread (real values). */
+  .range-scale {
+    position: relative;
+  }
+
+  .range-notches {
+    position: relative;
+    height: 16px;
+    margin: -2px 7px 0;
+  }
+
+  .range-notch {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateX(-50%);
+  }
+
+  .range-notch.is-major {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .range-notch b {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 600 8px/1 var(--mono);
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+  }
+
+  .range-notch b.is-start {
+    left: 0;
+    transform: none;
+  }
+
+  .range-notch b.is-end {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+
   .range::-moz-range-track {
     height: 4px;
     border-radius: 2px;
@@ -2555,6 +2601,121 @@ body {
     gap: 11px;
   }
 
+  /* Related independents share the card. The box-size fader and Scale sit side by side,
+     with a rule between them, the way the tempo knob sits beside the tempo fader. */
+  .mini-body:has(> .ctl-size-fader) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 10px;
+    align-items: center;
+  }
+
+  .mini-body:has(> .ctl-size-fader) > .ctl-size-fader {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    padding-right: 12px;
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .mini-body:has(> .ctl-size-fader) > .ctl:not(.ctl-size-fader) {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .mini-body:has(> .ctl-size-fader) > .ctl.ctl-scale-pads {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Square LED pads (XDJ-XZ beat-effect block). Eight values, even grid. */
+  .scale-pads {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .scale-pads.is-4x2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, auto);
+  }
+
+  .scale-pads.is-2x4 {
+    flex: 1;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    min-height: 168px;
+  }
+
+  .scale-pad {
+    position: relative;
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 28px;
+    border-radius: 4px;
+    border: 1px solid rgba(210, 220, 235, 0.38);
+    background: linear-gradient(180deg, #242b3a 0%, #10141c 100%);
+    color: rgba(255, 255, 255, 0.42);
+    font: 700 9px/1 var(--mono);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 3px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+
+  .scale-pads.is-2x4 .scale-pad {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .scale-pad-led {
+    position: absolute;
+    top: 3px;
+    left: 22%;
+    right: 22%;
+    height: 2px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .scale-pad:hover {
+    border-color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .scale-pad:active {
+    transform: translateY(1px);
+  }
+
+  .scale-pad.is-on {
+    border-color: #00f0ff;
+    color: #f3fdff;
+    background: linear-gradient(180deg, rgba(0, 240, 255, 0.34) 0%, rgba(0, 28, 40, 0.92) 100%);
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.95);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.45), inset 0 0 12px rgba(0, 240, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .scale-pad.is-on .scale-pad-led {
+    background: #00f0ff;
+    box-shadow: 0 0 6px #00f0ff;
+  }
+
+  .scale-pad:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--lab-accent);
+  }
+
+
   .mini-body.is-dials {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -3442,6 +3603,25 @@ body {
     background: rgba(255, 255, 255, 0.72);
   }
 
+  .xdj-tick b {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-100%, -50%);
+    padding-right: 3px;
+    font: 700 7px/1 var(--mono);
+    color: rgba(255, 255, 255, 0.72);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .xdj-fader,
+  .xdj-scale,
+  .xdj-fader-col,
+  .tempo-deck {
+    overflow: visible;
+  }
+
   .xdj-tick.is-zero i {
     width: 17px;
     height: 2px;
@@ -3552,6 +3732,92 @@ body {
     display: flex;
     justify-content: center;
     width: 100%;
+  }
+
+  /* Width | Height: the tempo-deck fader strip, one column, not a horizontal slider */
+  .ctl-size-fader .xdj-fader-col {
+    width: 86px;
+    align-self: center;
+  }
+
+  /* Metal mixer throw under the fader floor. One lever, left or right. Not a pill, tab, or iOS switch. */
+  .mix-throw {
+    align-self: center;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    width: 86px;
+    margin: 0;
+    padding: 1px 0 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .mix-throw-silk {
+    font: 700 8px/1 var(--mono);
+    font-style: normal;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.32);
+    padding-bottom: 1px;
+  }
+
+  .mix-throw:not(.is-right) .mix-throw-silk:first-child,
+  .mix-throw.is-right .mix-throw-silk:last-child {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .mix-throw-well {
+    position: relative;
+    width: 48px;
+    height: 11px;
+    border-radius: 2px;
+    background: #020305;
+    border: 1px solid #6a7588;
+    box-shadow: inset 0 2px 4px #000, 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Vertical metal rectangle parked at one end of the slot. Left = Width, right = Height. No tilt. */
+  .mix-throw-bat {
+    position: absolute;
+    top: 50%;
+    left: 1px;
+    width: 13px;
+    height: 18px;
+    margin: 0;
+    border-radius: 1px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, #141820 0%, #6e7a90 18%, #f4f7fb 46%, #8b97ab 70%, #232a38 100%);
+    border: 1px solid #e7edf5;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    transition: left 0.1s linear;
+    pointer-events: none;
+  }
+
+  .mix-throw-bat i {
+    position: absolute;
+    left: 50%;
+    top: 2px;
+    bottom: 2px;
+    width: 1.5px;
+    height: auto;
+    margin: 0;
+    transform: translateX(-50%);
+    background: #fff;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.9);
+  }
+
+  .mix-throw.is-right .mix-throw-bat {
+    left: calc(100% - 14px);
+  }
+
+  .mix-throw:focus-visible .mix-throw-well {
+    box-shadow: inset 0 2px 4px #000, 0 0 0 2px var(--lab-accent);
   }
 
   .mixer-pad {

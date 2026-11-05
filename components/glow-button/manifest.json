@@ -60,17 +60,20 @@
   },
   "core": {
     "hide": [
-      "SIZE_W",
-      "IX_DRAG"
+      "COLOR_BORDER",
+      "IX_DRAG",
+      "OPACITY_FILL",
+      "OPACITY_BORDER",
+      "SIZE_W"
     ],
     "opt": [
       "COLOR_ACCENT",
-      "BLUR",
       "WEIGHT",
       "TRACKING",
       "SPACE_PAD",
       "HOVER_LIFT",
-      "IDLE"
+      "IDLE",
+      "IX_STRENGTH"
     ],
     "freePicks": [
       "GLOW_STRENGTH",
@@ -80,11 +83,6 @@
       "mode": "fx"
     },
     "override": {
-      "COLOR_BORDER": {
-        "label": "Button border",
-        "featured": true,
-        "group": "Button"
-      },
       "COLOR_FILL": {
         "label": "Button fill",
         "featured": true,
@@ -112,7 +110,7 @@
         "signature": true
       },
       "SCALE_TEXT": {
-        "default": 0.94
+        "default": 1
       },
       "IX_HOVER": {
         "default": "both",

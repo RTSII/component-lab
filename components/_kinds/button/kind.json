@@ -22,7 +22,7 @@
     "MOTION_EASING"
   ],
   "defaults": {
-    "SCALE_TEXT": 0.94,
+    "SCALE_TEXT": 1,
     "RADIUS": 12,
     "GLOW_STRENGTH": 1.2
   },

@@ -67,8 +67,10 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   uses both via `time.cycle` / `time.speed`). **PROPOSED:** keep Speed; remove Seconds per loop from the user's menu
   (keep the id as a component setting for the base loop length), or repurpose it as "Loop length" only for animated
   kinds with no Speed.
-- **Width / Height → one control:** a mixer-style channel switch (two-position, label shows the active side:
-  "Width" / "Height") that drives one slider. **PROPOSED.**
+- **Width / Height → one control:** a metal slot switch under the tempo fader. The handle is a vertical
+  rectangle parked at the far left (Width) or far right (Height), plus a text label of the active side.
+  It drives one vertical tempo fader (the Motion Speed fader strip). **APPLIED** (§5.5). Not a tilted bar,
+  not pills, and not a horizontal slider.
 - **Padding / Gap → stepped presets:** None / Tight / Normal / Roomy pads plus a small fine-tune, instead of the
   tempo-deck faders (`v-fader` widget today). **PROPOSED.**
 
@@ -82,10 +84,10 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 
 ## 4. Open decisions (only ones that change what a user can do)
 1. Movement strength: move to Interaction as "reaction strength" (and stop it driving idle glow), or keep it in Motion for idle breathing?
-2. Seconds per loop: remove from the menu (Speed only), or keep it for animated kinds?
-3. Width / Height: one switch + one slider, or keep two faders?
-4. Padding / Gap: preset pads + fine-tune, or sliders?
-5. Dependents when the primary is off: grey out (recommended for Pro) or hide?
+2. Seconds per loop: **resolved** — Speed only in the menu when Speed is present (§6). The id stays for the base loop length.
+3. Width / Height: **resolved** — a vertical metal handle parked at the far left or far right of a slot under the fader, a label of the active side, and one vertical tempo fader (§5.5). Not a tilted bar, not pills, not two faders, and not a horizontal slider.
+4. Padding / Gap: **resolved** — preset pads plus a fine-tune slider, not a tempo track (§6).
+5. Dependents when the primary is off: **resolved** — hide, in every tier (§5.1).
 6. Kinds: explicit `show` lists (recommended) or keep `hide` lists?
 
 ## 5. Applied on feat/hierarchy-apply (Rob t692u/t694u/t695u)
@@ -133,16 +135,41 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   scales it). A component with a loop but no Speed still shows Loop time.
 - User-visible change: helix's Motion menu loses "Seconds per full loop". Needs Rob's call (keep or bring back).
 
-### 5.5 Size and spacing rows (commit 5)
-- Width and Height share one row: a Width | Height switch, a label naming the active side, one slider
-  (`"sizePair"` on Width, `"sizePairOf"` on Height). Ids stay SIZE_W / SIZE_H, so saved values load unchanged.
-  Where the tier shows only Width (Mid), Width is a plain slider.
-- Padding and Gap: presets None / Tight / Normal / Roomy (`"steps"`; padding 0/8/20/32 px, gap 0/6/10/18 px) over a
-  fine-tune slider. Any in-between value still saves and loads; no preset lights up for it.
-- These four were vertical faders; they are now horizontal sliders. Resolve baseline rewritten for that
-  (and for commit 4's `replacedBy`).
+### 5.5 Size and spacing rows (commit 5, Width/Height corrected)
+- Width and Height share one row when both are in the tier: a **metal slot switch** under the fader floor.
+  The handle is a vertical rectangle parked at the far left (Width) or the far right (Height) — the XDJ-XZ
+  way of showing which side is on. It is not a pill, a tab, an iOS switch, or a bar tilted in the middle of
+  the well. A text label names the active side, and **one vertical tempo fader** — the same strip Motion
+  Speed uses on the tempo deck
+  (`tempoFaderCol` in `lab/controls.js`). `"sizePair"` on Width, `"sizePairOf"` on Height. Ids stay SIZE_W / SIZE_H,
+  so saved values load unchanged. Switching sides does not copy the value; each id keeps its own number.
+  The Width | Height segment buttons were rejected (t699u): they wasted space and did not match the mixer chrome.
+- Where the tier shows only Width (Mid, or a component that does not include Height), there is no switch: Width
+  is that same vertical tempo fader. It is not a horizontal slider.
+- The horizontal Width/Height slider from commit c42a210 was a mistake (unauthorized relative to the mixer +
+  tempo-fader ask). The `h-slider` widget token stays on the two controls so the resolver still treats the value
+  as a ranged number; the lab overrides the drawing.
+- Padding and Gap are unchanged: presets None / Tight / Normal / Roomy (`"steps"`; padding 0/8/20/32 px, gap
+  0/6/10/18 px) over a fine-tune horizontal slider. Any in-between value still saves and loads; no preset lights
+  up for it. Motion Speed is unchanged (full tempo deck, not this row).
+- Scale (`SCALE_TEXT`) stays on the Size card, beside the Width/Height fader, with a border between them.
+  It is eight square LED pads — 0.50×, 0.70×, 0.85×, 1.00×, 1.25×, 1.50×, 1.75×, 2.00× — and no empty cell.
+  A saved in-between value snaps to the nearest mark. The Size fader ticks and the Speed tempo-deck ticks
+  are those controls' `notches` / `midNotches` (§6).
 
 ### 5.6 New component + kind picker (commit 6)
 - The template shows as "New component" (picker, title, index). Folder `_template` and `START_COMPONENT` are unchanged.
 - In the New component stepper, picking a kind also switches the live template to that kind, so the menus filter to
   its show list while you finish the steps (only when the template is the open component).
+
+## 6. Locked instrument standard (Rob t703u) — applied, not a proposal
+
+This is the Pro / New component / app-wide rule.
+
+1. **Independent vs dependent.** Two controls that are truly independent do not share one instrument. They may share a card when they relate (Motion: round tempo knob beside the vertical tempo fader). Separation on that card is a border or grouping, not a second card and not another flip side. A dependent nests under its primary and **hides** (it does not merely grey out) when the primary is off. A dependent never overrides its primary. Declared with `parent` + `showIf` (§5.1).
+2. **No infinite or unbounded sliders.** The renderer can accept any CSS-variable number. That is not a reason to ship an unmarked endless track. Fine drag between declared points is allowed. Hunting on an infinite unmarked slider is not the standard.
+3. **Declared spread + notches, one source of truth.** Every ranged control declares `min` / `max` (the spread), `default` (home), `notches` (the main marks), and optional `midNotches`. The fader, the horizontal slider, and the tempo deck draw their ticks from that same spec. A tick is a real value, not decoration. A value parked between notches still saves and loads. Step stays the fine drag (Speed is 0.05).
+4. **Motion Speed is the exemplar.** Main notches `0.25 / 0.5 / 1 / 2 / 3`, mid marks `0.75 / 1.5 / 2.5`. Spread `0.25×–3.00×`, home `1.00×`, step `0.05`. Speed is the left rotary plus the tempo deck. There is no second loop-time control in the menu when Speed is present (`MOTION_CYCLE` stays `replacedBy`).
+5. **Padding and Gap** stay stepped presets (None / Tight / Normal / Roomy) plus a fine-tune slider. They are not a tempo track. Their `notches` are those preset values (and the top of the spread).
+6. **Width / Height vs Scale.** Width and Height are box size in px (`SIZE_W` / `SIZE_H`): one mixer slot (vertical metal rectangle parked far left = Width, far right = Height) and one vertical tempo fader, notches from each side's spread. Scale (`SCALE_TEXT`, `--type-k`) is the main text-size multiplier on that same Layout › Size card, on the other side of a border. It is not a slider. It is eight Pioneer-style square LED pads — 0.50×, 0.70×, 0.85×, 1.00×, 1.25×, 1.50×, 1.75×, 2.00×. Home is 1.00×. The grid is 2×4 beside the fader, and 4×2 when the card has no Width/Height fader. Every cell is filled. In-between values are not valid; load snaps them to the nearest mark. The label stays Scale. No second card, no flip side.
+7. **Even pad grids.** A 2D block of pads or grouped buttons is 6 or 8. A single row or a single column may be any count. The marks divide the control’s range so the buttons fit and align; they do not have to be equal steps of a slider.

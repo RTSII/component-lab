@@ -23,7 +23,7 @@
     "MOTION_EASING"
   ],
   "defaults": {
-    "SCALE_TEXT": 1.22,
+    "SCALE_TEXT": 1.25,
     "SIZE_W": 320
   },
   "show": [

@@ -18,12 +18,13 @@
     'v-fader': { control: 'fader', variant: 'channel' },
     'fx-unit': { control: 'slider', variant: 'fx' },
     'tempo-deck': { control: 'slider' },
+    'led-pads': { control: 'pads' },
     select: { control: 'select' },
     'select-compact': { control: 'select', variant: 'compact' }
   };
   const DEFAULT_WHITELIST = ['label', 'short', 'min', 'max', 'step', 'default', 'unit', 'options', 'css', 'tier', 'group', 'section',
     'widget', 'variant', 'deckLabel', 'pair', 'padTitle', 'padSub', 'role', 'hint', 'where', 'note', 'featured', 'advanced',
-    'signature', 'master', 'timeRole', 'interaction', 'cssMap', 'alpha', 'bind', 'showIf', 'parent', 'replacedBy', 'sizePair', 'sizePairOf', 'steps'];
+    'signature', 'master', 'timeRole', 'interaction', 'cssMap', 'alpha', 'bind', 'showIf', 'parent', 'replacedBy', 'sizePair', 'sizePairOf', 'steps', 'notches', 'midNotches'];
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // lab var -> widget name (used by the scaffold / checker and for schema-2 vars)
@@ -35,6 +36,7 @@
     if (v.control === 'radial') return 'knob';
     if (v.control === 'fader') return 'v-fader';
     if (v.control === 'select') return v.variant === 'compact' ? 'select-compact' : 'select';
+    if (v.control === 'pads') return 'led-pads';
     if (v.control === 'slider') return v.variant === 'fx' ? 'fx-unit' : v.master === 'speed' ? 'tempo-deck' : 'h-slider';
     return v.control || 'h-slider';
   }
@@ -198,6 +200,19 @@
     return src;
   }
 
+  // The kind folder's show list is the only core set a component may use. hide/opt in the manifest
+  // are rewritten to that list (base controls not named are hidden; optional controls named are opted in).
+  function lockKindShow(m, spec, core) {
+    if (!m || !spec || !Array.isArray(spec.show)) return m;
+    const man = clone(m);
+    core = core || { controls: [], optional: [] };
+    const c = man.core = man.core || {};
+    const show = spec.show;
+    c.opt = (core.optional || []).map((x) => x.id).filter((i) => show.includes(i));
+    c.hide = (core.controls || []).map((x) => x.id).filter((i) => !show.includes(i));
+    return man;
+  }
+
   // ---------- kinds (components/_template/kinds.json) ----------
   // The blank template set up as one kind. JS twin of tools/check-components.py apply_kind() (the two must
   // stay in step; tools/test/resolve-test.js compares them for every kind). Pure: returns a new manifest.
@@ -315,7 +330,7 @@
     return !any;
   }
 
-  const api = { depShown, resolve, renameKeys, sourceForSave, widgetOf, applyKindSpec, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
+  const api = { depShown, resolve, renameKeys, sourceForSave, widgetOf, applyKindSpec, lockKindShow, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LabManifest = api;
 })(typeof window !== 'undefined' ? window : globalThis);

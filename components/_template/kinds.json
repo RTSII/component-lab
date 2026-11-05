@@ -84,7 +84,7 @@
         "MOTION_EASING"
       ],
       "defaults": {
-        "SCALE_TEXT": 1.22,
+        "SCALE_TEXT": 1.25,
         "SIZE_W": 320
       },
       "colorGroup": "Hero"
@@ -151,7 +151,7 @@
       "defaults": {
         "SPACE_PAD": 16,
         "SPACE_GAP": 8,
-        "SCALE_TEXT": 0.94
+        "SCALE_TEXT": 1
       },
       "colorGroup": "List",
       "hide": [
@@ -182,7 +182,7 @@
         "MOTION_EASING"
       ],
       "defaults": {
-        "SCALE_TEXT": 0.94,
+        "SCALE_TEXT": 1,
         "RADIUS": 12,
         "GLOW_STRENGTH": 1.2
       },
