@@ -126,3 +126,9 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   on restores them (or the defaults; if those are all off, Hover comes on). Touch (side two) depends on side one and
   hides with it. Keyboard focus keeps its own switch. Components without these slots keep the old one-control toggle.
 - Flip cards: the badge shows the side you are on (1/2, 2/2) instead of a bare count; the counts are in the tooltip.
+
+### 5.4 Speed stays, Loop time steps aside (commit 4)
+- `MOTION_CYCLE` (Loop time) gets `"replacedBy": "MOTION_SPEED"`: it has no row in any tier when the component also
+  has Speed. Its value still loads, saves, exports and drives the component (helix keeps its 26 s loop; Speed
+  scales it). A component with a loop but no Speed still shows Loop time.
+- User-visible change: helix's Motion menu loses "Seconds per full loop". Needs Rob's call (keep or bring back).

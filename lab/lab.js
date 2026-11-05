@@ -512,10 +512,13 @@
   // URL hash, defaults), so a hidden control simply keeps its default. No "tier" field (other components):
   // featured = every tier, other plain controls = Mid, advanced = Pro.
   function varTier(v) { return v.tier in VAR_TIER ? VAR_TIER[v.tier] : v.featured ? 0 : v.advanced ? 2 : 1; }
+  // "replacedBy": a control that stands in only when the component lacks the named one (Loop time hides when Speed
+  // exists). Its value still loads, saves and drives the component; it just has no row (DEPENDENCY-MAP.md §5.4).
+  const shadowed = (v) => !!(v.replacedBy && byId[v.replacedBy]);
   function tierVars() {
-    if (tier === 'pro') return vars;
+    if (tier === 'pro') return vars.some(shadowed) ? vars.filter((v) => !shadowed(v)) : vars;
     const r = tierRank(tier);
-    let list = vars.filter((v) => varTier(v) <= r && (caps().interaction || v.category !== 'interact'));
+    let list = vars.filter((v) => !shadowed(v) && varTier(v) <= r && (caps().interaction || v.category !== 'interact'));
     if (tier === 'free' && !vars.some((v) => v.tier)) list = list.slice(0, BASIC_CAP);
     return list;
   }

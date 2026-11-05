@@ -68,7 +68,8 @@
     "alpha",
     "bind",
     "showIf",
-    "parent"
+    "parent",
+    "replacedBy"
   ],
   "defaultFreePicks": [
     "GLOW_STRENGTH",
@@ -720,6 +721,7 @@
       "unit": "s",
       "timeRole": "cycle",
       "short": "Loop time",
+      "replacedBy": "MOTION_SPEED",
       "advanced": true,
       "optional": true
     },
