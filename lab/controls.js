@@ -787,10 +787,10 @@
       return wrap;
     }
 
-    // Pioneer XDJ-XZ beat-effect style square pads. Seven marks, one empty cell.
+    // Pioneer XDJ-XZ beat-effect style square pads. Eight marks, even grid, no empty cell.
     // 2×4 beside the Width/Height fader (lab.js adds is-2x4); 4×2 when Scale stands alone.
     function scalePadsEl(v, out) {
-      const marks = (Array.isArray(v.notches) && v.notches.length ? v.notches : [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]).map(Number);
+      const marks = (Array.isArray(v.notches) && v.notches.length ? v.notches : [0.5, 0.7, 0.85, 1, 1.25, 1.5, 1.75, 2]).map(Number);
       const grid = el('div', 'scale-pads is-4x2');
       grid.setAttribute('role', 'radiogroup');
       grid.setAttribute('aria-label', v.label);
@@ -803,7 +803,6 @@
         b.addEventListener('click', () => setValue(v.id, n));
         grid.appendChild(b);
       });
-      grid.appendChild(el('span', 'scale-pad-empty', ''));
       const paint = () => {
         const cur = Number(getP()[v.id]);
         let best = marks[0], dist = Infinity;

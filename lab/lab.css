@@ -2632,7 +2632,7 @@ body {
     gap: 8px;
   }
 
-  /* Square LED pads (XDJ-XZ beat-effect block). Seven values, one empty cell. */
+  /* Square LED pads (XDJ-XZ beat-effect block). Eight values, even grid. */
   .scale-pads {
     display: grid;
     gap: 4px;
@@ -2673,8 +2673,7 @@ body {
     transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
   }
 
-  .scale-pads.is-2x4 .scale-pad,
-  .scale-pads.is-2x4 .scale-pad-empty {
+  .scale-pads.is-2x4 .scale-pad {
     aspect-ratio: auto;
     height: 100%;
   }
@@ -2716,10 +2715,6 @@ body {
     box-shadow: 0 0 0 2px var(--lab-accent);
   }
 
-  .scale-pad-empty {
-    min-height: 28px;
-    border-radius: 4px;
-  }
 
   .mini-body.is-dials {
     display: grid;
