@@ -2624,6 +2624,103 @@ body {
     min-width: 0;
   }
 
+  .mini-body:has(> .ctl-size-fader) > .ctl.ctl-scale-pads {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Square LED pads (XDJ-XZ beat-effect block). Seven values, one empty cell. */
+  .scale-pads {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .scale-pads.is-4x2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, auto);
+  }
+
+  .scale-pads.is-2x4 {
+    flex: 1;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    min-height: 168px;
+  }
+
+  .scale-pad {
+    position: relative;
+    aspect-ratio: 1;
+    min-width: 0;
+    min-height: 28px;
+    border-radius: 4px;
+    border: 1px solid rgba(210, 220, 235, 0.38);
+    background: linear-gradient(180deg, #242b3a 0%, #10141c 100%);
+    color: rgba(255, 255, 255, 0.42);
+    font: 700 9px/1 var(--mono);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 3px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+
+  .scale-pads.is-2x4 .scale-pad,
+  .scale-pads.is-2x4 .scale-pad-empty {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .scale-pad-led {
+    position: absolute;
+    top: 3px;
+    left: 22%;
+    right: 22%;
+    height: 2px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .scale-pad:hover {
+    border-color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .scale-pad:active {
+    transform: translateY(1px);
+  }
+
+  .scale-pad.is-on {
+    border-color: #00f0ff;
+    color: #f3fdff;
+    background: linear-gradient(180deg, rgba(0, 240, 255, 0.34) 0%, rgba(0, 28, 40, 0.92) 100%);
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.95);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.45), inset 0 0 12px rgba(0, 240, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .scale-pad.is-on .scale-pad-led {
+    background: #00f0ff;
+    box-shadow: 0 0 6px #00f0ff;
+  }
+
+  .scale-pad:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--lab-accent);
+  }
+
+  .scale-pad-empty {
+    min-height: 28px;
+    border-radius: 4px;
+  }
+
   .mini-body.is-dials {
     display: grid;
     grid-template-columns: 1fr 1fr;

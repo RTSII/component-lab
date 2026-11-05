@@ -110,7 +110,7 @@
         "signature": true
       },
       "SCALE_TEXT": {
-        "default": 0.94
+        "default": 1
       },
       "IX_HOVER": {
         "default": "both",

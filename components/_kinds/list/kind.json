@@ -23,7 +23,7 @@
   "defaults": {
     "SPACE_PAD": 16,
     "SPACE_GAP": 8,
-    "SCALE_TEXT": 0.94
+    "SCALE_TEXT": 1
   },
   "show": [
     "COLOR_BORDER",

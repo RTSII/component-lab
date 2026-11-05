@@ -314,6 +314,10 @@
         paint();
         r.addEventListener('input', () => { setValue(v.id, r.value, { quiet: true }); paint(); if (!out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]); });
         mountRange(row, v, r);
+      } else if (v.control === 'pads') {
+        row.classList.add('ctl-scale-pads');
+        if (!isSizeFader) wireClickToType(v, out);
+        row.appendChild(scalePadsEl(v, out));
       } else if (v.control === 'swatch-role') {
         const line = el('div', 'swatch-line');
         const t = tierNow();
@@ -783,6 +787,39 @@
       return wrap;
     }
 
+    // Pioneer XDJ-XZ beat-effect style square pads. Seven marks, one empty cell.
+    // 2×4 beside the Width/Height fader (lab.js adds is-2x4); 4×2 when Scale stands alone.
+    function scalePadsEl(v, out) {
+      const marks = (Array.isArray(v.notches) && v.notches.length ? v.notches : [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]).map(Number);
+      const grid = el('div', 'scale-pads is-4x2');
+      grid.setAttribute('role', 'radiogroup');
+      grid.setAttribute('aria-label', v.label);
+      const labelOf = (n) => Number(n).toFixed(2) + '\u00d7';
+      marks.forEach((n) => {
+        const b = el('button', 'scale-pad', '<i class="scale-pad-led" aria-hidden="true"></i><span>' + labelOf(n) + '</span>');
+        b.type = 'button';
+        b.dataset.value = String(n);
+        b.setAttribute('role', 'radio');
+        b.addEventListener('click', () => setValue(v.id, n));
+        grid.appendChild(b);
+      });
+      grid.appendChild(el('span', 'scale-pad-empty', ''));
+      const paint = () => {
+        const cur = Number(getP()[v.id]);
+        let best = marks[0], dist = Infinity;
+        marks.forEach((n) => { const d = Math.abs(n - cur); if (d < dist) { best = n; dist = d; } });
+        grid.querySelectorAll('.scale-pad').forEach((b) => {
+          const on = same(Number(b.dataset.value), best);
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        if (out && !out.querySelector('.val-in')) out.textContent = fmt(v, best);
+      };
+      grid._paint = paint;
+      paint();
+      return grid;
+    }
+
     // Pioneer XDJ-XZ Backlit Silicone Performance Pad for boolean toggles (Fades / FX switches)
     function padSwitchEl(v) {
       const pad = el('button', 'xdj-perf-pad');
@@ -1123,6 +1160,8 @@
         if (sw) sw.setAttribute('aria-checked', P[id] ? 'true' : 'false');
         const seg = row.querySelector('.seg');
         if (seg) syncSeg(seg, null, P[id]);
+        const pads = row.querySelector('.scale-pads');
+        if (pads && pads._paint) pads._paint();
         const sel = row.querySelector('select');
         if (sel) sel.value = String(P[id]);
         const dl = row.querySelector('.dial');

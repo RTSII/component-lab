@@ -18,6 +18,7 @@
     'v-fader': { control: 'fader', variant: 'channel' },
     'fx-unit': { control: 'slider', variant: 'fx' },
     'tempo-deck': { control: 'slider' },
+    'led-pads': { control: 'pads' },
     select: { control: 'select' },
     'select-compact': { control: 'select', variant: 'compact' }
   };
@@ -35,6 +36,7 @@
     if (v.control === 'radial') return 'knob';
     if (v.control === 'fader') return 'v-fader';
     if (v.control === 'select') return v.variant === 'compact' ? 'select-compact' : 'select';
+    if (v.control === 'pads') return 'led-pads';
     if (v.control === 'slider') return v.variant === 'fx' ? 'fx-unit' : v.master === 'speed' ? 'tempo-deck' : 'h-slider';
     return v.control || 'h-slider';
   }

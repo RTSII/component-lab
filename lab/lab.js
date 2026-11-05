@@ -272,6 +272,15 @@
     if (v.control === 'switch') return raw === true || raw === 'true' || raw === '1' || raw === 1;
     if (v.options) { const o = v.options.find((x) => same(x.value, raw)); return o ? o.value : v.default; }
     const n = Number(raw);
+    if (v.control === 'pads' && Array.isArray(v.notches) && v.notches.length) {
+      if (!isFinite(n)) return v.default;
+      let best = Number(v.notches[0]), dist = Infinity;
+      v.notches.forEach((m) => {
+        const d = Math.abs(Number(m) - n);
+        if (d < dist) { best = Number(m); dist = d; }
+      });
+      return best;
+    }
     return isNaN(n) ? v.default : n;
   }
 
@@ -707,14 +716,23 @@
     presets = S.presets(pal);
 
     P = {};
-    vars.forEach((v) => { P[v.id] = v.default; });
+    vars.forEach((v) => { P[v.id] = v.control === 'pads' ? coerce(v, v.default) : v.default; });
     const saved = store.get('values:' + id, null);
     const hash = fromHash ? aliasHash(readHash(), m.aliases) : {};
     // a kind switch carries over only the values the user changed (the new kind's defaults fill the rest)
     const carry = id === '_template' ? kindCarry : null;
     kindCarry = null;
     if (carry) { vars.forEach((v) => { if (carry[v.id] !== undefined) P[v.id] = coerce(v, carry[v.id]); }); store.set('values:' + id, P); }
-    else if (saved) vars.forEach((v) => { if (saved[v.id] !== undefined) P[v.id] = coerce(v, saved[v.id]); });
+    else if (saved) {
+      let snapped = false;
+      vars.forEach((v) => {
+        if (saved[v.id] === undefined) return;
+        const next = coerce(v, saved[v.id]);
+        if (v.control === 'pads' && !same(Number(saved[v.id]), next)) snapped = true;
+        P[v.id] = next;
+      });
+      if (snapped) store.set('values:' + id, P);
+    }
     // a shared URL can only set the controls this tier shows (the hidden ones keep their defaults)
     const seen = tier === 'pro' ? null : new Set(tierVars().map((v) => v.id));
     vars.forEach((v) => { if (hash[v.id] !== undefined && hash[v.id] !== '' && (!seen || seen.has(v.id))) P[v.id] = coerce(v, hash[v.id]); });
@@ -1777,6 +1795,7 @@
     const list = basicVars().filter((v) => v.category === cat);
     if (cat === 'color' && vars.some((v) => v.control === 'swatch-role')) inner.appendChild(buildPresets());
     list.forEach((v) => inner.appendChild(ctlRow(v)));
+    tuneScalePads(inner);
     if (!list.length) inner.appendChild(el('p', 'empty', 'Nothing in this category for this component.'));
     return basicVars().length + ' of ' + vars.length + ' controls';
   }
@@ -1962,7 +1981,18 @@
     });
     syncFlipUi();
     card._syncFlip = syncFlipUi;
+    tuneScalePads(card);
     return card;
+  }
+  // Scale pads: 2×4 beside the Width/Height fader, 4×2 when Scale is the only Size control.
+  function tuneScalePads(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll('.scale-pads').forEach((grid) => {
+      const host = grid.closest('.mini-body');
+      const beside = !!(host && host.querySelector('.ctl-size-fader'));
+      grid.classList.toggle('is-2x4', beside);
+      grid.classList.toggle('is-4x2', !beside);
+    });
   }
   function miniCard(g, bare, inAdv) {
     const rawMore = inAdv ? [] : g.items.filter((v) => v.advanced);
@@ -2002,12 +2032,14 @@
       // scheme order: whichever comes first in the group goes on top (a mixed deck puts its faders first)
       if (faderItems.includes(lead[0])) body.append(faderArea, topArea); else body.append(topArea, faderArea);
       card.appendChild(body);
+      tuneScalePads(card);
       return card;
     }
 
     const body = el('div', 'mini-body' + (isDials ? ' is-dials' : '') + (isPads ? ' is-pads' : '') + (isDeck ? ' is-deck' : '') + (isDeck && lead.length === 1 && tier === 'mid' ? ' is-single' : ''));
     lead.forEach((v) => body.appendChild(ctlRow(v, { compact: !bare })));
     card.appendChild(body);
+    tuneScalePads(card);
     return card;
   }
   // ---------- Color section (t652u): palettes drawer, one gradient Fill row, one switchable Text row ----------

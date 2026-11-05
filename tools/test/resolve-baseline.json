@@ -505,29 +505,27 @@
      "id": "SCALE_TEXT",
      "label": "Number size",
      "group": "Size",
-     "widget": "h-slider",
+     "widget": "led-pads",
      "tier": "vip",
      "min": 0.5,
      "max": 2,
-     "step": 0.05,
+     "step": 0.25,
      "default": 1,
      "notches": [
       0.5,
-      1,
-      1.5,
-      2
-     ],
-     "midNotches": [
       0.75,
+      1,
       1.25,
-      1.75
+      1.5,
+      1.75,
+      2
      ],
      "unit": "×",
      "css": "--hx-num-k",
-     "hint": "Main text size. Not the box width or height.",
+     "hint": "Main text size. Seven pads only; a saved in-between value snaps to the nearest mark.",
      "short": "Number",
      "category": "layout",
-     "control": "slider",
+     "control": "pads",
      "core": "SCALE_TEXT",
      "was": "NUM_SCALE",
      "_featured0": false
@@ -2664,29 +2662,27 @@
      "id": "SCALE_TEXT",
      "label": "Scale",
      "group": "Size",
-     "widget": "h-slider",
+     "widget": "led-pads",
      "tier": "vip",
      "min": 0.5,
      "max": 2,
-     "step": 0.05,
-     "default": 0.94,
+     "step": 0.25,
+     "default": 1,
      "notches": [
       0.5,
-      1,
-      1.5,
-      2
-     ],
-     "midNotches": [
       0.75,
+      1,
       1.25,
-      1.75
+      1.5,
+      1.75,
+      2
      ],
      "unit": "×",
      "css": "--type-k",
-     "hint": "Main text size. Not the box width or height.",
+     "hint": "Main text size. Seven pads only; a saved in-between value snaps to the nearest mark.",
      "short": "Scale",
      "category": "layout",
-     "control": "slider",
+     "control": "pads",
      "core": "SCALE_TEXT",
      "_featured0": false
     },
@@ -3013,7 +3009,7 @@
        "signature": true
       },
       "SCALE_TEXT": {
-       "default": 0.94
+       "default": 1
       },
       "IX_HOVER": {
        "default": "both",
