@@ -119,3 +119,10 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   size, Letter spacing), button (Background blur, Border, Muted text, Border opacity, Fill opacity, Secondary text size,
   Height, Gap), input (Height). Card, hero and modal keep everything.
 - Render rule: the dock shows the kind's show list, then hides dependents whose parent is off (§5.1).
+
+### 5.3 Interaction on/off key (commit 3)
+- The key left the snapshot row and sits at the far left of the Interaction section row (Pro and Mid).
+- It switches side one as a whole: every Pointer slot this tier shows (Hover, Press, Drag). Off remembers each value;
+  on restores them (or the defaults; if those are all off, Hover comes on). Touch (side two) depends on side one and
+  hides with it. Keyboard focus keeps its own switch. Components without these slots keep the old one-control toggle.
+- Flip cards: the badge shows the side you are on (1/2, 2/2) instead of a bare count; the counts are in the tooltip.

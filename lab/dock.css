@@ -314,3 +314,8 @@ html[data-tier="free"] .dock .rail .rail-avatar { display: none !important; }
 
 /* Dependents (docs/HIERARCHY.md rule 3): a control whose parent is off is hidden in every tier */
 .ctl[hidden], .mini[hidden], .ctl.is-dep-off { display: none !important; }
+
+/* Interaction on/off key: far left of the Interaction section row (docs/DEPENDENCY-MAP.md §5.3) */
+.dock .acc.has-quick { position: relative; }
+.dock .acc.has-quick > .acc-quick { position: absolute; left: 6px; top: 5px; z-index: 2; }
+.dock .acc.has-quick > .acc-head { padding-left: 44px; padding-right: 44px; }

@@ -1928,8 +1928,8 @@
       titleEl.textContent = flipped ? backTitle : frontTitle;
       const shown = (face) => face.querySelectorAll('.ctl[data-id]:not([hidden])').length;
       const nA = shown(faceA), nB = shown(faceB);
-      const count = flipped ? nA : nB;
-      badge.querySelector('.flip-circle').textContent = count;
+      // the badge names the side you are on (1/2, 2/2); the control counts live in the tooltip
+      badge.querySelector('.flip-circle').textContent = (flipped ? 2 : 1) + '/2';
       badge.classList.toggle('is-on', flipped);
       head.title = flipped ? 'Flip to ' + frontTitle + ' (' + nA + ' controls)' : 'Flip to ' + backTitle + ' (' + nB + ' controls)';
       if (flipped) {
@@ -2197,8 +2197,7 @@
     if (!hasPro('snapshots') || !caps().snapshots || !def) return null;
     const bar = el('div', 'snap-bar');
     // Pro home row (t577u): [interaction key + dropdown arrow] | SNAPSHOTS A B C, one centred row
-    const qv = quickVar();
-    if (qv) { const q = buildQuickCtl(); paintQuick(q, qv); bar.append(q, el('span', 'snap-sep')); }
+    // the Interaction on/off key moved to the far left of the Interaction section row (docs/DEPENDENCY-MAP.md §5.3)
     bar.appendChild(el('span', 'snap-tag', 'Snapshots'));
     const paint = () => {
       const snaps = store.get('snaps:' + def.id, {});
@@ -2322,7 +2321,15 @@
         head.querySelector('.acc-n').textContent = r.n;
         if (c.id === 'interact') box.classList.add('acc-interact');
         body.appendChild(bin);
-        box.append(head, body);
+        const qv = c.id === 'interact' ? quickVar() : null;
+        if (qv) {
+          // Interaction on/off: far left of the Interaction row; switches the pointer side (side one) as a whole
+          const q = buildQuickCtl({ noGo: true });
+          q.classList.add('acc-quick');
+          paintQuick(q, qv);
+          box.classList.add('has-quick');
+          box.append(q, head, body);
+        } else box.append(head, body);
         if (r.pal) wirePalette(box, head, r.pal);
         head.addEventListener('click', () => toggle(c.id));
         wrapEl.appendChild(box);
@@ -2696,18 +2703,42 @@
     const o = v.options.find((x) => ['play', 'off', 'none', false].includes(x.value));
     return o ? o.value : v.options[0].value;
   };
-  const quickIsOn = (v) => (v.options ? !same(P[v.id], quickOff(v)) : !!P[v.id]);
+  // Side one = the Pointer slots (hover, press, drag) this tier shows. The key is on while any of them is on;
+  // off switches all of them off (remembering each value), on brings them back. Side two (Touch) depends on
+  // side one and hides with it (showIf); Keyboard focus keeps its own switch.
+  const QUICK_SLOTS = ['IX_HOVER', 'IX_PRESS', 'IX_DRAG'];
+  const OFF_VALS = ['play', 'off', 'none', 'ignore', false];
+  const slotOff = (v) => { if (!v.options) return false; const o = v.options.find((x) => OFF_VALS.includes(x.value)); return o ? o.value : null; };
+  const quickSlots = () => { const shown = new Set(tierVars().map((v) => v.id)); return QUICK_SLOTS.map((id) => byId[id]).filter((v) => v && shown.has(v.id) && slotOff(v) !== null); };
+  const slotOn = (v) => (v.options ? !same(P[v.id], slotOff(v)) : !!P[v.id]);
+  const quickIsOn = (v) => { const sl = quickSlots(); return sl.length ? sl.some(slotOn) : (v.options ? !same(P[v.id], quickOff(v)) : !!P[v.id]); };
+  let quickMem = null;
   function quickToggle() {
     const v = quickVar();
     if (!v) return;
-    if (!v.options) { setValue(v.id, !P[v.id]); return; }
-    if (quickIsOn(v)) { quickOnVal = P[v.id]; setValue(v.id, quickOff(v)); }
-    else {
-      const fallback = !same(v.default, quickOff(v)) ? v.default : (v.options.find((o) => !same(o.value, quickOff(v))) || v.options[0]).value;
-      setValue(v.id, quickOnVal != null && !same(quickOnVal, quickOff(v)) ? quickOnVal : fallback);
+    const sl = quickSlots();
+    if (!sl.length) {
+      if (!v.options) { setValue(v.id, !P[v.id]); return; }
+      if (quickIsOn(v)) { quickOnVal = P[v.id]; setValue(v.id, quickOff(v)); }
+      else setValue(v.id, quickOnVal != null && !same(quickOnVal, quickOff(v)) ? quickOnVal : (v.options.find((o) => !same(o.value, quickOff(v))) || v.options[0]).value);
+      return;
+    }
+    Hist.begin();
+    if (sl.some(slotOn)) {
+      quickMem = {};
+      sl.forEach((x) => { quickMem[x.id] = P[x.id]; setValue(x.id, slotOff(x)); });
+      Hist.end('interaction off');
+    } else {
+      sl.forEach((x) => {
+        const mem = quickMem && quickMem[x.id];
+        setValue(x.id, mem !== undefined && mem !== null ? mem : x.default);
+      });
+      // nothing came back on (every default is off): turn the primary (hover) on with its first real option
+      if (!sl.some(slotOn)) { const h = sl[0]; setValue(h.id, (h.options.find((o) => !OFF_VALS.includes(o.value)) || h.options[0]).value); }
+      Hist.end('interaction on');
     }
   }
-  function buildQuickCtl() {
+  function buildQuickCtl(o) {
     const wrap = el('span', 'quick-ctl');
     const key = el('button', 'quick-key', svg('interact'));
     key.type = 'button';
@@ -2720,7 +2751,7 @@
     goB.setAttribute('aria-label', 'Open Interaction section');
     goB.title = 'Open the Interaction section';
     goB.addEventListener('click', () => { openDock('click'); go({ type: 'cat', cat: 'interact' }); });
-    wrap.append(key, goB);
+    if (o && o.noGo) wrap.append(key); else wrap.append(key, goB);
     return wrap;
   }
   function paintQuick(wrap, v) {
@@ -2729,8 +2760,10 @@
     const on = quickIsOn(v), val = fmt(v, P[v.id]);
     key.classList.toggle('is-on', on);
     key.setAttribute('aria-pressed', on ? 'true' : 'false');
-    key.setAttribute('aria-label', v.label + ' (' + val + ')' + (on ? ': on. Press to turn off.' : ': off. Press to turn on.'));
-    key.title = v.label + ': ' + val + (on ? ' \u00b7 click to turn off' : ' \u00b7 click to turn on');
+    const what = quickSlots().length ? 'Interaction' : v.label;
+    const now = quickSlots().length ? (on ? 'on' : 'off') : val;
+    key.setAttribute('aria-label', what + ' (' + now + ')' + (on ? ': on. Press to turn off.' : ': off. Press to turn on.'));
+    key.title = what + ': ' + now + (on ? ' \u00b7 click to turn off' : ' \u00b7 click to turn on');
   }
   function syncQuick() {
     const row = $('quickRow');
