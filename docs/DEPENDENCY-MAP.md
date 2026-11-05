@@ -84,10 +84,10 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 
 ## 4. Open decisions (only ones that change what a user can do)
 1. Movement strength: move to Interaction as "reaction strength" (and stop it driving idle glow), or keep it in Motion for idle breathing?
-2. Seconds per loop: remove from the menu (Speed only), or keep it for animated kinds?
+2. Seconds per loop: **resolved** — Speed only in the menu when Speed is present (§6). The id stays for the base loop length.
 3. Width / Height: **resolved** — a vertical metal handle parked at the far left or far right of a slot under the fader, a label of the active side, and one vertical tempo fader (§5.5). Not a tilted bar, not pills, not two faders, and not a horizontal slider.
-4. Padding / Gap: preset pads + fine-tune, or sliders?
-5. Dependents when the primary is off: grey out (recommended for Pro) or hide?
+4. Padding / Gap: **resolved** — preset pads plus a fine-tune slider, not a tempo track (§6).
+5. Dependents when the primary is off: **resolved** — hide, in every tier (§5.1).
 6. Kinds: explicit `show` lists (recommended) or keep `hide` lists?
 
 ## 5. Applied on feat/hierarchy-apply (Rob t692u/t694u/t695u)
@@ -152,8 +152,21 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 - Padding and Gap are unchanged: presets None / Tight / Normal / Roomy (`"steps"`; padding 0/8/20/32 px, gap
   0/6/10/18 px) over a fine-tune horizontal slider. Any in-between value still saves and loads; no preset lights
   up for it. Motion Speed is unchanged (full tempo deck, not this row).
+- Scale (`SCALE_TEXT`) left the Size card. It is Layout › Text size, its own block. The Size fader ticks and the
+  Speed tempo-deck ticks are the control's `notches` / `midNotches` (§6).
 
 ### 5.6 New component + kind picker (commit 6)
 - The template shows as "New component" (picker, title, index). Folder `_template` and `START_COMPONENT` are unchanged.
 - In the New component stepper, picking a kind also switches the live template to that kind, so the menus filter to
   its show list while you finish the steps (only when the template is the open component).
+
+## 6. Locked instrument standard (Rob t703u) — applied, not a proposal
+
+This is the Pro / New component / app-wide rule.
+
+1. **Independent vs dependent.** Two controls that are truly independent do not share one instrument. They may sit in the same menu, in separate visual blocks, so the workflow shows the independence. A dependent nests under its primary and **hides** (it does not merely grey out) when the primary is off. A dependent never overrides its primary. Declared with `parent` + `showIf` (§5.1).
+2. **No infinite or unbounded sliders.** The renderer can accept any CSS-variable number. That is not a reason to ship an unmarked endless track. Fine drag between declared points is allowed. Hunting on an infinite unmarked slider is not the standard.
+3. **Declared spread + notches, one source of truth.** Every ranged control declares `min` / `max` (the spread), `default` (home), `notches` (the main marks), and optional `midNotches`. The fader, the horizontal slider, and the tempo deck draw their ticks from that same spec. A tick is a real value, not decoration. A value parked between notches still saves and loads. Step stays the fine drag (Speed is 0.05).
+4. **Motion Speed is the exemplar.** Main notches `0.25 / 0.5 / 1 / 2 / 3`, mid marks `0.75 / 1.5 / 2.5`. Spread `0.25×–3.00×`, home `1.00×`, step `0.05`. Speed is the left rotary plus the tempo deck. There is no second loop-time control in the menu when Speed is present (`MOTION_CYCLE` stays `replacedBy`).
+5. **Padding and Gap** stay stepped presets (None / Tight / Normal / Roomy) plus a fine-tune slider. They are not a tempo track. Their `notches` are those preset values (and the top of the spread).
+6. **Width / Height vs Scale.** Width and Height are box size in px (`SIZE_W` / `SIZE_H`): one mixer slot (vertical metal rectangle parked far left = Width, far right = Height) and one vertical tempo fader, notches from each side's spread. Scale (`SCALE_TEXT`, `--type-k`) is the main text-size multiplier. It is its own Layout card, **Text size**, not another handle under the Width/Height fader. The label stays Scale.

@@ -25,6 +25,60 @@
       return +val.toFixed(Math.max(decimals(st), decimals(min)));
     }
 
+    // Declared spread: main notches + optional mid marks. Values outside min/max are dropped.
+    // No declared notches (an extra that never set them) falls back to even marks so the track is not blank.
+    function spreadMarks(v) {
+      const min = v.min != null ? Number(v.min) : 0;
+      const max = v.max != null ? Number(v.max) : 1;
+      const span = (max - min) || 1;
+      const inRange = (n) => { const x = Number(n); return isFinite(x) && x >= min - 1e-9 && x <= max + 1e-9; };
+      let main = (Array.isArray(v.notches) ? v.notches : []).filter(inRange).map(Number);
+      let mid = (Array.isArray(v.midNotches) ? v.midNotches : []).filter(inRange).map(Number);
+      if (!main.length && Array.isArray(v.steps)) main = v.steps.map((s) => s.value).filter(inRange).map(Number);
+      const declared = main.length > 0;
+      if (!declared) {
+        main = [];
+        for (let i = 0; i <= 4; i++) main.push(min + span * i / 4);
+        mid = [];
+      }
+      const mainSet = {};
+      main.forEach((n) => { mainSet[n] = 1; });
+      mid = mid.filter((n) => !mainSet[n]);
+      return { min, max, span, main, mid, declared };
+    }
+
+    function notchText(v, val) {
+      const st = v.step || 1;
+      const d = Math.max(decimals(st), decimals(val));
+      return (+Number(val).toFixed(Math.min(4, d))).toString();
+    }
+
+    // Horizontal slider ticks drawn from the control's notches (real values, not even decoration).
+    function mountRange(row, v, r) {
+      const marks = spreadMarks(v);
+      if (!marks.declared) { row.appendChild(r); return; }
+      const wrap = el('div', 'range-scale');
+      wrap.appendChild(r);
+      const scale = el('div', 'range-notches');
+      const add = (val, major) => {
+        const left = ((val - marks.min) / marks.span) * 100;
+        const t = el('span', 'range-notch' + (major ? ' is-major' : ''));
+        t.style.left = left.toFixed(2) + '%';
+        t.title = fmt(v, val);
+        if (major) {
+          const b = el('b', null, notchText(v, val));
+          if (left < 8) b.className = 'is-start';
+          else if (left > 92) b.className = 'is-end';
+          t.appendChild(b);
+        }
+        scale.appendChild(t);
+      };
+      marks.main.forEach((n) => add(n, true));
+      marks.mid.forEach((n) => add(n, false));
+      wrap.appendChild(scale);
+      row.appendChild(wrap);
+    }
+
     function buildPresets(opts) {
       const wrapEl = el('div', 'presets');
       if (!opts || opts.caption !== false) wrapEl.appendChild(el('div', 'ctl-label sub', 'Palettes from this project'));
@@ -217,7 +271,8 @@
         seg.setAttribute('aria-label', v.label + ' presets');
         buildSeg(seg, v.steps.filter((x) => x.value >= v.min && x.value <= v.max), P[v.id], (val) => { setValue(v.id, val, { quiet: true }); out.textContent = fmt(v, getP()[v.id]); }, { equal: true });
         r.addEventListener('input', () => { setValue(v.id, r.value, { quiet: true }); paint(); if (!out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]); });
-        row.append(seg, r);
+        row.appendChild(seg);
+        mountRange(row, v, r);
       } else if (isRatePads) {
         row.classList.add('ctl-rate-pads');
         lab.htmlFor = uid;
@@ -226,7 +281,7 @@
         const paint = () => r.style.setProperty('--p', ((r.value - v.min) / (v.max - v.min || 1) * 100).toFixed(2) + '%');
         paint();
         r.addEventListener('input', () => { setValue(v.id, r.value, { quiet: true }); paint(); if (!out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]); });
-        row.appendChild(r);
+        mountRange(row, v, r);
         const seg = el('div', 'seg seg-sm');
         seg.setAttribute('role', 'radiogroup');
         seg.setAttribute('aria-label', v.label + ' presets');
@@ -258,7 +313,7 @@
         const paint = () => r.style.setProperty('--p', ((r.value - v.min) / (v.max - v.min || 1) * 100).toFixed(2) + '%');
         paint();
         r.addEventListener('input', () => { setValue(v.id, r.value, { quiet: true }); paint(); if (!out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]); });
-        row.appendChild(r);
+        mountRange(row, v, r);
       } else if (v.control === 'swatch-role') {
         const line = el('div', 'swatch-line');
         const t = tierNow();
@@ -342,19 +397,13 @@
     function tempoFaderCol(getSpec, hooks) {
       hooks = hooks || {};
       const col = el('div', 'xdj-fader-col');
-      let ticksHtml = '';
-      for (let i = 0; i <= 18; i++) {
-        const p = (i / 18) * 100;
-        const isMajor = i === 0 || i === 9 || i === 18;
-        ticksHtml += '<span class="xdj-tick' + (isMajor ? ' is-major' : '') + '" style="top:' + p.toFixed(2) + '%"><i></i><i></i></span>';
-      }
       const first = getSpec();
       const title0 = typeof hooks.title === 'function' ? hooks.title(first) : (hooks.title || 'TEMPO');
       col.innerHTML =
         '<div class="xdj-fader-head"><span class="xdj-fader-title">' + esc(title0) + '</span></div>' +
         '<div class="xdj-fader-pole"><span>+</span><small></small></div>' +
-        '<div class="xdj-fader" tabindex="0" role="slider">' +
-          '<div class="xdj-scale">' + ticksHtml + '</div>' +
+          '<div class="xdj-fader" tabindex="0" role="slider">' +
+          '<div class="xdj-scale"></div>' +
           '<span class="xdj-zero-led"></span>' +
           '<span class="xdj-detent-mark"></span>' +
           '<div class="xdj-slot"><div class="xdj-fill"></div></div>' +
@@ -368,6 +417,8 @@
       const detent = col.querySelector('.xdj-detent-mark');
       const titleEl = col.querySelector('.xdj-fader-title');
       const poles = col.querySelectorAll('.xdj-fader-pole small');
+      const scale = col.querySelector('.xdj-scale');
+      let tickKey = '';
       const specNow = () => {
         const s = getSpec();
         const min = s.min != null ? s.min : 0;
@@ -383,6 +434,20 @@
         const defPct = Math.min(100, Math.max(0, ((defVal - min) / span) * 100));
         const topPct = (1 - norm) * 100;
         const zeroTop = 100 - defPct;
+        const marks = spreadMarks(s);
+        const key = s.id + '|' + marks.min + '|' + marks.max + '|' + marks.main.join(',') + '|' + marks.mid.join(',');
+        if (key !== tickKey) {
+          tickKey = key;
+          const bits = [];
+          const pushTick = (val, major) => {
+            const top = (1 - (val - marks.min) / marks.span) * 100;
+            bits.push('<span class="xdj-tick' + (major ? ' is-major' : '') + '" style="top:' + top.toFixed(2) + '%" title="' + esc(fmt(s, val)) + '"><i></i>' +
+              (major ? '<b>' + esc(notchText(s, val)) + '</b>' : '') + '<i></i></span>');
+          };
+          marks.main.forEach((n) => pushTick(n, true));
+          marks.mid.forEach((n) => pushTick(n, false));
+          scale.innerHTML = bits.join('');
+        }
         cap.style.top = topPct.toFixed(2) + '%';
         const fTop = Math.min(topPct, zeroTop);
         const fH = Math.max(1.5, Math.abs(topPct - zeroTop));

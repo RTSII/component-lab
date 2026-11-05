@@ -23,7 +23,7 @@
   };
   const DEFAULT_WHITELIST = ['label', 'short', 'min', 'max', 'step', 'default', 'unit', 'options', 'css', 'tier', 'group', 'section',
     'widget', 'variant', 'deckLabel', 'pair', 'padTitle', 'padSub', 'role', 'hint', 'where', 'note', 'featured', 'advanced',
-    'signature', 'master', 'timeRole', 'interaction', 'cssMap', 'alpha', 'bind', 'showIf', 'parent', 'replacedBy', 'sizePair', 'sizePairOf', 'steps'];
+    'signature', 'master', 'timeRole', 'interaction', 'cssMap', 'alpha', 'bind', 'showIf', 'parent', 'replacedBy', 'sizePair', 'sizePairOf', 'steps', 'notches', 'midNotches'];
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // lab var -> widget name (used by the scaffold / checker and for schema-2 vars)

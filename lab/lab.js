@@ -1999,7 +1999,7 @@
         v.deckCh = v.deckCh || (idx + 1);
         faderArea.appendChild(ctlRow(v, { compact: true }));
       });
-      // scheme order: whichever comes first in the group goes on top (Size: Width + Height faders, then Scale)
+      // scheme order: whichever comes first in the group goes on top (a mixed deck puts its faders first)
       if (faderItems.includes(lead[0])) body.append(faderArea, topArea); else body.append(topArea, faderArea);
       card.appendChild(body);
       return card;

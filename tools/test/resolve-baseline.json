@@ -90,6 +90,7 @@
     ],
     "layout": [
      "Size",
+     "Text size",
      "Spacing & Radius",
      "Text"
     ]
@@ -370,6 +371,15 @@
      "max": 1.2,
      "step": 0.01,
      "default": 1,
+     "notches": [
+      0,
+      0.5,
+      1
+     ],
+     "midNotches": [
+      0.25,
+      0.75
+     ],
      "css": "--hx-fill-op",
      "short": "Card",
      "category": "surface",
@@ -391,6 +401,15 @@
      "max": 1,
      "step": 0.01,
      "default": 1,
+     "notches": [
+      0,
+      0.5,
+      1
+     ],
+     "midNotches": [
+      0.25,
+      0.75
+     ],
      "css": "--hx-border-op",
      "short": "Border",
      "category": "surface",
@@ -410,6 +429,17 @@
      "max": 3,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "midNotches": [
+      0.5,
+      1.5,
+      2.5
+     ],
      "unit": "×",
      "css": "--hx-glow-k",
      "short": "Strength",
@@ -475,15 +505,27 @@
     {
      "id": "SCALE_TEXT",
      "label": "Number size",
-     "group": "Size",
+     "group": "Text size",
      "widget": "h-slider",
      "tier": "vip",
      "min": 0.5,
      "max": 2,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0.5,
+      1,
+      1.5,
+      2
+     ],
+     "midNotches": [
+      0.75,
+      1.25,
+      1.75
+     ],
      "unit": "×",
      "css": "--hx-num-k",
+     "hint": "Main text size. Not the box width or height.",
      "short": "Number",
      "category": "layout",
      "control": "slider",
@@ -501,6 +543,17 @@
      "max": 2,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0.5,
+      1,
+      1.5,
+      2
+     ],
+     "midNotches": [
+      0.75,
+      1.25,
+      1.75
+     ],
      "unit": "×",
      "css": "--hx-lbl-k",
      "short": "Secondary text",
@@ -550,6 +603,18 @@
      "max": 3,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0.25,
+      0.5,
+      1,
+      2,
+      3
+     ],
+     "midNotches": [
+      0.75,
+      1.5,
+      2.5
+     ],
      "unit": "×",
      "master": "speed",
      "short": "Speed",
@@ -781,6 +846,17 @@
      "max": 240,
      "step": 1,
      "default": 156,
+     "notches": [
+      80,
+      120,
+      156,
+      200,
+      240
+     ],
+     "midNotches": [
+      100,
+      180
+     ],
      "unit": "px",
      "short": "Card width",
      "sizePair": "SIZE_H",
@@ -933,6 +1009,16 @@
      "max": 16,
      "step": 1,
      "default": 0,
+     "notches": [
+      0,
+      4,
+      8,
+      16
+     ],
+     "midNotches": [
+      2,
+      12
+     ],
      "unit": "px",
      "css": "--lift",
      "short": "Lift",
@@ -980,6 +1066,15 @@
      "max": 2,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0,
+      1,
+      2
+     ],
+     "midNotches": [
+      0.5,
+      1.5
+     ],
      "unit": "×",
      "css": "--react",
      "short": "Strength",
@@ -1016,6 +1111,18 @@
      "max": 40,
      "step": 1,
      "default": 10,
+     "notches": [
+      0,
+      8,
+      16,
+      32,
+      48
+     ],
+     "midNotches": [
+      4,
+      24,
+      40
+     ],
      "unit": "px",
      "css": "--radius",
      "short": "Roundness",
@@ -1035,6 +1142,17 @@
      "max": 30,
      "step": 1,
      "default": 0,
+     "notches": [
+      0,
+      8,
+      16,
+      30
+     ],
+     "midNotches": [
+      4,
+      12,
+      24
+     ],
      "unit": "px",
      "css": "--blur",
      "short": "Blur",
@@ -1073,6 +1191,16 @@
      "max": 180,
      "step": 1,
      "default": 92,
+     "notches": [
+      64,
+      92,
+      120,
+      180
+     ],
+     "midNotches": [
+      80,
+      150
+     ],
      "unit": "px",
      "short": "Card height",
      "sizePairOf": "SIZE_W",
@@ -1093,6 +1221,13 @@
      "max": 48,
      "step": 1,
      "default": 8,
+     "notches": [
+      0,
+      8,
+      20,
+      32,
+      48
+     ],
      "unit": "px",
      "css": "--pad",
      "short": "Padding",
@@ -1129,6 +1264,13 @@
      "max": 64,
      "step": 1,
      "default": 4,
+     "notches": [
+      0,
+      6,
+      10,
+      18,
+      64
+     ],
      "unit": "px",
      "css": "--gap",
      "short": "Gap",
@@ -1195,6 +1337,18 @@
      "max": 0.3,
      "step": 0.01,
      "default": 0,
+     "notches": [
+      -0.05,
+      0,
+      0.1,
+      0.2,
+      0.3
+     ],
+     "midNotches": [
+      0.05,
+      0.15,
+      0.25
+     ],
      "unit": "em",
      "css": "--track",
      "short": "Letter spacing",
@@ -1393,6 +1547,17 @@
        "min": 80,
        "max": 240,
        "default": 156,
+       "notches": [
+        80,
+        120,
+        156,
+        200,
+        240
+       ],
+       "midNotches": [
+        100,
+        180
+       ],
        "css": null,
        "short": "Card width",
        "where": ".hx-helix-card in home.css"
@@ -1403,6 +1568,16 @@
        "min": 64,
        "max": 180,
        "default": 92,
+       "notches": [
+        64,
+        92,
+        120,
+        180
+       ],
+       "midNotches": [
+        80,
+        150
+       ],
        "css": null,
        "where": ".hx-helix-card height"
       },
@@ -1466,6 +1641,7 @@
      ],
      "layout": [
       "Size",
+      "Text size",
       "Spacing & Radius",
       "Text"
      ]
@@ -1916,12 +2092,14 @@
    "layout": {
     "groups": [
      "Size",
+     "Text size",
      "Spacing & Radius",
      "Text",
      "Spacing"
     ],
     "cards": [
-     "CARD Size(SCALE_TEXT,N,SIZE_W,SCALE_MIN,SIZE_H)",
+     "CARD Size(N,SIZE_W,SCALE_MIN,SIZE_H)",
+     "CARD Text size(SCALE_TEXT)",
      "FLIP Spacing & Radius(RADIUS_MAX,TRAVEL,WAVE) <-> Spacing & Radius · Adv(RADIUS_FRAC*,RADIUS_PAD*)",
      "FLIP Text(SCALE_LABEL) <-> Text · Adv(WEIGHT*,TRACKING*)",
      "CARD Spacing(SPACE_PAD,SPACE_GAP)"
@@ -2038,6 +2216,7 @@
     ],
     "layout": [
      "Size",
+     "Text size",
      "Spacing",
      "Text"
     ]
@@ -2158,6 +2337,16 @@
      "max": 16,
      "step": 1,
      "default": 4,
+     "notches": [
+      0,
+      4,
+      8,
+      16
+     ],
+     "midNotches": [
+      2,
+      12
+     ],
      "unit": "px",
      "css": "--lift",
      "short": "Lift",
@@ -2215,6 +2404,15 @@
      "max": 2,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0,
+      1,
+      2
+     ],
+     "midNotches": [
+      0.5,
+      1.5
+     ],
      "unit": "×",
      "css": "--react",
      "short": "Strength",
@@ -2322,6 +2520,17 @@
      "max": 3,
      "step": 0.05,
      "default": 1.2,
+     "notches": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "midNotches": [
+      0.5,
+      1.5,
+      2.5
+     ],
      "unit": "×",
      "css": "--glow-k",
      "short": "Strength",
@@ -2344,6 +2553,18 @@
      "max": 48,
      "step": 1,
      "default": 12,
+     "notches": [
+      0,
+      8,
+      16,
+      32,
+      48
+     ],
+     "midNotches": [
+      4,
+      24,
+      40
+     ],
      "unit": "px",
      "css": "--radius",
      "short": "Roundness",
@@ -2365,6 +2586,18 @@
      "max": 3,
      "step": 0.05,
      "default": 1,
+     "notches": [
+      0.25,
+      0.5,
+      1,
+      2,
+      3
+     ],
+     "midNotches": [
+      0.75,
+      1.5,
+      2.5
+     ],
      "unit": "×",
      "css": "--speed",
      "master": "speed",
@@ -2435,15 +2668,27 @@
     {
      "id": "SCALE_TEXT",
      "label": "Scale",
-     "group": "Size",
+     "group": "Text size",
      "widget": "h-slider",
      "tier": "vip",
      "min": 0.5,
      "max": 2,
      "step": 0.05,
      "default": 0.94,
+     "notches": [
+      0.5,
+      1,
+      1.5,
+      2
+     ],
+     "midNotches": [
+      0.75,
+      1.25,
+      1.75
+     ],
      "unit": "×",
      "css": "--type-k",
+     "hint": "Main text size. Not the box width or height.",
      "short": "Scale",
      "category": "layout",
      "control": "slider",
@@ -2460,6 +2705,13 @@
      "max": 48,
      "step": 1,
      "default": 20,
+     "notches": [
+      0,
+      8,
+      20,
+      32,
+      48
+     ],
      "unit": "px",
      "css": "--pad",
      "short": "Padding",
@@ -2526,6 +2778,18 @@
      "max": 0.3,
      "step": 0.01,
      "default": 0.02,
+     "notches": [
+      -0.05,
+      0,
+      0.1,
+      0.2,
+      0.3
+     ],
+     "midNotches": [
+      0.05,
+      0.15,
+      0.25
+     ],
      "unit": "em",
      "css": "--track",
      "short": "Letter spacing",
@@ -2936,13 +3200,13 @@
    "layout": {
     "groups": [
      "Button",
-     "Size",
+     "Text size",
      "Spacing",
      "Text"
     ],
     "cards": [
      "FLIP Button(BTN_ICON,BTN_SHEEN,BTN_SHEEN_ANGLE,BTN_PULSE,BTN_CASE) <-> Text(WEIGHT*,TRACKING*)",
-     "CARD Size(SCALE_TEXT)",
+     "CARD Text size(SCALE_TEXT)",
      "CARD Spacing(SPACE_PAD)"
     ]
    }

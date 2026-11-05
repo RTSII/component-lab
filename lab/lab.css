@@ -1373,6 +1373,52 @@ body {
     transform: scale(1.15);
   }
 
+  /* Notch marks from the control's declared spread (real values). */
+  .range-scale {
+    position: relative;
+  }
+
+  .range-notches {
+    position: relative;
+    height: 16px;
+    margin: -2px 7px 0;
+  }
+
+  .range-notch {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateX(-50%);
+  }
+
+  .range-notch.is-major {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .range-notch b {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 600 8px/1 var(--mono);
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+  }
+
+  .range-notch b.is-start {
+    left: 0;
+    transform: none;
+  }
+
+  .range-notch b.is-end {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+
   .range::-moz-range-track {
     height: 4px;
     border-radius: 2px;
@@ -3440,6 +3486,25 @@ body {
     width: 14px;
     height: 1.5px;
     background: rgba(255, 255, 255, 0.72);
+  }
+
+  .xdj-tick b {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-100%, -50%);
+    padding-right: 3px;
+    font: 700 7px/1 var(--mono);
+    color: rgba(255, 255, 255, 0.72);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .xdj-fader,
+  .xdj-scale,
+  .xdj-fader-col,
+  .tempo-deck {
+    overflow: visible;
   }
 
   .xdj-tick.is-zero i {
