@@ -5,7 +5,7 @@
   --c-border: #00e5ff; --c-fill: #04121f; --c-text: #d8f3ff; --c-glow: #00e5ff; --c-accent: #00e5ff;
   --fill-op: 0.86; --border-op: 0.6; --glow-k: 1.2; --radius: 12px; --blur: 0px;
   --type-k: 0.94; --fw: 700; --track: 0.02em; --pad: 20px; --lift: 4px;
-  --speed: 1; --ease: cubic-bezier(0.22, 1, 0.36, 1); --idle: running;
+  --speed: 1; --ease: cubic-bezier(0.22, 1, 0.36, 1); --idle: running; --react: 1;
   --shine-angle: 115deg;
   --fs: calc(18px * var(--type-k));
 }
@@ -24,8 +24,8 @@
   border: 1px solid rgb(from var(--c-border) r g b / var(--border-op));
   border-radius: var(--radius);
   backdrop-filter: blur(var(--blur));
-  box-shadow: 0 0 calc(16px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.38),
-    inset 0 0 calc(10px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.16);
+  box-shadow: 0 0 calc(16px * var(--glow-k) * var(--react, 1)) rgb(from var(--c-glow) r g b / 0.38),
+    inset 0 0 calc(10px * var(--glow-k) * var(--react, 1)) rgb(from var(--c-glow) r g b / 0.16);
   cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   transition: transform calc(260ms / var(--speed)) var(--ease), box-shadow calc(260ms / var(--speed)) var(--ease),
     border-color calc(260ms / var(--speed)) var(--ease);
@@ -59,21 +59,21 @@
 .gb-host:not([data-touch-off])[data-hover="lift"] .gb:hover,
 .gb-host:not([data-touch-off])[data-hover="both"] .gb:hover,
 .gb-host[data-key="on"][data-hover="lift"] .gb:focus-visible,
-.gb-host[data-key="on"][data-hover="both"] .gb:focus-visible { transform: translateY(calc(-1 * var(--lift))); }
+.gb-host[data-key="on"][data-hover="both"] .gb:focus-visible { transform: translateY(calc(-1 * var(--lift) * var(--react, 1))); }
 .gb-host:not([data-touch-off])[data-hover="glow"] .gb:hover,
 .gb-host:not([data-touch-off])[data-hover="both"] .gb:hover,
 .gb-host[data-key="on"][data-hover="glow"] .gb:focus-visible,
 .gb-host[data-key="on"][data-hover="both"] .gb:focus-visible {
   border-color: rgb(from var(--c-border) r g b / 1);
-  box-shadow: 0 0 calc(28px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.6), inset 0 0 calc(14px * var(--glow-k)) rgb(from var(--c-glow) r g b / 0.28);
+  box-shadow: 0 0 calc(28px * var(--glow-k) * var(--react, 1)) rgb(from var(--c-glow) r g b / 0.6), inset 0 0 calc(14px * var(--glow-k) * var(--react, 1)) rgb(from var(--c-glow) r g b / 0.28);
 }
 .gb-host:not([data-touch-off]):not([data-hover="none"]) .gb:hover .gb-sheen,
 .gb-host[data-key="on"]:not([data-hover="none"]) .gb:focus-visible .gb-sheen {
   opacity: 1; background-position: -20% 0;
   transition: background-position calc(700ms / var(--speed)) var(--ease), opacity 200ms;
 }
-.gb-host:not([data-touch-off])[data-press="press"] .gb:active { transform: translateY(0) scale(0.96); }
-.gb-host:not([data-touch-off])[data-press="glow"] .gb:active { box-shadow: 0 0 calc(36px * var(--glow-k)) var(--c-glow); }
+.gb-host:not([data-touch-off])[data-press="press"] .gb:active { transform: translateY(0) scale(calc(1 - 0.04 * var(--react, 1))); }
+.gb-host:not([data-touch-off])[data-press="glow"] .gb:active { box-shadow: 0 0 calc(36px * var(--glow-k) * var(--react, 1)) var(--c-glow); }
 .gb-host[data-touch-off] .gb { cursor: default; }
 .gb-host[data-key="on"] .gb:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
 .gb-host[data-key="off"] .gb:focus-visible { outline: none; }

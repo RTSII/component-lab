@@ -129,11 +129,12 @@ const ALLOWED = [
 
 function fail(msg) { console.log('FAIL ' + msg); process.exitCode = 1; }
 
-if (process.argv.includes('--write')) {
+if (process.argv.includes('--write') || process.argv.includes('--write-current')) {
+  const legacy = !process.argv.includes('--write-current');
   const base = {};
-  COMPONENTS.forEach((id) => { base[id] = snapshot(id, true); });
+  COMPONENTS.forEach((id) => { base[id] = snapshot(id, legacy); });
   fs.writeFileSync(BASELINE, JSON.stringify(base, null, 1) + '\n');
-  console.log('wrote ' + path.relative(ROOT, BASELINE) + ' (legacy layout rules)');
+  console.log('wrote ' + path.relative(ROOT, BASELINE) + (legacy ? ' (legacy layout rules)' : ' (current layout rules)'));
   process.exit(0);
 }
 
@@ -193,6 +194,18 @@ function dupLabels(name, r) {
   else console.log('ok   labels ' + name);
 }
 ['helix', 'glow-button'].forEach((id) => dupLabels(id, LM.resolve(read('components/' + id + '/manifest.json'), core)));
+// Kind show list is the core set. A component's resolved core ids must match its kind, nothing else.
+function assertKind(id) {
+  const r = LM.resolve(read('components/' + id + '/manifest.json'), core);
+  const spec = read('components/_kinds/' + r.kind + '/kind.json');
+  const show = spec.show || [];
+  const got = r.vars.filter((v) => v.core).map((v) => v.id);
+  const missing = show.filter((i) => got.indexOf(i) < 0);
+  const extra = got.filter((i) => show.indexOf(i) < 0);
+  if (missing.length || extra.length) fail(id + ' core set != ' + r.kind + ' show: missing ' + missing.join(',') + '; extra ' + extra.join(','));
+  else console.log('ok   ' + id + ' follows kind ' + r.kind + ' (' + show.length + ' core controls)');
+}
+['helix', 'glow-button'].forEach(assertKind);
 if (typeof LM.applyKindSpec === 'function') {
   const tpl = read('components/_template/manifest.json');
   const kinds = readKinds();

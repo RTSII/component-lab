@@ -54,18 +54,20 @@
     "components/helix/style.css"
   ],
   "core": {
-    "hide": [
-      "IX_PRESS",
-      "RADIUS"
-    ],
+    "hide": [],
     "opt": [
-      "COLOR_FILL_2",
+      "COLOR_ACCENT",
       "COLOR_MUTED",
+      "BLUR",
+      "WEIGHT",
+      "TRACKING",
       "SCALE_LABEL",
-      "MOTION_DIRECTION",
-      "DEPTH_PERSPECTIVE",
-      "MOTION_INTENSITY",
-      "MOTION_CYCLE"
+      "SIZE_H",
+      "SPACE_PAD",
+      "SPACE_GAP",
+      "HOVER_LIFT",
+      "IDLE",
+      "IX_STRENGTH"
     ],
     "freePicks": [
       "TEXT_FADE_ON",
@@ -98,11 +100,6 @@
         "default": "#00324e",
         "css": "--hx-c-fill",
         "short": "Fill top"
-      },
-      "COLOR_FILL_2": {
-        "label": "Card fill (bottom)",
-        "css": "--hx-c-fill2",
-        "short": "Fill bottom"
       },
       "COLOR_MUTED": {
         "label": "Label text",
@@ -180,37 +177,10 @@
         "featured": true,
         "where": "how the loop moves between card slots: constant, ease in/out per slot, or overshoot per slot"
       },
-      "MOTION_DIRECTION": {
-        "tier": "mid",
-        "options": [
-          {
-            "value": 1,
-            "label": "Up"
-          },
-          {
-            "value": -1,
-            "label": "Down"
-          }
-        ]
-      },
-      "DEPTH_PERSPECTIVE": {
-        "label": "Stage perspective",
-        "css": null,
-        "where": ".hx-helix-stage in home.css"
-      },
       "MOTION_SPEED": {
         "css": null,
         "featured": true,
         "where": "loop time = CYCLE / Speed"
-      },
-      "MOTION_INTENSITY": {
-        "where": "scales STEP, TILT, WAVE and depth scaling together"
-      },
-      "MOTION_CYCLE": {
-        "label": "Seconds per full loop",
-        "min": 4,
-        "unit": null,
-        "short": "Seconds per loop"
       },
       "SIZE_W": {
         "label": "Card width cap (px)",
@@ -220,6 +190,34 @@
         "css": null,
         "short": "Card width",
         "where": ".hx-helix-card in home.css"
+      },
+      "SIZE_H": {
+        "label": "Card height",
+        "short": "Card height",
+        "min": 64,
+        "max": 180,
+        "default": 92,
+        "css": null,
+        "where": ".hx-helix-card height"
+      },
+      "RADIUS": {
+        "default": 10,
+        "min": 0,
+        "max": 40,
+        "where": "chamfer of .hx-helix-card"
+      },
+      "SPACE_PAD": {
+        "default": 8
+      },
+      "SPACE_GAP": {
+        "default": 4
+      },
+      "TRACKING": {
+        "default": 0
+      },
+      "HOVER_LIFT": {
+        "default": 0,
+        "showIf": null
       }
     }
   },
@@ -271,7 +269,6 @@
     "COLOR_TEXT",
     "COLOR_GLOW",
     "COLOR_FILL",
-    "COLOR_FILL_2",
     "COLOR_MUTED",
     "ZERO_TEXT",
     "IX_HOVER",
@@ -287,11 +284,7 @@
     "SCALE_TEXT",
     "SCALE_LABEL",
     "MOTION_EASING",
-    "MOTION_DIRECTION",
-    "DEPTH_PERSPECTIVE",
     "MOTION_SPEED",
-    "MOTION_INTENSITY",
-    "MOTION_CYCLE",
     "STEP",
     "TILT",
     "TEXT_FADE_A",
@@ -549,7 +542,7 @@
     },
     {
       "id": "RADIUS_MAX",
-      "tier": "mid",
+      "tier": "pro",
       "label": "Swing radius cap (px)",
       "section": "layout",
       "variant": "master",
@@ -655,7 +648,6 @@
     "TITLE_TEXT": "COLOR_TEXT",
     "GLOW": "COLOR_GLOW",
     "LABEL_TEXT": "COLOR_MUTED",
-    "CARD_FILL_2": "COLOR_FILL_2",
     "HOVER": "IX_HOVER",
     "DRAG": "IX_DRAG",
     "TOUCH": "IX_TOUCH",
@@ -666,10 +658,6 @@
     "LABEL_SCALE": "SCALE_LABEL",
     "SPEED": "MOTION_SPEED",
     "EASING": "MOTION_EASING",
-    "DIRECTION": "MOTION_DIRECTION",
-    "INTENSITY": "MOTION_INTENSITY",
-    "CYCLE": "MOTION_CYCLE",
-    "PERSPECTIVE": "DEPTH_PERSPECTIVE",
     "CARD_W": "SIZE_W"
   },
   "aliasVersion": 1

@@ -98,6 +98,14 @@
 .lab-frame[data-component="helix"] .hx-helix-card {
   height: calc(var(--lab-card-h, 92px) * var(--hx-fit));
   width: min(var(--lab-card-w, 156px), 60%);
+  padding: var(--pad, 8px) calc(var(--pad, 8px) * 1.25);
+  gap: var(--gap, 4px);
+  backdrop-filter: blur(var(--blur, 0px));
+  clip-path: polygon(var(--radius, 10px) 0, 100% 0, 100% calc(100% - var(--radius, 10px)), calc(100% - var(--radius, 10px)) 100%, 0 100%, 0 var(--radius, 10px));
+}
+.lab-frame[data-component="helix"] .hx-helix-num {
+  font-weight: var(--fw, 700);
+  letter-spacing: var(--track, 0em);
 }
 .lab-frame[data-component="helix"] .hx-helix-num { font-size: calc(var(--lab-num-fs, 19.2px) * var(--hx-fit)); }
 .lab-frame[data-component="helix"] .hx-helix-stage { perspective: var(--lab-perspective, 900px); }
@@ -126,7 +134,10 @@
 .lab-frame[data-component="helix"] .hx-helix-edge path {
   stroke: var(--hx-c-border);
   stroke-opacity: var(--hx-border-op);
-  filter: drop-shadow(0 0 calc(3px * var(--hx-glow-k)) rgb(from var(--hx-c-glow) r g b / 0.85));
+  filter: drop-shadow(0 0 calc(3px * var(--hx-glow-k)) var(--c-accent, var(--hx-c-glow)));
+}
+.lab-frame[data-component="helix"] .hx-helix-card.is-glow .hx-helix-edge path {
+  filter: drop-shadow(0 0 calc(8px * var(--hx-glow-k) * var(--react, 1)) var(--c-accent, var(--hx-c-glow)));
 }
 .lab-frame[data-component="helix"] .hx-helix-num {
   color: var(--hx-c-title);

@@ -41,7 +41,10 @@ Lab.register({
     const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 
     const NS = 'http://www.w3.org/2000/svg';
-    const CUT = 10;
+    function chamfer() {
+      const r = Number(lastP.RADIUS);
+      return isFinite(r) ? r : 10;
+    }
     function buildEdge(card) {
       let svg = card.querySelector('.hx-helix-edge');
       if (!svg) {
@@ -55,7 +58,7 @@ Lab.register({
         }
         card.appendChild(svg);
       }
-      const w = card.offsetWidth, h = card.offsetHeight, i = 1, c = CUT;
+      const w = card.offsetWidth, h = card.offsetHeight, i = 1, c = chamfer();
       svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
       const d = [
         'M' + w / 2 + ' ' + i + 'H' + (w - i) + 'V' + h / 2,
@@ -95,14 +98,23 @@ Lab.register({
     };
 
     let lastP = (ctx && ctx.params) || {};
+    let builtChamfer = null;
+    let pressed = null;
     function render(P, offset) {
       lastP = P;
       setCount(Math.max(1, Math.round(P.N)));
-      frame.style.setProperty('--lab-perspective', P.DEPTH_PERSPECTIVE + 'px');
-      frame.style.setProperty('--lab-card-w', P.SIZE_W + 'px');
+      const depth = P.DEPTH_PERSPECTIVE == null ? 900 : P.DEPTH_PERSPECTIVE;
+      frame.style.setProperty('--lab-perspective', depth + 'px');
+      frame.style.setProperty('--lab-card-w', (P.SIZE_W == null ? 156 : P.SIZE_W) + 'px');
+      if (P.SIZE_H != null) frame.style.setProperty('--lab-card-h', P.SIZE_H + 'px');
+      const ch = chamfer();
+      if (ch !== builtChamfer) { builtChamfer = ch; cards.forEach(buildEdge); }
       const n = cards.length;
       // Masters: Intensity scales the turn, twist, wave and depth scaling together (1 = original).
       const I = P.MOTION_INTENSITY === undefined ? 1 : P.MOTION_INTENSITY;
+      const react = P.IX_STRENGTH == null ? 1 : Number(P.IX_STRENGTH);
+      const liftPx = (Number(P.HOVER_LIFT) || 0) * (isFinite(react) ? react : 1);
+      const hot = cardUnderPointer();
       const STEP = P.STEP * I, TILT = P.TILT * I, WAVE = P.WAVE * I;
       const SCALE_MIN = 1 - (1 - P.SCALE_MIN) * Math.min(I, 1 / Math.max(0.0001, 1 - P.SCALE_MIN));
       const ease = easeSlot[P.MOTION_EASING] || easeSlot.linear;
@@ -129,12 +141,15 @@ Lab.register({
         const th = deg * Math.PI / 180;
         const x = Math.sin(th) * radius;
         const y = sp * (t + WAVE * Math.sin(t * Math.PI / span));
-        const depth = (Math.cos(th) + 1) / 2;
-        const scale = SCALE_MIN + (1 - SCALE_MIN) * depth;
+        const depthK = (Math.cos(th) + 1) / 2;
+        let scale = SCALE_MIN + (1 - SCALE_MIN) * depthK;
+        const card = cards[i];
+        const yLift = card === hot ? -liftPx : 0;
+        if (card === pressed && P.IX_PRESS === 'press') scale *= (1 - 0.04 * (isFinite(react) ? react : 1));
         const body = 1 - (1 - P.BACK_OPACITY) * smooth(P.BACK_FADE_A, P.BACK_FADE_B, absDeg);
         const opacity = body * (P.END_FADE_ON === false ? 1 : 1 - smooth(P.END_FADE_A, P.END_FADE_B, absT));
-        const card = cards[i];
-        card.style.transform = 'translate(-50%, -50%) translate(' + x.toFixed(2) + 'px, ' + y.toFixed(2) +
+        card.classList.toggle('is-glow', card === pressed && P.IX_PRESS === 'glow');
+        card.style.transform = 'translate(-50%, -50%) translate(' + x.toFixed(2) + 'px, ' + (y + yLift).toFixed(2) +
           'px) rotateY(' + (TILT * deg).toFixed(2) + 'deg) scale(' + scale.toFixed(3) + ')';
         card.style.opacity = opacity.toFixed(3);
         card.style.zIndex = String(100 + Math.round(Math.cos(th) * 50));
@@ -161,12 +176,16 @@ Lab.register({
     root.addEventListener('pointerenter', (e) => { inside = true; hoverTouch = e.pointerType === 'touch'; track(e); });
     root.addEventListener('pointermove', track, { passive: true });
     root.addEventListener('pointerleave', () => { inside = false; });
-    function overCard() {
-      if (!inside) return false;
+    const clearPress = () => { pressed = null; };
+    window.addEventListener('pointerup', clearPress);
+    window.addEventListener('pointercancel', clearPress);
+    function cardUnderPointer() {
+      if (!inside) return null;
       const hit = document.elementFromPoint(ptrX, ptrY);
       const card = hit && hit.closest && hit.closest('.hx-helix-card');
-      return !!(card && root.contains(card));
+      return card && root.contains(card) ? card : null;
     }
+    function overCard() { return !!cardUnderPointer(); }
 
     function onPointerMove(e) {
       if (!dragging) return;
@@ -179,6 +198,7 @@ Lab.register({
       if (Math.abs(e.clientY - startY) > DRAG_PX) dragMoved = true;
     }
     function endDrag() {
+      pressed = null;
       if (!dragging) return;
       dragging = false;
       root.classList.remove('is-dragging');
@@ -187,6 +207,8 @@ Lab.register({
       window.removeEventListener('pointercancel', endDrag);
     }
     root.addEventListener('pointerdown', (e) => {
+      const card = e.target && e.target.closest && e.target.closest('.hx-helix-card');
+      pressed = card && root.contains(card) && lastP.IX_PRESS !== 'none' ? card : null;
       if (e.button !== 0 || lastP.IX_DRAG === 'ignore') return;
       if (e.pointerType === 'touch' && lastP.IX_TOUCH === 'ignore') return;
       dragging = true;
@@ -228,20 +250,33 @@ Lab.register({
     // Playback multiplier for this frame. Eased (~80ms) so slow / fast do not jolt.
     function rate(P, dt) {
       const hovering = overCard();
-      let target = 1;
+      const strength = P.IX_STRENGTH == null ? 1 : Number(P.IX_STRENGTH);
+      let target = P.IDLE === false ? 0 : 1;
       if (dragging) target = 0;
       else if (kbdPause && P.IX_KEY !== false) target = 0;
-      else if (hovering && !(hoverTouch && P.IX_TOUCH === 'ignore')) target = HOVER_RATE[P.IX_HOVER] !== undefined ? HOVER_RATE[P.IX_HOVER] : 0;
+      else if (hovering && !(hoverTouch && P.IX_TOUCH === 'ignore')) {
+        const base = HOVER_RATE[P.IX_HOVER];
+        if (base === undefined) target = 0;
+        else if (!isFinite(strength)) target = base;
+        else target = Math.max(0, 1 + (base - 1) * strength);
+      }
       if (target === 0) rateNow = 0; // pause is immediate, as on the site
       else rateNow += (target - rateNow) * Math.min(1, (dt || 0.016) * 12);
-      return rateNow;
+      // Card kind does not show Loop time. The lab then uses a 10s cycle; 10/26 keeps the helix's 26s loop.
+      const loop = P.MOTION_CYCLE == null ? (10 / 26) : 1;
+      return rateNow * loop;
     }
 
     return {
       render,
       rate,
       get hovering() { return overCard(); },
-      destroy() { if (ro) ro.disconnect(); endDrag(); }
+      destroy() {
+        if (ro) ro.disconnect();
+        endDrag();
+        window.removeEventListener('pointerup', clearPress);
+        window.removeEventListener('pointercancel', clearPress);
+      }
     };
   }
 });

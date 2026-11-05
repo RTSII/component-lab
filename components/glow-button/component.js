@@ -1,8 +1,8 @@
 // Glow button (component #2, P1): the proof component for the core@1 base template. A single call-to-action
 // button with a neon edge, a hover sheen and an optional icon. Built from components/_template with
-// new-component.py: manifest.json inherits the core controls (colours, opacity, glow, radius, text scale,
-// speed, easing and the IX_* interaction slots), hides the two that do not apply to a button (SIZE_W: a
-// button sizes to its label; IX_DRAG: a button is not dragged), and adds its own extras (Button group).
+// new-component.py: manifest.json inherits core. Which core controls show is the button kind show list
+// (components/_kinds/button/kind.json), not a hide list of its own. Extras (icon, sheen, pulse, case)
+// are this component's own controls.
 // Every control with a "css" key is a CSS custom property the lab sets on the frame; this file only wires
 // the interaction slots and the extras that switch markup (icon, sheen, pulse ring). No helix code.
 Lab.register({

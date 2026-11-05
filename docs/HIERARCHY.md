@@ -45,6 +45,8 @@ Related: [LABEL-RUBRIC.md](LABEL-RUBRIC.md) (naming), [MENU-SCHEME.md](MENU-SCHE
 
 **Applied (feat/hierarchy-apply):** every kind now has an explicit `show` list (below). Original recommendation: use an explicit `show` list per kind (the kind says what it supports, in Pro order), keep `hide` readable for old files (a kind with `hide` only means "core minus hide"). The checker fails when a shown control has no CSS/JS reading it in that kind's files, and warns when a core control is shown by no kind. This matches rule 1 (every control has a real parent and a real effect).
 
+**Locked.** `components/_kinds/<kind>/kind.json` `show` is the only core set for that kind. A saved component (glow-button, helix, anything new) may not carry a hide or opt list that differs. The lab rewrites hide/opt from the show list on load (`lockKindShow`), and `check-components.py` errors if the file disagrees. The blank template is the pre-kind base and is the one exception. Component extras (helix layout, glow-button icon/sheen) stay on that component; they are not core controls.
+
 ### 3.2 Proposed folder layout
 ```
 components/

@@ -145,6 +145,21 @@ def check_manifest(cid, man, core, errs, warns):
     for x in (c.get("hide") or []) + (c.get("opt") or []):
         if x not in core_ids:
             errs.append("%s: core.hide/opt names unknown core control %s" % (where, x))
+    # Kind show list is the only core set. A component may not keep its own hide/opt.
+    # The blank template is the pre-kind base; apply_kind / applyKindSpec merges the show list onto it.
+    if cid != "_template" and meta.get("kind"):
+        kinds = load_kinds()
+        spec = kinds.get(meta["kind"]) if isinstance(kinds, dict) else None
+        show = spec.get("show") if isinstance(spec, dict) else None
+        if isinstance(show, list):
+            base_ids = [cc["id"] for cc in core.get("controls", [])]
+            opt_ids = [cc["id"] for cc in core.get("optional", [])]
+            expect_hide = [i for i in base_ids if i not in show]
+            expect_opt = [i for i in opt_ids if i in show]
+            if set(c.get("hide") or []) != set(expect_hide) or set(c.get("opt") or []) != set(expect_opt):
+                errs.append("%s: core.hide/opt diverges from %s kind show list "
+                            "(components/_kinds/%s/kind.json is the source of truth; "
+                            "hide %s opt %s)" % (where, meta["kind"], meta["kind"], expect_hide, expect_opt))
     widgets = set(core.get("widgets", []))
     seen = set()
     for e in man.get("extras") or []:

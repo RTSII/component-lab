@@ -665,8 +665,13 @@
       auto = true;
     }
     if (m.schema === 3) {
-      if (id === '_template' && validKind(tplKind)) m = window.LabManifest.applyKindSpec(m, tplKind, kindsInfo.kinds[tplKind], await loadCore());
-      m = window.LabManifest.resolve(m, await loadCore());
+      const coreDoc = await loadCore();
+      if (id === '_template' && validKind(tplKind)) m = window.LabManifest.applyKindSpec(m, tplKind, kindsInfo.kinds[tplKind], coreDoc);
+      // Kind show list wins over any hide/opt written on the component (HIERARCHY.md). The template is
+      // already merged above; every other component is locked to components/_kinds/<kind>/kind.json.
+      const kindSpec = m.meta && kindsInfo && kindsInfo.kinds && kindsInfo.kinds[m.meta.kind];
+      if (kindSpec && window.LabManifest.lockKindShow) m = window.LabManifest.lockKindShow(m, kindSpec, coreDoc);
+      m = window.LabManifest.resolve(m, coreDoc);
       if (id === '_template' && validKind(tplKind) && kindsInfo.layout === 'folders') {
         const km = await fetchText('components/_kinds/' + tplKind + '/markup.html');
         if (km) m.kindMarkup = km;
