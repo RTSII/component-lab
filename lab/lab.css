@@ -2601,6 +2601,29 @@ body {
     gap: 11px;
   }
 
+  /* Related independents share the card. The box-size fader and Scale sit side by side,
+     with a rule between them, the way the tempo knob sits beside the tempo fader. */
+  .mini-body:has(> .ctl-size-fader) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 10px;
+    align-items: center;
+  }
+
+  .mini-body:has(> .ctl-size-fader) > .ctl-size-fader {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    padding-right: 12px;
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .mini-body:has(> .ctl-size-fader) > .ctl:not(.ctl-size-fader) {
+    grid-column: 2;
+    min-width: 0;
+  }
+
   .mini-body.is-dials {
     display: grid;
     grid-template-columns: 1fr 1fr;

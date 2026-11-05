@@ -90,7 +90,6 @@
     ],
     "layout": [
      "Size",
-     "Text size",
      "Spacing & Radius",
      "Text"
     ]
@@ -505,7 +504,7 @@
     {
      "id": "SCALE_TEXT",
      "label": "Number size",
-     "group": "Text size",
+     "group": "Size",
      "widget": "h-slider",
      "tier": "vip",
      "min": 0.5,
@@ -1641,7 +1640,6 @@
      ],
      "layout": [
       "Size",
-      "Text size",
       "Spacing & Radius",
       "Text"
      ]
@@ -2092,14 +2090,12 @@
    "layout": {
     "groups": [
      "Size",
-     "Text size",
      "Spacing & Radius",
      "Text",
      "Spacing"
     ],
     "cards": [
-     "CARD Size(N,SIZE_W,SCALE_MIN,SIZE_H)",
-     "CARD Text size(SCALE_TEXT)",
+     "CARD Size(SCALE_TEXT,N,SIZE_W,SCALE_MIN,SIZE_H)",
      "FLIP Spacing & Radius(RADIUS_MAX,TRAVEL,WAVE) <-> Spacing & Radius · Adv(RADIUS_FRAC*,RADIUS_PAD*)",
      "FLIP Text(SCALE_LABEL) <-> Text · Adv(WEIGHT*,TRACKING*)",
      "CARD Spacing(SPACE_PAD,SPACE_GAP)"
@@ -2216,7 +2212,6 @@
     ],
     "layout": [
      "Size",
-     "Text size",
      "Spacing",
      "Text"
     ]
@@ -2668,7 +2663,7 @@
     {
      "id": "SCALE_TEXT",
      "label": "Scale",
-     "group": "Text size",
+     "group": "Size",
      "widget": "h-slider",
      "tier": "vip",
      "min": 0.5,
@@ -3200,13 +3195,13 @@
    "layout": {
     "groups": [
      "Button",
-     "Text size",
+     "Size",
      "Spacing",
      "Text"
     ],
     "cards": [
      "FLIP Button(BTN_ICON,BTN_SHEEN,BTN_SHEEN_ANGLE,BTN_PULSE,BTN_CASE) <-> Text(WEIGHT*,TRACKING*)",
-     "CARD Text size(SCALE_TEXT)",
+     "CARD Size(SCALE_TEXT)",
      "CARD Spacing(SPACE_PAD)"
     ]
    }

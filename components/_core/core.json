@@ -104,7 +104,6 @@
     ],
     "layout": [
       "Size",
-      "Text size",
       "Spacing",
       "Text"
     ]
@@ -445,7 +444,7 @@
       "id": "SCALE_TEXT",
       "label": "Scale",
       "section": "layout",
-      "group": "Text size",
+      "group": "Size",
       "widget": "h-slider",
       "tier": "mid",
       "min": 0.5,
