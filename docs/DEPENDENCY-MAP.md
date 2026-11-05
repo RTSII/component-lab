@@ -141,3 +141,8 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   fine-tune slider. Any in-between value still saves and loads; no preset lights up for it.
 - These four were vertical faders; they are now horizontal sliders. Resolve baseline rewritten for that
   (and for commit 4's `replacedBy`).
+
+### 5.6 New component + kind picker (commit 6)
+- The template shows as "New component" (picker, title, index). Folder `_template` and `START_COMPONENT` are unchanged.
+- In the New component stepper, picking a kind also switches the live template to that kind, so the menus filter to
+  its show list while you finish the steps (only when the template is the open component).

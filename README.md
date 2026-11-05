@@ -262,7 +262,7 @@ Every component lives in `components/<id>/`; `components/registry.js` and `compo
   ```
   Required files, limits and what blocks an import: [docs/COMPONENT-IMPORT.md](docs/COMPONENT-IMPORT.md).
   Group / subcard names: [docs/NAMING-STANDARD.md](docs/NAMING-STANDARD.md).
-- **Blank template kinds (console, no UI yet):** on `#c=_template`, `await __lab.setTemplateKind('modal')`
+- **New component kinds (stepper or console):** on `#c=_template`, `await __lab.setTemplateKind('modal')`
   reloads the template as that kind (hash `kind=modal`); `/api/new` also takes optional validated
   `overrides: { CONTROL_ID: value }` applied after the palette. `_template` stays last in the picker.
 - **Regression check after manifest / resolver edits:** `node tools/test/resolve-test.js` (helix must stay

@@ -5,7 +5,7 @@
 // IX_TOUCH, IX_KEY). Every control with a "css" key is a CSS custom property the lab sets on the frame, so
 // style.css does the visual work; this file only wires the interaction slots. Replace markup / CSS freely.
 Lab.register({
-  title: 'Blank template',
+  title: 'New component',
   css: ['style.css'],
   markup: 'markup.html',
   animated: false,          // CSS animations run on their own; true adds play/pause + scrub (then use interaction mode "rate")
