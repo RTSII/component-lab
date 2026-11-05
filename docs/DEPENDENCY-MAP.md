@@ -132,3 +132,12 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   has Speed. Its value still loads, saves, exports and drives the component (helix keeps its 26 s loop; Speed
   scales it). A component with a loop but no Speed still shows Loop time.
 - User-visible change: helix's Motion menu loses "Seconds per full loop". Needs Rob's call (keep or bring back).
+
+### 5.5 Size and spacing rows (commit 5)
+- Width and Height share one row: a Width | Height switch, a label naming the active side, one slider
+  (`"sizePair"` on Width, `"sizePairOf"` on Height). Ids stay SIZE_W / SIZE_H, so saved values load unchanged.
+  Where the tier shows only Width (Mid), Width is a plain slider.
+- Padding and Gap: presets None / Tight / Normal / Roomy (`"steps"`; padding 0/8/20/32 px, gap 0/6/10/18 px) over a
+  fine-tune slider. Any in-between value still saves and loads; no preset lights up for it.
+- These four were vertical faders; they are now horizontal sliders. Resolve baseline rewritten for that
+  (and for commit 4's `replacedBy`).

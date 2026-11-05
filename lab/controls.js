@@ -124,7 +124,48 @@
       row.appendChild(head);
       const uid = 'c-' + v.id;
 
-      if (isRatePads) {
+      const pairB = !isTempoDeck && v.control === 'slider' && ctx.pairPartner ? ctx.pairPartner(v) : null;
+      if (pairB) {
+        // Width | Height: a mixer-style switch picks the side; the label names it; one slider drives it
+        row.classList.add('ctl-pair');
+        row.dataset.pairB = pairB.id;
+        lab.htmlFor = uid;
+        let side = v;
+        const sw = el('div', 'seg seg-sm pair-seg');
+        sw.setAttribute('role', 'radiogroup');
+        sw.setAttribute('aria-label', 'Which size the slider sets');
+        const r = el('input', 'range');
+        r.type = 'range'; r.id = uid;
+        const sync = () => {
+          const Pn = getP();
+          Object.assign(r, { min: side.min, max: side.max, step: side.step });
+          r.value = Pn[side.id];
+          r.style.setProperty('--p', ((Pn[side.id] - side.min) / (side.max - side.min || 1) * 100).toFixed(2) + '%');
+          lab.textContent = compact && side.short ? side.short : side.label;
+          if (!out.querySelector('.val-in')) out.textContent = fmt(side, Pn[side.id]);
+          r.setAttribute('aria-label', side.label);
+        };
+        row._sync = sync;
+        buildSeg(sw, [{ value: v.id, label: v.short || v.label }, { value: pairB.id, label: pairB.short || pairB.label }], v.id, (id) => { side = id === v.id ? v : pairB; sync(); }, { equal: true });
+        r.addEventListener('input', () => { setValue(side.id, r.value, { quiet: true }); sync(); });
+        lab.addEventListener('dblclick', (e) => { if (side !== v) { e.stopImmediatePropagation(); setValue(side.id, side.default); } }, true);
+        row.append(sw, r);
+        sync();
+      } else if (v.steps && v.control === 'slider' && !isTempoDeck) {
+        // Padding / Gap: named presets (None / Tight / Normal / Roomy) over a fine-tune slider
+        row.classList.add('ctl-rate-pads', 'ctl-steps');
+        lab.htmlFor = uid;
+        const r = el('input', 'range');
+        Object.assign(r, { type: 'range', id: uid, min: v.min, max: v.max, step: v.step, value: P[v.id] });
+        const paint = () => r.style.setProperty('--p', ((r.value - v.min) / (v.max - v.min || 1) * 100).toFixed(2) + '%');
+        paint();
+        const seg = el('div', 'seg seg-sm');
+        seg.setAttribute('role', 'radiogroup');
+        seg.setAttribute('aria-label', v.label + ' presets');
+        buildSeg(seg, v.steps.filter((x) => x.value >= v.min && x.value <= v.max), P[v.id], (val) => { setValue(v.id, val, { quiet: true }); out.textContent = fmt(v, getP()[v.id]); }, { equal: true });
+        r.addEventListener('input', () => { setValue(v.id, r.value, { quiet: true }); paint(); if (!out.querySelector('.val-in')) out.textContent = fmt(v, getP()[v.id]); });
+        row.append(seg, r);
+      } else if (isRatePads) {
         row.classList.add('ctl-rate-pads');
         lab.htmlFor = uid;
         const r = el('input', 'range');
@@ -902,7 +943,8 @@
       const byId = getById(), P = getP();
       const v = byId[id];
       if (!v) return;
-      document.querySelectorAll('.ctl[data-id="' + id + '"]').forEach((row) => {
+      document.querySelectorAll('.ctl-pair[data-id="' + id + '"], .ctl-pair[data-pair-b="' + id + '"]').forEach((row) => row._sync && row._sync());
+      document.querySelectorAll('.ctl[data-id="' + id + '"]:not(.ctl-pair)').forEach((row) => {
         const out = row.querySelector('.ctl-val');
         if (out && !row.querySelector('.swatch-trigger') && !out.querySelector('.val-in')) out.textContent = fmt(v, P[id]);
         const r = row.querySelector('input.range');

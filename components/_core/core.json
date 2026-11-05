@@ -69,7 +69,10 @@
     "bind",
     "showIf",
     "parent",
-    "replacedBy"
+    "replacedBy",
+    "sizePair",
+    "sizePairOf",
+    "steps"
   ],
   "defaultFreePicks": [
     "GLOW_STRENGTH",
@@ -413,7 +416,7 @@
       "label": "Width",
       "section": "layout",
       "group": "Size",
-      "widget": "v-fader",
+      "widget": "h-slider",
       "tier": "mid",
       "min": 120,
       "max": 520,
@@ -422,6 +425,7 @@
       "unit": "px",
       "css": "--w",
       "short": "Width",
+      "sizePair": "SIZE_H",
       "deckLabel": "CH 1"
     },
     {
@@ -616,7 +620,7 @@
       "label": "Height",
       "section": "layout",
       "group": "Size",
-      "widget": "v-fader",
+      "widget": "h-slider",
       "tier": "pro",
       "min": 80,
       "max": 560,
@@ -625,6 +629,7 @@
       "unit": "px",
       "css": "--h",
       "short": "Height",
+      "sizePairOf": "SIZE_W",
       "deckLabel": "CH 2",
       "optional": true
     },
@@ -633,7 +638,7 @@
       "label": "Padding",
       "section": "layout",
       "group": "Spacing",
-      "widget": "v-fader",
+      "widget": "h-slider",
       "tier": "pro",
       "min": 0,
       "max": 48,
@@ -642,6 +647,7 @@
       "unit": "px",
       "css": "--pad",
       "short": "Padding",
+      "steps": [{"value": 0, "label": "None"}, {"value": 8, "label": "Tight"}, {"value": 20, "label": "Normal"}, {"value": 32, "label": "Roomy"}],
       "optional": true
     },
     {
@@ -649,7 +655,7 @@
       "label": "Gap",
       "section": "layout",
       "group": "Spacing",
-      "widget": "v-fader",
+      "widget": "h-slider",
       "tier": "pro",
       "min": 0,
       "max": 64,
@@ -658,6 +664,7 @@
       "unit": "px",
       "css": "--gap",
       "short": "Gap",
+      "steps": [{"value": 0, "label": "None"}, {"value": 6, "label": "Tight"}, {"value": 10, "label": "Normal"}, {"value": 18, "label": "Roomy"}],
       "optional": true
     },
     {

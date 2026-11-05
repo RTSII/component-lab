@@ -514,7 +514,9 @@
   function varTier(v) { return v.tier in VAR_TIER ? VAR_TIER[v.tier] : v.featured ? 0 : v.advanced ? 2 : 1; }
   // "replacedBy": a control that stands in only when the component lacks the named one (Loop time hides when Speed
   // exists). Its value still loads, saves and drives the component; it just has no row (DEPENDENCY-MAP.md §5.4).
-  const shadowed = (v) => !!(v.replacedBy && byId[v.replacedBy]);
+  // "sizePair"/"sizePairOf": Width + Height share one row (a Width | Height switch over one slider) when both show
+  const pairPartner = (v) => { const b = v && v.sizePair && byId[v.sizePair]; return b && (tier === 'pro' || varTier(b) <= tierRank(tier)) ? b : null; };
+  const shadowed = (v) => !!((v.replacedBy && byId[v.replacedBy]) || (v.sizePairOf && byId[v.sizePairOf] && pairPartner(byId[v.sizePairOf]) === v));
   function tierVars() {
     if (tier === 'pro') return vars.some(shadowed) ? vars.filter((v) => !shadowed(v)) : vars;
     const r = tierRank(tier);
@@ -2785,7 +2787,7 @@
     hasPro, same, fmt, decimals, setValue,
     swatchesFor, allPresets, presetDots, applyPreset,
     userPalette, featuredOverrides, store, toast, push, buildSeg, syncSeg,
-    getTier: () => tier
+    getTier: () => tier, pairPartner
   });
   const { buildPresets, starBtn, ctlRow, dialEl, chip, syncRow, buildRole, Arc, holdButton } = controlsMod;
 

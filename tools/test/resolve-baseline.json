@@ -677,6 +677,7 @@
      "default": 26,
      "timeRole": "cycle",
      "short": "Seconds per loop",
+     "replacedBy": "MOTION_SPEED",
      "advanced": true,
      "category": "motion",
      "control": "slider",
@@ -890,7 +891,7 @@
      "id": "SIZE_W",
      "label": "Card width cap (px)",
      "group": "Size",
-     "widget": "v-fader",
+     "widget": "h-slider",
      "tier": "vip",
      "min": 80,
      "max": 240,
@@ -898,10 +899,10 @@
      "default": 156,
      "unit": "px",
      "short": "Card width",
+     "sizePair": "SIZE_H",
      "deckLabel": "CH 1",
      "category": "layout",
-     "control": "fader",
-     "variant": "channel",
+     "control": "slider",
      "core": "SIZE_W",
      "where": ".hx-helix-card in home.css",
      "was": "CARD_W",
@@ -2315,7 +2316,7 @@
      "id": "SPACE_PAD",
      "label": "Padding",
      "group": "Spacing",
-     "widget": "v-fader",
+     "widget": "h-slider",
      "tier": "pro",
      "min": 0,
      "max": 48,
@@ -2324,9 +2325,26 @@
      "unit": "px",
      "css": "--pad",
      "short": "Padding",
+     "steps": [
+      {
+       "value": 0,
+       "label": "None"
+      },
+      {
+       "value": 8,
+       "label": "Tight"
+      },
+      {
+       "value": 20,
+       "label": "Normal"
+      },
+      {
+       "value": 32,
+       "label": "Roomy"
+      }
+     ],
      "category": "layout",
-     "control": "fader",
-     "variant": "channel",
+     "control": "slider",
      "core": "SPACE_PAD",
      "_featured0": false
     },
