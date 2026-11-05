@@ -24,7 +24,7 @@ Related: [LABEL-RUBRIC.md](LABEL-RUBRIC.md) (naming), [MENU-SCHEME.md](MENU-SCHE
 8. **Pro first.** Pro is the full tier and covers every function of the app. Design and approve Pro first; Mid and Free are later subsets cut from Pro, in the same order. Tier never reorders controls.
 9. **General app first.** Rules, labels and code key on the general menus and core controls, never on one component (not helix, not the simple button).
 
-**Layout › Size (applied).** Width and Height are one control when both are shown: a metal left/right mixer throw under the fader, a text label of the active side, and one vertical tempo fader (the Motion Speed fader strip). Ids stay `SIZE_W` / `SIZE_H`. Segment pills and a horizontal slider were both rejected. Width alone (no Height in the tier) is the same vertical fader with no throw. Detail: [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) §5.5.
+**Layout › Size (applied).** Width and Height are one control when both are shown: a vertical metal handle parked at the far left (Width) or far right (Height) of a slot under the fader, a text label of the active side, and one vertical tempo fader (the Motion Speed fader strip). Ids stay `SIZE_W` / `SIZE_H`. Pills, a tilted mid-well bar, and a horizontal slider were rejected. Width alone (no Height in the tier) is the same vertical fader with no switch. Detail: [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) §5.5.
 
 ## 3. Kind flow ("New component")
 1. The entry is called **New component** (replaces "Blank template" in the picker and dock title).

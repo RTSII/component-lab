@@ -150,7 +150,7 @@
         };
         row._sync = sync;
         if (pairB) {
-          // One metal throw under the fader floor. Left = Width, right = Height. Not a pill pair.
+          // Vertical metal rectangle in the slot under the fader. Parked hard left = Width, hard right = Height.
           const mark = (s) => /height/i.test(s.short || s.label || '') ? 'H' : 'W';
           sw = el('button', 'mix-throw');
           sw.type = 'button';

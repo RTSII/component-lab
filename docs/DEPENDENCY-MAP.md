@@ -67,9 +67,10 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
   uses both via `time.cycle` / `time.speed`). **PROPOSED:** keep Speed; remove Seconds per loop from the user's menu
   (keep the id as a component setting for the base loop length), or repurpose it as "Loop length" only for animated
   kinds with no Speed.
-- **Width / Height → one control:** a metal mixer throw (one lever, left Width / right Height) under the
-  tempo fader, plus a text label of the active side. It drives one vertical tempo fader (the Motion Speed
-  fader strip). **APPLIED** (§5.5). Not pills, and not a horizontal slider.
+- **Width / Height → one control:** a metal slot switch under the tempo fader. The handle is a vertical
+  rectangle parked at the far left (Width) or far right (Height), plus a text label of the active side.
+  It drives one vertical tempo fader (the Motion Speed fader strip). **APPLIED** (§5.5). Not a tilted bar,
+  not pills, and not a horizontal slider.
 - **Padding / Gap → stepped presets:** None / Tight / Normal / Roomy pads plus a small fine-tune, instead of the
   tempo-deck faders (`v-fader` widget today). **PROPOSED.**
 
@@ -84,7 +85,7 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 ## 4. Open decisions (only ones that change what a user can do)
 1. Movement strength: move to Interaction as "reaction strength" (and stop it driving idle glow), or keep it in Motion for idle breathing?
 2. Seconds per loop: remove from the menu (Speed only), or keep it for animated kinds?
-3. Width / Height: **resolved** — a metal left/right mixer throw under the fader, a label of the active side, and one vertical tempo fader (§5.5). Not pills, not two faders, and not a horizontal slider.
+3. Width / Height: **resolved** — a vertical metal handle parked at the far left or far right of a slot under the fader, a label of the active side, and one vertical tempo fader (§5.5). Not a tilted bar, not pills, not two faders, and not a horizontal slider.
 4. Padding / Gap: preset pads + fine-tune, or sliders?
 5. Dependents when the primary is off: grey out (recommended for Pro) or hide?
 6. Kinds: explicit `show` lists (recommended) or keep `hide` lists?
@@ -135,9 +136,11 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 - User-visible change: helix's Motion menu loses "Seconds per full loop". Needs Rob's call (keep or bring back).
 
 ### 5.5 Size and spacing rows (commit 5, Width/Height corrected)
-- Width and Height share one row when both are in the tier: a **metal mixer throw** under the fader floor
-  (one lever, left = Width, right = Height — not a pill, tab, or iOS switch), a text label naming the active
-  side, and **one vertical tempo fader** — the same strip Motion Speed uses on the tempo deck
+- Width and Height share one row when both are in the tier: a **metal slot switch** under the fader floor.
+  The handle is a vertical rectangle parked at the far left (Width) or the far right (Height) — the XDJ-XZ
+  way of showing which side is on. It is not a pill, a tab, an iOS switch, or a bar tilted in the middle of
+  the well. A text label names the active side, and **one vertical tempo fader** — the same strip Motion
+  Speed uses on the tempo deck
   (`tempoFaderCol` in `lab/controls.js`). `"sizePair"` on Width, `"sizePairOf"` on Height. Ids stay SIZE_W / SIZE_H,
   so saved values load unchanged. Switching sides does not copy the value; each id keeps its own number.
   The Width | Height segment buttons were rejected (t699u): they wasted space and did not match the mixer chrome.
