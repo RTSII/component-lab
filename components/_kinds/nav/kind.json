@@ -1,0 +1,56 @@
+{
+  "label": "Nav",
+  "desc": "Tabs or menu bar",
+  "category": "menus",
+  "frames": {
+    "1600x770": {
+      "w": 560,
+      "h": 140
+    },
+    "1366x768": {
+      "w": 520,
+      "h": 130
+    }
+  },
+  "featured": [
+    "COLOR_ACCENT",
+    "COLOR_TEXT",
+    "COLOR_FILL",
+    "OPACITY_FILL",
+    "SCALE_TEXT",
+    "SPACE_GAP",
+    "MOTION_EASING"
+  ],
+  "defaults": {
+    "SPACE_PAD": 16,
+    "RADIUS": 16
+  },
+  "show": [
+    "COLOR_BORDER",
+    "COLOR_FILL",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "IX_HOVER",
+    "IX_PRESS",
+    "IX_TOUCH",
+    "IX_KEY",
+    "OPACITY_FILL",
+    "OPACITY_BORDER",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "SCALE_TEXT",
+    "MOTION_SPEED",
+    "MOTION_EASING",
+    "COLOR_ACCENT",
+    "COLOR_MUTED",
+    "BLUR",
+    "WEIGHT",
+    "TRACKING",
+    "SPACE_PAD",
+    "SPACE_GAP",
+    "HOVER_LIFT",
+    "IDLE",
+    "IX_STRENGTH"
+  ],
+  "colorGroup": "Nav"
+}

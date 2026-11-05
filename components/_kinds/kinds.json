@@ -1,0 +1,13 @@
+{
+  "$comment": "Kinds for New component, in picker order. Each kind is a folder here with kind.json (show = the exact core controls it supports) and markup.html. Add a kind: add a folder + its id below.",
+  "order": [
+    "card",
+    "nav",
+    "hero",
+    "animated-background",
+    "list",
+    "button",
+    "modal",
+    "input"
+  ]
+}

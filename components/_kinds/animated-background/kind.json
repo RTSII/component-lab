@@ -1,0 +1,51 @@
+{
+  "label": "Animated bg",
+  "desc": "Moving backdrop",
+  "category": "backgrounds",
+  "frames": {
+    "1600x770": {
+      "w": 900,
+      "h": 520
+    },
+    "1366x768": {
+      "w": 760,
+      "h": 460
+    }
+  },
+  "featured": [
+    "COLOR_ACCENT",
+    "COLOR_GLOW",
+    "COLOR_FILL",
+    "OPACITY_FILL",
+    "GLOW_STRENGTH",
+    "MOTION_SPEED"
+  ],
+  "defaults": {
+    "OPACITY_FILL": 1,
+    "GLOW_STRENGTH": 1.2,
+    "HOVER_LIFT": 0
+  },
+  "show": [
+    "COLOR_BORDER",
+    "COLOR_FILL",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "IX_HOVER",
+    "IX_TOUCH",
+    "IX_KEY",
+    "OPACITY_FILL",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "SCALE_TEXT",
+    "MOTION_SPEED",
+    "MOTION_EASING",
+    "COLOR_ACCENT",
+    "WEIGHT",
+    "TRACKING",
+    "SPACE_PAD",
+    "HOVER_LIFT",
+    "IDLE",
+    "IX_STRENGTH"
+  ],
+  "colorGroup": "Backdrop"
+}

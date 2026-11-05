@@ -194,7 +194,9 @@ def check_manifest(cid, man, core, errs, warns):
 
 
 # ---------- kinds (components/_template/kinds.json) ----------
-KINDS_PATH = os.path.join(COMP, "_template", "kinds.json")
+KINDS_PATH = os.path.join(COMP, "_template", "kinds.json")   # legacy (hide lists); read only when _kinds/ is absent
+KINDS_DIR = os.path.join(COMP, "_kinds")                       # one folder per kind: _kinds/<kind>/kind.json (+ markup.html)
+KINDS_INDEX = os.path.join(KINDS_DIR, "kinds.json")
 TEMPLATE_DIR = os.path.join(COMP, "_template")
 # core controls whose colour group is the component body ("Card" in core@1); a kind's "colorGroup" renames it
 BODY_COLOURS = ("COLOR_BORDER", "COLOR_FILL", "COLOR_FILL_2")
@@ -217,7 +219,14 @@ def apply_kind(man, kind_id, spec, core):
         c["freePicks"] = list(spec["freePicks"])
     base_ids = [cc["id"] for cc in core.get("controls", [])]
     picks = c.get("freePicks") or []
-    c["hide"] = [h for h in (spec.get("hide") or []) if h in base_ids and h not in picks]
+    if isinstance(spec.get("show"), list):
+        # explicit show list (docs/HIERARCHY.md 3.1): exactly these core controls; Pro order still comes from core.order
+        show = spec["show"]
+        opt_ids = [cc["id"] for cc in core.get("optional", [])]
+        c["opt"] = [i for i in opt_ids if i in show]
+        c["hide"] = [i for i in base_ids if i not in show]
+    else:
+        c["hide"] = [h for h in (spec.get("hide") or []) if h in base_ids and h not in picks]
     resolved_ids = [i for i in base_ids if i not in c["hide"]] + [i for i in (c.get("opt") or []) if i not in base_ids]
     ov = {}
     featured = set(spec.get("featured") or [])
@@ -249,10 +258,83 @@ def apply_kind(man, kind_id, spec, core):
 
 
 def load_kinds():
+    """Kinds in picker order. New layout: components/_kinds/kinds.json ("order") + _kinds/<kind>/kind.json.
+    Migration path: when _kinds/ is missing, the old components/_template/kinds.json (hide lists) is read."""
+    if os.path.exists(KINDS_INDEX):
+        try:
+            idx = load_json(KINDS_INDEX)
+        except (OSError, ValueError):
+            return {}
+        out = {}
+        for kid in idx.get("order") or []:
+            try:
+                out[kid] = load_json(os.path.join(KINDS_DIR, kid, "kind.json"))
+            except (OSError, ValueError):
+                continue
+        return out
     try:
         return load_json(KINDS_PATH).get("kinds") or {}
     except (OSError, ValueError):
         return {}
+
+
+def kind_markup(kid, js_src=""):
+    """A kind's starter markup: _kinds/<kind>/markup.html, else the KINDS entry in _template/component.js."""
+    try:
+        with open(os.path.join(KINDS_DIR, kid, "markup.html"), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        pass
+    m = re.search(r"['\"]?%s['\"]?\s*:\s*((?:'[^']*'\s*\+?\s*)+)" % re.escape(kid), js_src)
+    return "".join(re.findall(r"'([^']*)'", m.group(1))) if m else ""
+
+
+GENERIC_CLASSES = {"lab-frame", "cmp-host"}
+
+
+def css_uses_for_kind(css, markup):
+    """CSS custom properties read by rules that can match this kind's markup. A selector counts when every
+    class it names is in the markup (or is the frame / host wrapper)."""
+    classes = set(GENERIC_CLASSES)
+    for m in re.finditer(r'class="([^"]+)"', markup):
+        classes.update(m.group(1).split())
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    used = set()
+    for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", css):
+        sels, body = m.group(1), m.group(2)
+        if "@keyframes" in sels or re.match(r"\s*(from|to|\d+%)\s*$", sels):
+            hit = True
+        else:
+            hit = any(set(re.findall(r"\.([\w-]+)", sel)) <= classes for sel in sels.split(","))
+        if hit:
+            used.update(re.findall(r"var\((--[\w-]+)", body))
+    # a custom property defined from others (e.g. --fs from --type-k) passes its inputs on when it is read
+    defs = dict(re.findall(r"(--[\w-]+)\s*:\s*([^;]+);", css))
+    changed = True
+    while changed:
+        changed = False
+        for k, val in defs.items():
+            if k in used:
+                for x in re.findall(r"var\((--[\w-]+)", val):
+                    if x not in used:
+                        used.add(x)
+                        changed = True
+    return used
+
+
+def dead_controls(vars_, css, js, markup):
+    """Shown controls that do nothing for this kind: a css control whose property no matching rule reads, or a
+    control with no css that the component script never names."""
+    used = css_uses_for_kind(css, markup)
+    out = []
+    for v in vars_:
+        cssk = v.get("css")
+        if isinstance(cssk, str) and cssk.startswith("--"):
+            if cssk not in used:
+                out.append(v["id"])
+        elif not cssk and not v.get("timeRole") and v.get("master") != "speed" and v["id"] not in js:
+            out.append(v["id"])
+    return out
 
 
 def template_sources():
@@ -267,16 +349,26 @@ def template_sources():
 
 
 def check_kinds(core, warns, errs=None):
-    """Warnings for components/_template/kinds.json (nothing here blocks a start or a save)."""
-    if not os.path.exists(KINDS_PATH):
+    """Kinds: components/_kinds/<kind>/kind.json (or the legacy _template/kinds.json). Mostly warnings; a control
+    a kind's show list names that does nothing for that kind's markup is an ERROR (docs/HIERARCHY.md 3.1)."""
+    new_layout = os.path.exists(KINDS_INDEX)
+    if not new_layout and not os.path.exists(KINDS_PATH):
         return
-    try:
-        kinds = load_json(KINDS_PATH).get("kinds")
-    except ValueError as e:
-        (errs if errs is not None else warns).append("components/_template/kinds.json: JSON error %s" % e)
-        return
+    if new_layout:
+        try:
+            idx = load_json(KINDS_INDEX)
+        except ValueError as e:
+            (errs if errs is not None else warns).append("components/_kinds/kinds.json: JSON error %s" % e)
+            return
+        for kid in idx.get("order") or []:
+            if not os.path.exists(os.path.join(KINDS_DIR, kid, "kind.json")):
+                warns.append("components/_kinds/kinds.json: %s has no folder with kind.json" % kid)
+        for d in sorted(os.listdir(KINDS_DIR)):
+            if os.path.isdir(os.path.join(KINDS_DIR, d)) and d not in (idx.get("order") or []):
+                warns.append("components/_kinds/%s/ is not listed in _kinds/kinds.json (the picker will not show it)" % d)
+    kinds = load_kinds()
     if not isinstance(kinds, dict) or not kinds:
-        warns.append("components/_template/kinds.json: no kinds")
+        warns.append("kinds: none found")
         return
     try:
         tpl = load_json(os.path.join(TEMPLATE_DIR, "manifest.json"))
@@ -284,10 +376,9 @@ def check_kinds(core, warns, errs=None):
         return
     src = template_sources()
     all_ids = {cc["id"] for cc in core.get("controls", []) + core.get("optional", [])}
-    where = "components/_template/kinds.json"
     bud = core.get("budget", {})
     for kid, spec in kinds.items():
-        w = "%s %s" % (where, kid)
+        w = ("components/_kinds/%s/kind.json" % kid) if new_layout else ("components/_template/kinds.json %s" % kid)
         if not NAME_RE.match(kid) or kid == "_template":
             warns.append("%s: kind id should be lowercase letters, numbers and dashes" % w)
         if not isinstance(spec, dict):
@@ -298,17 +389,26 @@ def check_kinds(core, warns, errs=None):
                 warns.append("%s: missing %s" % (w, k))
         if spec.get("category") and spec["category"] not in core.get("categories", []):
             warns.append("%s: unknown category %r" % (w, spec["category"]))
-        for fld in ("featured", "hide", "opt", "freePicks"):
+        for fld in ("featured", "hide", "opt", "freePicks", "show"):
             for x in spec.get(fld) or []:
                 if x not in all_ids:
                     warns.append("%s: %s names unknown core control %s" % (w, fld, x))
         for x in (spec.get("defaults") or {}):
             if x not in all_ids:
                 warns.append("%s: default for unknown core control %s" % (w, x))
-        if not re.search(r"(^|[\s{,])['\"]?%s['\"]?\s*:" % re.escape(kid), src["component.js"]):
-            warns.append("%s: no starter markup for this kind in _template/component.js (it would mount card markup)" % w)
+        markup = kind_markup(kid, src["component.js"])
+        if not markup:
+            warns.append("%s: no starter markup (markup.html) for this kind (it would mount card markup)" % w)
+        if new_layout and not isinstance(spec.get("show"), list):
+            warns.append("%s: no show list (every core control would show)" % w)
+        for x in spec.get("freePicks") or []:
+            if isinstance(spec.get("show"), list) and x not in spec["show"]:
+                warns.append("%s: free pick %s is not in the show list" % (w, x))
         man = apply_kind(tpl, kid, spec, core)
         vars_ = resolve(man, core)
+        if isinstance(spec.get("show"), list):
+            for x in dead_controls(vars_, src["style.css"], src["component.js"], markup):
+                (errs if errs is not None else warns).append("%s: shows %s but it does nothing for this kind (no rule for its markup reads it)" % (w, x))
         by = {v["id"]: v for v in vars_}
         for x, val in (spec.get("defaults") or {}).items():
             if x in all_ids and x not in by:
@@ -424,7 +524,7 @@ def run(write=True, quiet=False):
             "inherits": man.get("inherits"), "controls": {"free": tiers["free"], "mid": tiers["free"] + tiers["mid"], "pro": len(vars_)},
             "thumbnail": meta.get("thumbnail"), "updated": meta.get("updated")})
     license_guard(errs)
-    check_kinds(core, warns)
+    check_kinds(core, warns, errs)
     if write and not errs:
         changed = write_if_changed(os.path.join(COMP, "index.json"), json.dumps({
             "$comment": "GENERATED by tools/check-components.py from components/*/manifest.json. Do not edit by hand.",

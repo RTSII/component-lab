@@ -111,3 +111,11 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 - **Other parents applied:** Touch (side two) shows only while any pointer interaction is on; Speed and Play direction
   hide when Move when idle is off (only where the component has Move when idle). Motion keeps Timing, Movement
   (feel + idle) and Depth; the Motion › Hover card is gone.
+
+### 5.2 Kinds show only what applies (commit 2)
+- `components/_kinds/<kind>/kind.json` + `markup.html` replace the hide lists (HIERARCHY.md 3.2). The migration dropped
+  controls that did nothing for the kind's markup: nav (Width, Height, Secondary text size), animated background
+  (Background blur, Muted text, Border opacity, Secondary text size, Height, Gap), list (Muted text, Secondary text
+  size, Letter spacing), button (Background blur, Border, Muted text, Border opacity, Fill opacity, Secondary text size,
+  Height, Gap), input (Height). Card, hero and modal keep everything.
+- Render rule: the dock shows the kind's show list, then hides dependents whose parent is off (§5.1).

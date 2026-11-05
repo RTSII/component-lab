@@ -18,6 +18,15 @@ const LM = require(path.join(ROOT, 'lab', 'manifest.js'));
 const read = (p) => JSON.parse(fs.readFileSync(path.join(ROOT, p), 'utf8'));
 const core = read('components/_core/core.json');
 const BASELINE = path.join(__dirname, 'resolve-baseline.json');
+// kinds: components/_kinds/kinds.json order + _kinds/<kind>/kind.json, else the legacy _template/kinds.json
+function readKinds() {
+  if (fs.existsSync(path.join(ROOT, 'components/_kinds/kinds.json'))) {
+    const out = {};
+    (read('components/_kinds/kinds.json').order || []).forEach((k) => { out[k] = read('components/_kinds/' + k + '/kind.json'); });
+    return out;
+  }
+  return read('components/_template/kinds.json').kinds;
+}
 
 // --- copy of lab.js autoGroup() (only used for vars with no group; core controls all carry one) ---
 function autoGroup(v) {
@@ -146,7 +155,7 @@ COMPONENTS.forEach((id) => {
 // every kind on the blank template
 if (typeof LM.applyKindSpec === 'function') {
   const tpl = read('components/_template/manifest.json');
-  const kinds = read('components/_template/kinds.json').kinds;
+  const kinds = readKinds();
   let py = null;
   try {
     py = JSON.parse(execFileSync(process.env.PYTHON || 'python3', [path.join(ROOT, 'tools', 'check-components.py'), '--kinds-json'], { encoding: 'utf8' }));
@@ -186,7 +195,7 @@ function dupLabels(name, r) {
 ['helix', 'glow-button'].forEach((id) => dupLabels(id, LM.resolve(read('components/' + id + '/manifest.json'), core)));
 if (typeof LM.applyKindSpec === 'function') {
   const tpl = read('components/_template/manifest.json');
-  const kinds = read('components/_template/kinds.json').kinds;
+  const kinds = readKinds();
   Object.keys(kinds).forEach((k) => dupLabels('kind ' + k, LM.resolve(LM.applyKindSpec(tpl, k, kinds[k], core), core)));
 }
 // Rob t691u: the mouse wheel never changes a dock control (it must scroll the dock). Only the stage / scaler may listen.

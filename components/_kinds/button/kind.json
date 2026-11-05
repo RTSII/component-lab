@@ -1,0 +1,51 @@
+{
+  "label": "Button",
+  "desc": "One call to action",
+  "category": "buttons",
+  "frames": {
+    "1600x770": {
+      "w": 360,
+      "h": 200
+    },
+    "1366x768": {
+      "w": 340,
+      "h": 180
+    }
+  },
+  "featured": [
+    "COLOR_ACCENT",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "GLOW_STRENGTH",
+    "SCALE_TEXT",
+    "RADIUS",
+    "MOTION_EASING"
+  ],
+  "defaults": {
+    "SCALE_TEXT": 0.94,
+    "RADIUS": 12,
+    "GLOW_STRENGTH": 1.2
+  },
+  "show": [
+    "COLOR_FILL",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "IX_HOVER",
+    "IX_PRESS",
+    "IX_TOUCH",
+    "IX_KEY",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "SCALE_TEXT",
+    "MOTION_SPEED",
+    "MOTION_EASING",
+    "COLOR_ACCENT",
+    "WEIGHT",
+    "TRACKING",
+    "SPACE_PAD",
+    "HOVER_LIFT",
+    "IDLE",
+    "IX_STRENGTH"
+  ],
+  "colorGroup": "Button"
+}

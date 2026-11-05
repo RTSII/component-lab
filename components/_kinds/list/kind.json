@@ -1,0 +1,57 @@
+{
+  "label": "List",
+  "desc": "Rows with values",
+  "category": "cards",
+  "frames": {
+    "1600x770": {
+      "w": 420,
+      "h": 320
+    },
+    "1366x768": {
+      "w": 380,
+      "h": 300
+    }
+  },
+  "featured": [
+    "COLOR_ACCENT",
+    "COLOR_TEXT",
+    "OPACITY_BORDER",
+    "SCALE_TEXT",
+    "SPACE_GAP",
+    "SPACE_PAD"
+  ],
+  "defaults": {
+    "SPACE_PAD": 16,
+    "SPACE_GAP": 8,
+    "SCALE_TEXT": 0.94
+  },
+  "show": [
+    "COLOR_BORDER",
+    "COLOR_FILL",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "IX_HOVER",
+    "IX_PRESS",
+    "IX_DRAG",
+    "IX_TOUCH",
+    "IX_KEY",
+    "OPACITY_FILL",
+    "OPACITY_BORDER",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "SIZE_W",
+    "SCALE_TEXT",
+    "MOTION_SPEED",
+    "MOTION_EASING",
+    "COLOR_ACCENT",
+    "BLUR",
+    "WEIGHT",
+    "SIZE_H",
+    "SPACE_PAD",
+    "SPACE_GAP",
+    "HOVER_LIFT",
+    "IDLE",
+    "IX_STRENGTH"
+  ],
+  "colorGroup": "List"
+}

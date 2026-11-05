@@ -661,6 +661,10 @@
     if (m.schema === 3) {
       if (id === '_template' && validKind(tplKind)) m = window.LabManifest.applyKindSpec(m, tplKind, kindsInfo.kinds[tplKind], await loadCore());
       m = window.LabManifest.resolve(m, await loadCore());
+      if (id === '_template' && validKind(tplKind) && kindsInfo.layout === 'folders') {
+        const km = await fetchText('components/_kinds/' + tplKind + '/markup.html');
+        if (km) m.kindMarkup = km;
+      }
       if (m.loaderNotes) console.warn('[lab] ' + id + '/manifest.json:', m.loaderNotes.join(' | '));
       migrateIds(id, m.aliases, m.source && m.source.aliasVersion);
     } else if (auto && m.aliases) migrateIds(id, m.aliases, 1);   // auto-scan on core@1 ids (P1): old scan ids move over once
@@ -3402,6 +3406,18 @@
     return cur.length ? cur.length + ' saved' : 'Not set';
   }
 
+  // Kinds for New component: components/_kinds/kinds.json (order) + _kinds/<kind>/kind.json (show list, defaults...).
+  // Migration path: no _kinds/ folder = the old components/_template/kinds.json (hide lists) still works.
+  async function loadKinds() {
+    try {
+      const idx = JSON.parse(await fetchText('components/_kinds/kinds.json'));
+      const kinds = {};
+      const got = await Promise.all((idx.order || []).map(async (k) => { try { return [k, JSON.parse(await fetchText('components/_kinds/' + k + '/kind.json'))]; } catch (e) { return null; } }));
+      got.forEach((x) => { if (x) kinds[x[0]] = x[1]; });
+      if (Object.keys(kinds).length) return { kinds, layout: 'folders' };
+    } catch (e) { /* fall back */ }
+    try { return JSON.parse(await fetchText('components/_template/kinds.json')); } catch (e) { return null; }
+  }
   // ---------- blank-template kind switch (backend; console: __lab.setTemplateKind('input')) ----------
   // Reloads components/_template with the kind applied (lab/manifest.js applyKindSpec), so markup, frame, rail
   // and pages rebuild the normal way. Changed values carry over; untouched ones take the new kind's defaults.
@@ -4513,7 +4529,7 @@
 
     buildChrome();
     applyDockLayout();
-    try { kindsInfo = JSON.parse(await fetchText('components/_template/kinds.json')); } catch (e) { kindsInfo = null; }
+    kindsInfo = await loadKinds();
     const reg = window.LAB_REGISTRY || [];
     const h = readHash();
     // Default component on a fresh load (no #c= in the link): the blank template, never a specific component.

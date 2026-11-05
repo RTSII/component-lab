@@ -1,0 +1,61 @@
+{
+  "label": "Hero",
+  "desc": "Headline block",
+  "category": "heroes",
+  "frames": {
+    "1600x770": {
+      "w": 820,
+      "h": 420
+    },
+    "1366x768": {
+      "w": 720,
+      "h": 380
+    }
+  },
+  "featured": [
+    "COLOR_ACCENT",
+    "COLOR_TEXT",
+    "COLOR_FILL",
+    "OPACITY_FILL",
+    "SCALE_TEXT",
+    "WEIGHT",
+    "SPACE_PAD",
+    "MOTION_EASING"
+  ],
+  "defaults": {
+    "SCALE_TEXT": 1.22,
+    "SIZE_W": 320
+  },
+  "show": [
+    "COLOR_BORDER",
+    "COLOR_FILL",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "IX_HOVER",
+    "IX_PRESS",
+    "IX_DRAG",
+    "IX_TOUCH",
+    "IX_KEY",
+    "OPACITY_FILL",
+    "OPACITY_BORDER",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "SIZE_W",
+    "SCALE_TEXT",
+    "MOTION_SPEED",
+    "MOTION_EASING",
+    "COLOR_ACCENT",
+    "COLOR_MUTED",
+    "BLUR",
+    "WEIGHT",
+    "TRACKING",
+    "SCALE_LABEL",
+    "SIZE_H",
+    "SPACE_PAD",
+    "SPACE_GAP",
+    "HOVER_LIFT",
+    "IDLE",
+    "IX_STRENGTH"
+  ],
+  "colorGroup": "Hero"
+}

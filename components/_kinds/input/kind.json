@@ -1,0 +1,58 @@
+{
+  "label": "Input",
+  "desc": "Labelled text field",
+  "category": "forms",
+  "frames": {
+    "1600x770": {
+      "w": 420,
+      "h": 220
+    },
+    "1366x768": {
+      "w": 380,
+      "h": 200
+    }
+  },
+  "featured": [
+    "COLOR_ACCENT",
+    "COLOR_TEXT",
+    "COLOR_BORDER",
+    "OPACITY_BORDER",
+    "RADIUS",
+    "SCALE_TEXT",
+    "SPACE_PAD"
+  ],
+  "defaults": {
+    "SIZE_W": 300,
+    "RADIUS": 10,
+    "SPACE_PAD": 18
+  },
+  "show": [
+    "COLOR_BORDER",
+    "COLOR_FILL",
+    "COLOR_TEXT",
+    "COLOR_GLOW",
+    "IX_HOVER",
+    "IX_TOUCH",
+    "IX_KEY",
+    "OPACITY_FILL",
+    "OPACITY_BORDER",
+    "GLOW_STRENGTH",
+    "RADIUS",
+    "SIZE_W",
+    "SCALE_TEXT",
+    "MOTION_SPEED",
+    "MOTION_EASING",
+    "COLOR_ACCENT",
+    "COLOR_MUTED",
+    "BLUR",
+    "WEIGHT",
+    "TRACKING",
+    "SCALE_LABEL",
+    "SPACE_PAD",
+    "SPACE_GAP",
+    "HOVER_LIFT",
+    "IDLE",
+    "IX_STRENGTH"
+  ],
+  "colorGroup": "Field"
+}

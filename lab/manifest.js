@@ -215,7 +215,11 @@
     if (Array.isArray(spec.freePicks)) c.freePicks = spec.freePicks.slice();
     const baseIds = (core.controls || []).map((x) => x.id);
     const picks = c.freePicks || [];
-    c.hide = (spec.hide || []).filter((h) => baseIds.includes(h) && !picks.includes(h));
+    if (Array.isArray(spec.show)) {
+      // explicit show list (docs/HIERARCHY.md 3.1): exactly these core controls; Pro order still comes from core.order
+      c.opt = (core.optional || []).map((x) => x.id).filter((i) => spec.show.includes(i));
+      c.hide = baseIds.filter((i) => !spec.show.includes(i));
+    } else c.hide = (spec.hide || []).filter((h) => baseIds.includes(h) && !picks.includes(h));
     const resolvedIds = baseIds.filter((i) => !c.hide.includes(i)).concat((c.opt || []).filter((i) => !baseIds.includes(i)));
     const ov = {};
     const featured = new Set(spec.featured || []);

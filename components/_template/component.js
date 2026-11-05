@@ -35,7 +35,8 @@ Lab.register({
     };
     const host = frame.querySelector('.cmp-host');
     if (host && !host.children.length) {
-      host.innerHTML = KINDS[kind] || KINDS.card;
+      // components/_kinds/<kind>/markup.html when the lab passes it; the table above is the fallback
+      host.innerHTML = (ctx && ctx.manifest && ctx.manifest.kindMarkup) || KINDS[kind] || KINDS.card;
       host.dataset.kind = kind;
     }
     const root = host || frame;
