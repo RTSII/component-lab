@@ -66,7 +66,9 @@
     "interaction",
     "cssMap",
     "alpha",
-    "bind"
+    "bind",
+    "showIf",
+    "parent"
   ],
   "defaultFreePicks": [
     "GLOW_STRENGTH",
@@ -92,8 +94,7 @@
     "motion": [
       "Timing",
       "Movement",
-      "Depth",
-      "Hover"
+      "Depth"
     ],
     "layout": [
       "Size",
@@ -308,6 +309,32 @@
           "value": "ignore",
           "label": "Ignore"
         }
+      ],
+      "parent": "IX_HOVER",
+      "showIf": [
+        {
+          "IX_HOVER": {
+            "not": [
+              "none",
+              "play"
+            ]
+          }
+        },
+        {
+          "IX_PRESS": {
+            "not": [
+              "none"
+            ]
+          }
+        },
+        {
+          "IX_DRAG": {
+            "not": [
+              "none",
+              "ignore"
+            ]
+          }
+        }
       ]
     },
     {
@@ -425,7 +452,15 @@
       "unit": "×",
       "css": "--speed",
       "master": "speed",
-      "short": "Speed"
+      "short": "Speed",
+      "parent": "IDLE",
+      "showIf": [
+        {
+          "IDLE": [
+            true
+          ]
+        }
+      ]
     },
     {
       "id": "MOTION_EASING",
@@ -644,7 +679,15 @@
           "label": "Reverse"
         }
       ],
-      "optional": true
+      "optional": true,
+      "parent": "IDLE",
+      "showIf": [
+        {
+          "IDLE": [
+            true
+          ]
+        }
+      ]
     },
     {
       "id": "MOTION_INTENSITY",
@@ -700,8 +743,8 @@
     {
       "id": "HOVER_LIFT",
       "label": "Hover lift",
-      "section": "motion",
-      "group": "Hover",
+      "section": "interact",
+      "group": "Pointer",
       "widget": "knob",
       "tier": "pro",
       "min": 0,
@@ -711,7 +754,16 @@
       "unit": "px",
       "css": "--lift",
       "short": "Lift",
-      "optional": true
+      "optional": true,
+      "parent": "IX_HOVER",
+      "showIf": [
+        {
+          "IX_HOVER": [
+            "lift",
+            "both"
+          ]
+        }
+      ]
     },
     {
       "id": "IDLE",
@@ -727,6 +779,40 @@
         "false": "paused"
       },
       "short": "When idle",
+      "optional": true
+    },
+    {
+      "id": "IX_STRENGTH",
+      "label": "Reaction strength",
+      "section": "interact",
+      "group": "Pointer",
+      "widget": "h-slider",
+      "tier": "pro",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "default": 1,
+      "unit": "×",
+      "css": "--react",
+      "short": "Strength",
+      "parent": "IX_HOVER",
+      "showIf": [
+        {
+          "IX_HOVER": {
+            "not": [
+              "none",
+              "play"
+            ]
+          }
+        },
+        {
+          "IX_PRESS": {
+            "not": [
+              "none"
+            ]
+          }
+        }
+      ],
       "optional": true
     }
   ],
@@ -825,8 +911,10 @@
     "COLOR_GLOW",
     "COLOR_ACCENT",
     "IX_HOVER",
+    "HOVER_LIFT",
     "IX_PRESS",
     "IX_DRAG",
+    "IX_STRENGTH",
     "IX_TOUCH",
     "IX_KEY",
     "OPACITY_FILL",
@@ -841,7 +929,6 @@
     "MOTION_INTENSITY",
     "IDLE",
     "DEPTH_PERSPECTIVE",
-    "HOVER_LIFT",
     "SIZE_W",
     "SIZE_H",
     "SCALE_TEXT",

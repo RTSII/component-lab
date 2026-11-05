@@ -384,6 +384,7 @@
     if (!opts || !opts.quiet) syncRow(id);
     if (v.control === 'swatch-role') syncColorExtras(id);
     if (v.category === 'interact') syncQuick();
+    if (hasDeps(id)) syncDeps();
   }
 
   // ---------- undo / redo ----------
@@ -484,6 +485,29 @@
     });
   }
   const interactVars = () => vars.filter((v) => v.category === 'interact');
+  // ---------- dependents (docs/HIERARCHY.md rule 3, DEPENDENCY-MAP.md) ----------
+  // A control with "showIf" hides (every tier) while its parent is off; rows stay built so turning the
+  // parent back on shows them in place with no page rebuild (the stage never moves).
+  const depOk = (v) => window.LabManifest.depShown(v, P, (id) => !!byId[id]);
+  const hasDeps = (id) => vars.some((v) => Array.isArray(v.showIf) && v.showIf.some((cl) => cl && id in cl));
+  function syncDeps() {
+    document.querySelectorAll('.ctl[data-id]').forEach((row) => {
+      const v = byId[row.dataset.id];
+      if (!v || !v.showIf) return;
+      const on = depOk(v);
+      row.hidden = !on;
+      row.classList.toggle('is-dep-off', !on);
+    });
+    document.querySelectorAll('.mini').forEach((m) => {
+      const rows = [...m.querySelectorAll('.ctl[data-id]')];
+      if (rows.length) m.hidden = rows.every((r) => r.hidden || r.classList.contains('is-dep-off'));
+      if (m._syncFlip) m._syncFlip();
+    });
+    document.querySelectorAll('.acc[data-cat]').forEach((box) => {
+      const n = box.querySelector('.acc-n');
+      if (n) n.textContent = tierVars().filter((v) => v.category === box.dataset.cat && depOk(v)).length;
+    });
+  }
   // The controls this tier SHOWS (manifest var "tier": ga / vip / pro). vars stays complete (values, export,
   // URL hash, defaults), so a hidden control simply keeps its default. No "tier" field (other components):
   // featured = every tier, other plain controls = Mid, advanced = Pro.
@@ -1720,6 +1744,7 @@
     refreshChanged();
     requestAnimationFrame(() => page.querySelectorAll('.seg').forEach((s) => syncSeg(s, null, s.dataset.value, true)));
     if (spec.type === 'new') requestAnimationFrame(() => syncTiles(page, true));
+    syncDeps();
   }
 
   function buildPage(spec, inner) {
@@ -1897,10 +1922,12 @@
       head.classList.toggle('is-on', flipped);
       head.setAttribute('aria-expanded', flipped ? 'true' : 'false');
       titleEl.textContent = flipped ? backTitle : frontTitle;
-      const count = flipped ? frontItems.length : backItems.length;
+      const shown = (face) => face.querySelectorAll('.ctl[data-id]:not([hidden])').length;
+      const nA = shown(faceA), nB = shown(faceB);
+      const count = flipped ? nA : nB;
       badge.querySelector('.flip-circle').textContent = count;
       badge.classList.toggle('is-on', flipped);
-      head.title = flipped ? 'Flip to ' + frontTitle + ' (' + frontItems.length + ' controls)' : 'Flip to ' + backTitle + ' (' + backItems.length + ' controls)';
+      head.title = flipped ? 'Flip to ' + frontTitle + ' (' + nA + ' controls)' : 'Flip to ' + backTitle + ' (' + nB + ' controls)';
       if (flipped) {
         faceA.setAttribute('inert', '');
         faceB.removeAttribute('inert');
@@ -1919,6 +1946,7 @@
       }
     });
     syncFlipUi();
+    card._syncFlip = syncFlipUi;
     return card;
   }
   function miniCard(g, bare, inAdv) {

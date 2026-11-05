@@ -60,7 +60,7 @@
       "SPACE_GAP",
       "HOVER_LIFT",
       "IDLE",
-      "MOTION_INTENSITY",
+      "IX_STRENGTH",
       "SIZE_H",
       "SCALE_LABEL"
     ],
@@ -72,10 +72,6 @@
       "mode": "fx"
     },
     "override": {
-      "MOTION_INTENSITY": {
-        "css": "--intensity",
-        "label": "Glow / blob intensity"
-      },
       "COLOR_ACCENT": {
         "featured": true
       },
@@ -107,5 +103,7 @@
     "pads": []
   },
   "extras": [],
-  "aliases": {}
+  "aliases": {
+    "MOTION_INTENSITY": "IX_STRENGTH"
+  }
 }

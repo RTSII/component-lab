@@ -23,7 +23,7 @@
   };
   const DEFAULT_WHITELIST = ['label', 'short', 'min', 'max', 'step', 'default', 'unit', 'options', 'css', 'tier', 'group', 'section',
     'widget', 'variant', 'deckLabel', 'pair', 'padTitle', 'padSub', 'role', 'hint', 'where', 'note', 'featured', 'advanced',
-    'signature', 'master', 'timeRole', 'interaction', 'cssMap', 'alpha', 'bind'];
+    'signature', 'master', 'timeRole', 'interaction', 'cssMap', 'alpha', 'bind', 'showIf', 'parent'];
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // lab var -> widget name (used by the scaffold / checker and for schema-2 vars)
@@ -287,7 +287,31 @@
     return out;
   }
 
-  const api = { resolve, renameKeys, sourceForSave, widgetOf, applyKindSpec, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
+  // ---------- dependents (docs/HIERARCHY.md rule 3) ----------
+  // "showIf": [clause, ...] is OR; a clause { ID: allowed } is AND; allowed = [values] or { "not": [values] }.
+  // A clause naming a control this component does not have is skipped; no applicable clause = always shown.
+  // So a dependent only hides when its real parent is here and switched off.
+  function depShown(v, P, has) {
+    const sc = v && v.showIf;
+    if (!Array.isArray(sc) || !sc.length) return true;
+    let any = false;
+    for (const cl of sc) {
+      const ids = Object.keys(cl || {});
+      if (!ids.length || !ids.every((id) => has(id))) continue;
+      any = true;
+      const ok = ids.every((id) => {
+        const want = cl[id], val = P[id];
+        const eq = (x) => x === val || String(x) === String(val);
+        if (Array.isArray(want)) return want.some(eq);
+        if (want && Array.isArray(want.not)) return !want.not.some(eq);
+        return true;
+      });
+      if (ok) return true;
+    }
+    return !any;
+  }
+
+  const api = { depShown, resolve, renameKeys, sourceForSave, widgetOf, applyKindSpec, orderGroups, flipPlan, FLIP_PAIRS, WIDGET, TIER_MAP };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LabManifest = api;
 })(typeof window !== 'undefined' ? window : globalThis);

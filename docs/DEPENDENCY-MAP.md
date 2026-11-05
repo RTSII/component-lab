@@ -87,3 +87,27 @@ same rules: Sheen angle's parent is Hover sheen (grey out when sheen is off); Id
 4. Padding / Gap: preset pads + fine-tune, or sliders?
 5. Dependents when the primary is off: grey out (recommended for Pro) or hide?
 6. Kinds: explicit `show` lists (recommended) or keep `hide` lists?
+
+## 5. Applied on feat/hierarchy-apply (Rob t692u/t694u/t695u)
+
+### 5.1 Dependents under their primary (commit 1)
+- **How a dependent is declared:** a core control carries `"parent"` and `"showIf"` (core.json; both may be overridden per
+  component). `showIf` is a list of OR'd clauses; each clause is `{ ID: [allowed values] }` or `{ ID: { "not": [...] } }`.
+  A clause that names a control the component does not have is skipped, so a dependent only hides when its real parent
+  is present and off (`lab/manifest.js depShown`). The lab hides the row (all tiers), hides a card whose rows are all
+  hidden, and recounts the section and flip-card numbers. Rows stay built, so nothing on the stage moves.
+- **Hover lift** → Interaction › Pointer, right after On hover; shows only when On hover = Lift or Both.
+- **Movement strength → Reaction strength (template).** Decision: helix uses `MOTION_INTENSITY` as a real self-running
+  strength (step, tilt, wave), so the core control stays in Motion for animated components. The blank template's copy
+  only fed idle glow breathing (a Style result) and blob opacity, so the template now opts in a new Interaction control,
+  **Reaction strength** (`IX_STRENGTH`, `--react`, Interaction › Pointer) that scales hover lift, hover/press glow and
+  press squeeze. It shows when hover or press is on. Saved template values move over by alias
+  (`MOTION_INTENSITY → IX_STRENGTH`, existing migrateIds path).
+- **Glow is Style's again:** card glow no longer breathes with a Motion control (fixed alpha); animated-background blob
+  brightness now follows Style › Glow strength.
+- **Hover lift no longer drives idle float:** the idle float uses its own fixed `--float` (Motion owns idle).
+- **Transforms composed:** drag tilt, hover lift and press squeeze each set one part of one transform
+  (`--tilt-*`, `--hov-y`, `--press-k`), so none cancels another.
+- **Other parents applied:** Touch (side two) shows only while any pointer interaction is on; Speed and Play direction
+  hide when Move when idle is off (only where the component has Move when idle). Motion keeps Timing, Movement
+  (feel + idle) and Depth; the Motion › Hover card is gone.

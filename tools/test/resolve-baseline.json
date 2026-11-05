@@ -330,6 +330,32 @@
        "label": "Ignore"
       }
      ],
+     "parent": "IX_HOVER",
+     "showIf": [
+      {
+       "IX_HOVER": {
+        "not": [
+         "none",
+         "play"
+        ]
+       }
+      },
+      {
+       "IX_PRESS": {
+        "not": [
+         "none"
+        ]
+       }
+      },
+      {
+       "IX_DRAG": {
+        "not": [
+         "none",
+         "ignore"
+        ]
+       }
+      }
+     ],
      "category": "interact",
      "control": "segmented",
      "core": "IX_TOUCH",
@@ -555,6 +581,14 @@
        "label": "Down"
       }
      ],
+     "parent": "IDLE",
+     "showIf": [
+      {
+       "IDLE": [
+        true
+       ]
+      }
+     ],
      "category": "motion",
      "control": "segmented",
      "core": "MOTION_DIRECTION",
@@ -594,6 +628,14 @@
      "unit": "×",
      "master": "speed",
      "short": "Speed",
+     "parent": "IDLE",
+     "showIf": [
+      {
+       "IDLE": [
+        true
+       ]
+      }
+     ],
      "category": "motion",
      "control": "slider",
      "core": "MOTION_SPEED",
@@ -1819,8 +1861,7 @@
     "motion": [
      "Timing",
      "Movement",
-     "Depth",
-     "Hover"
+     "Depth"
     ],
     "layout": [
      "Size",
@@ -1952,6 +1993,33 @@
      "_featured0": false
     },
     {
+     "id": "HOVER_LIFT",
+     "label": "Hover lift",
+     "group": "Pointer",
+     "widget": "knob",
+     "tier": "pro",
+     "min": 0,
+     "max": 16,
+     "step": 1,
+     "default": 4,
+     "unit": "px",
+     "css": "--lift",
+     "short": "Lift",
+     "parent": "IX_HOVER",
+     "showIf": [
+      {
+       "IX_HOVER": [
+        "lift",
+        "both"
+       ]
+      }
+     ],
+     "category": "interact",
+     "control": "radial",
+     "core": "HOVER_LIFT",
+     "_featured0": false
+    },
+    {
      "id": "IX_PRESS",
      "label": "On press",
      "group": "Pointer",
@@ -1999,6 +2067,32 @@
       {
        "value": "ignore",
        "label": "Ignore"
+      }
+     ],
+     "parent": "IX_HOVER",
+     "showIf": [
+      {
+       "IX_HOVER": {
+        "not": [
+         "none",
+         "play"
+        ]
+       }
+      },
+      {
+       "IX_PRESS": {
+        "not": [
+         "none"
+        ]
+       }
+      },
+      {
+       "IX_DRAG": {
+        "not": [
+         "none",
+         "ignore"
+        ]
+       }
       }
      ],
      "category": "interact",
@@ -2136,6 +2230,14 @@
      "css": "--speed",
      "master": "speed",
      "short": "Speed",
+     "parent": "IDLE",
+     "showIf": [
+      {
+       "IDLE": [
+        true
+       ]
+      }
+     ],
      "category": "motion",
      "control": "slider",
      "core": "MOTION_SPEED",
@@ -2189,24 +2291,6 @@
      "control": "switch",
      "variant": "pad",
      "core": "IDLE",
-     "_featured0": false
-    },
-    {
-     "id": "HOVER_LIFT",
-     "label": "Hover lift",
-     "group": "Hover",
-     "widget": "knob",
-     "tier": "pro",
-     "min": 0,
-     "max": 16,
-     "step": 1,
-     "default": 4,
-     "unit": "px",
-     "css": "--lift",
-     "short": "Lift",
-     "category": "motion",
-     "control": "radial",
-     "core": "HOVER_LIFT",
      "_featured0": false
     },
     {
@@ -2672,7 +2756,7 @@
      "Touch & keys"
     ],
     "cards": [
-     "FLIP Pointer(IX_HOVER,IX_PRESS) <-> Touch & keys(IX_TOUCH*,IX_KEY*)"
+     "FLIP Pointer(IX_HOVER,HOVER_LIFT,IX_PRESS) <-> Touch & keys(IX_TOUCH*,IX_KEY*)"
     ]
    },
    "surface": {
@@ -2691,13 +2775,11 @@
    "motion": {
     "groups": [
      "Timing",
-     "Movement",
-     "Hover"
+     "Movement"
     ],
     "cards": [
      "CARD Timing(MOTION_SPEED)",
-     "CARD Movement(MOTION_EASING,IDLE)",
-     "CARD Hover(HOVER_LIFT)"
+     "CARD Movement(MOTION_EASING,IDLE)"
     ]
    },
    "layout": {

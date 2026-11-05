@@ -311,3 +311,6 @@ html[data-tier="free"] .dock .rail .rail-avatar { display: none !important; }
 .dock .card .snap-slot:hover { background: color-mix(in srgb, #fff 8%, var(--card-solid)); }
 .dock .card .snap-slot.is-filled { background: color-mix(in srgb, #6ee7ff 14%, var(--card-solid)); }
 @media (prefers-reduced-motion: reduce) { .dock :is(.quick-key, .quick-ctl .quick-go) { transition-duration: 0.01ms !important; } }
+
+/* Dependents (docs/HIERARCHY.md rule 3): a control whose parent is off is hidden in every tier */
+.ctl[hidden], .mini[hidden], .ctl.is-dep-off { display: none !important; }

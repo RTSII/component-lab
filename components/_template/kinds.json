@@ -114,7 +114,6 @@
       "defaults": {
         "OPACITY_FILL": 1,
         "GLOW_STRENGTH": 1.2,
-        "MOTION_INTENSITY": 1.1,
         "HOVER_LIFT": 0
       },
       "hide": [
